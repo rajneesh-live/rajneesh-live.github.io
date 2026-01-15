@@ -16,6 +16,14 @@ import { UNKNOWN_ITEM_ID } from '../../types/constants'
 import { createPlaylistsActions } from './create-playlists-actions'
 import { toast } from '~/components/toast/toast'
 
+// Rajneesh catalog integration
+import {
+  RAJNEESH_FLAGS,
+  loadBundledCatalog,
+  normalizeToEntities,
+} from '~/lib/rajneesh'
+import catalogYaml from '~/lib/rajneesh/data/rajneesh-catalog.yaml?raw'
+
 export interface State {
   tracks: {
     [trackId: string]: Track
@@ -44,6 +52,37 @@ export const createEntitiesStore = () => {
   })
 
   const playlistsActions = createPlaylistsActions(setState)
+
+  // Load static catalog if Rajneesh feature is enabled
+  const loadStaticCatalog = () => {
+    if (!RAJNEESH_FLAGS.STATIC_CATALOG) {
+      return
+    }
+
+    try {
+      const catalog = loadBundledCatalog(catalogYaml)
+      const entities = normalizeToEntities(catalog)
+
+      batch(() => {
+        setState('tracks', entities.tracks)
+        setState('albums', entities.albums)
+        setState('artists', entities.artists)
+      })
+
+      console.log(
+        `[Rajneesh] Loaded ${Object.keys(entities.tracks).length} tracks from catalog`,
+      )
+    } catch (error) {
+      console.error('[Rajneesh] Failed to load catalog:', error)
+      toast({
+        message: 'Failed to load content library',
+        duration: 5000,
+      })
+    }
+  }
+
+  // Initialize with static catalog
+  loadStaticCatalog()
 
   const removeTracks = (trackIds: readonly string[]) => {
     batch(() => {
