@@ -1,9 +1,9 @@
 <!doctype html >
 <html lang='en-US'>
   <head>
-    <title>Snae player</title>
+    <title>Osho Digital Library</title>
     <meta charset='UTF-8'>
-    <base href='/'>
+    <base href='./'>
 
     <!--
       TODO. For now only Chrome supports 'unsafe-hashes' option.
@@ -12,13 +12,13 @@
     -->
     <meta http-equiv='Content-Security-Policy' content="
       default-src 'none';
-      connect-src 'self' https://snaeplayer.goatcounter.com;
+      connect-src 'self' blob: *;
       script-src 'self' blob: 'unsafe-inline' https://gc.zgo.at/;
       style-src 'self' 'unsafe-inline';
       font-src 'self';
       manifest-src 'self';
-      img-src 'self' blob: https://snaeplayer.goatcounter.com/count;
-      media-src 'self' blob:;
+      img-src 'self' blob: https://snaeplayer.goatcounter.com/count https://oshoworld.com;
+      media-src 'self' blob: *;
       child-src 'self' blob:;
       form-action 'none';
       base-uri 'none';
@@ -26,7 +26,7 @@
 
     <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
     <meta name='theme-color' content='#2a2827'>
-    <meta name='description' content='Lightweight on device music player right in your browser.'>
+    <meta name='description' content='A comprehensive digital library of Osho teachings and discourses.'>
     <link rel='icon' href='/icons/icon_responsive.svg' type='image/svg+xml' />
     <link rel="alternate icon" href="/icons/icon_16.png" sizes="16x16" type="image/png" />
     <link rel='apple-touch-icon' href='/icons/apple-touch-icon.png' sizes='180x180' />

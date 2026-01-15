@@ -24,11 +24,15 @@ export const injectScriptsToHtmlDuringBuild = (
     },
     transformIndexHtml: {
       enforce: 'post',
-      transform() {
+      transform(html, ctx) {
+        // Get the base path from Vite config
+        const base = ctx.server?.config.base || '/'
+        const normalizedBase = base === '/' ? '' : base.replace(/\/$/, '')
+        
         return inputFileNames.map((src) => ({
           tag: 'script',
           attrs: {
-            src,
+            src: `${normalizedBase}/${src}`,
             type: 'module',
             async: true,
           },

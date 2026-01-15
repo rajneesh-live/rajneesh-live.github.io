@@ -8,15 +8,21 @@ interface FileHandle {
   file: FileSystemFileHandle
 }
 
-export type FileWrapper = FileLegacy | FileHandle
+interface FileUrl {
+  type: 'url'
+  url: string
+}
 
-export type ImageType = Blob | undefined
+export type FileWrapper = FileLegacy | FileHandle | FileUrl
+
+export type ImageType = Blob | string | undefined
 
 export const MusicItemType = {
   TRACK: 0,
   ALBUM: 1,
   ARTIST: 2,
   PLAYLIST: 3,
+  HISTORY: 4,
 } as const
 
 export type MusicItemType = typeof MusicItemType[keyof typeof MusicItemType]
@@ -50,6 +56,8 @@ export interface UnknownTrack {
   image?: ImageType
   fileWrapper: FileWrapper
   primaryColor?: number
+  description?: string
+  topics?: string[]
 }
 
 export interface Track extends BaseMusicItem, UnknownTrack {
@@ -67,6 +75,7 @@ export interface Album extends BaseMusicItemWithTrackIds {
   artists: string[]
   year?: string
   image?: ImageType
+  description?: string
 }
 
 export interface Artist extends BaseMusicItemWithTrackIds {

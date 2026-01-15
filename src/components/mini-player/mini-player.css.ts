@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css'
+import { style, globalStyle } from '@vanilla-extract/css'
 import { EASING_OUTGOING_40 } from '../../styles/shared.css'
 import { sharedStyles, sprinkles, vars } from '../../styles/styles.css'
 
@@ -106,4 +106,54 @@ export const artworkArrow = style({
       },
     },
   },
+})
+
+export const miniPlayerControls = style({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: '8px',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexWrap: 'nowrap',
+  flex: 'none',
+  gridArea: 'unset',
+})
+
+export const compactControls = style({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: '8px',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexWrap: 'nowrap',
+  width: 'auto',
+  height: 'auto',
+  flex: 'none',
+})
+
+globalStyle(`${compactControls} button`, {
+  minWidth: '44px',
+  width: '44px',
+  height: '44px',
+  borderRadius: '50%',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'background-color 0.2s',
+})
+
+globalStyle(`${compactControls} button:hover`, {
+  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+})
+
+globalStyle(`${compactControls} button:disabled`, {
+  opacity: 0.38,
+  cursor: 'auto',
+})
+
+globalStyle(`${compactControls} button:disabled:hover`, {
+  backgroundColor: 'transparent',
 })

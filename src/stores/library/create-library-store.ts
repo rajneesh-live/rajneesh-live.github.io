@@ -9,17 +9,19 @@ import {
 } from '../../types/types'
 
 interface LibraryItemSortState {
-  [MusicItemType.TRACK]: keyof Track
   [MusicItemType.ALBUM]: keyof Album
   [MusicItemType.ARTIST]: keyof Artist
   [MusicItemType.PLAYLIST]: keyof Playlist
+  [MusicItemType.HISTORY]: keyof Track
 }
+
+type LibraryItemTypes = keyof LibraryItemSortState
 
 interface State {
   sortKeys: LibraryItemSortState
 }
 
-interface SortOptions<T extends MusicItemType> {
+interface SortOptions<T extends LibraryItemTypes> {
   type: T
   key: LibraryItemSortState[T]
 }
@@ -27,14 +29,14 @@ interface SortOptions<T extends MusicItemType> {
 export const createLibraryStore = () => {
   const [state, setState] = createStore<State>({
     sortKeys: {
-      [MusicItemType.TRACK]: MusicItemKey.NAME,
       [MusicItemType.ALBUM]: MusicItemKey.NAME,
       [MusicItemType.ARTIST]: MusicItemKey.NAME,
       [MusicItemType.PLAYLIST]: MusicItemKey.NAME,
+      [MusicItemType.HISTORY]: MusicItemKey.NAME,
     },
   })
 
-  const sort = <T extends MusicItemType>(opts: SortOptions<T>) => {
+  const sort = <T extends LibraryItemTypes>(opts: SortOptions<T>) => {
     setState({
       sortKeys: {
         ...state.sortKeys,

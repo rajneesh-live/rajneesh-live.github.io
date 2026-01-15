@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import solidPlugin from 'vite-plugin-solid'
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin'
 import { createHtmlPlugin } from 'vite-plugin-html'
-import { ViteWebfontDownload } from 'vite-plugin-webfont-dl'
+// import { ViteWebfontDownload } from 'vite-plugin-webfont-dl' // Removed - no longer needed
 import manifest from './package.json'
 import { mangleClassNames } from './lib/vite-mangle-classnames'
 import { injectScriptsToHtmlDuringBuild } from './lib/vite-inject-scripts-to-html'
@@ -16,6 +16,8 @@ const createMScreenshot = (name: string, sizes: string) => ({
 })
 
 export default defineConfig({
+  // Set base path for GitHub Pages deployment
+  base: '/',
   resolve: {
     alias: {
       '~': path.resolve(__dirname, './src'),
@@ -53,7 +55,9 @@ export default defineConfig({
     },
   },
   plugins: [
-    createHtmlPlugin(),
+    createHtmlPlugin({
+      minify: true,
+    }),
     // Vite always bundles or imports all scripts into one file.
     // In unsupported browsers we want to display error message about it,
     // but because everything is bundled into one file, main app bundle
@@ -70,15 +74,14 @@ export default defineConfig({
     solidPlugin({
       hot: false,
     }),
-    ViteWebfontDownload([
-      'https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&display=swap',
-    ]),
+    // ViteWebfontDownload plugin removed to eliminate Google Fonts dependency
+    // Now using system fonts for better offline performance
     serviceWorker({
       manifest: {
-        short_name: 'Snae',
-        name: 'Snae player',
-        start_url: '/',
-        scope: '../',
+        short_name: 'Osho',
+        name: 'Osho Digital Library',
+        start_url: './',
+        scope: './',
         theme_color: '#1a1a1a',
         background_color: '#1a1a1a',
         display: 'standalone',

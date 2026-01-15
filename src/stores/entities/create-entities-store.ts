@@ -15,6 +15,7 @@ import {
 import { UNKNOWN_ITEM_ID } from '../../types/constants'
 import { createPlaylistsActions } from './create-playlists-actions'
 import { toast } from '~/components/toast/toast'
+import { getStaticContentData } from '../../content/content-adapter'
 
 export interface State {
   tracks: {
@@ -44,6 +45,30 @@ export const createEntitiesStore = () => {
   })
 
   const playlistsActions = createPlaylistsActions(setState)
+
+  // Load static content data on initialization
+  const loadStaticContent = () => {
+    try {
+      const staticData = getStaticContentData()
+      batch(() => {
+        setState('tracks', staticData.tracks)
+        setState('albums', staticData.albums)
+        setState('artists', staticData.artists)
+        setState('playlists', staticData.playlists)
+        setState('favorites', staticData.favorites)
+      })
+      console.log('Static content loaded successfully')
+    } catch (error) {
+      console.error('Error loading static content:', error)
+      toast({
+        message: 'Failed to load content library',
+        duration: 5000,
+      })
+    }
+  }
+
+  // Load content immediately
+  loadStaticContent()
 
   const removeTracks = (trackIds: readonly string[]) => {
     batch(() => {

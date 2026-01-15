@@ -2,7 +2,9 @@
 // and then minified.
 export const ICON_PATHS = {
   backArrow: 'M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z',
+  seekBack: 'M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z',
   play: 'M8 5.14v14l11-7-11-7z',
+  pause: 'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
   musicNote:
     'M12 3v9.26c-.5-.17-1-.26-1.5-.26C8 12 6 14 6 16.5S8 21 10.5 21s4.5-2 4.5-4.5V6h4V3h-7z',
   musicNoteOutline:

@@ -64,7 +64,7 @@ const Search = (): JSXElement => {
     const itemIds = createMemo<string[]>((prev = []) => {
       const items = Object.values(itemsSelector(config.type)) as BaseMusicItem[]
       const isActive = isSelected()
-      const term = searchTerm().trim().toLowerCase()
+      const term = searchTerm().trim()
 
       return untrack(() => {
         if (term === '') {
@@ -75,7 +75,7 @@ const Search = (): JSXElement => {
           return prev
         }
 
-        const filteredItems = items.filter((item) => config.filter(term, item))
+        const filteredItems = config.filter(term, items)
         const sortedItems = sortedItemsByName(filteredItems)
 
         return sortedItems.map((item) => item.id)

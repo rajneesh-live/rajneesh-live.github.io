@@ -8,8 +8,9 @@ export const deleteIDBDatabases = async (
 
     const dbs = await idb.databases()
     dbs.forEach((db) => {
-      if (db.name !== fullName) {
-        idb.deleteDatabase(db.name)
+      // Only delete databases that start with the baseName but aren't the current version
+      if (db.name && db.name.startsWith(baseName) && db.name !== fullName) {
+        window.indexedDB.deleteDatabase(db.name)
       }
     })
   } else {

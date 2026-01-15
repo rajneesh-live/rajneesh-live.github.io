@@ -11,13 +11,13 @@ const extraSmallWidthMedia = '(max-width: 256px)'
 
 export const compact = style({
   vars: {
-    [trailingSizeVar]: '36px',
+    [trailingSizeVar]: '80px', // Increased to accommodate progress/duration text
   },
 })
 
 export const narrow = style({
   vars: {
-    [trailingSizeVar]: '0px',
+    [trailingSizeVar]: '70px', // Ensure minimum space for time display
   },
 })
 
@@ -51,22 +51,29 @@ export const artwork = style({
 export const album = style([
   sharedStyles.textEclipse,
   style({
+    flexShrink: 1, // Allow album to shrink before time
+    minWidth: 0, // Allow it to shrink below content size
     selectors: {
       [`${compact} &`]: {
-        display: 'none',
+        display: 'none', // Hide album in compact mode to give space to time
+      },
+      [`${narrow} &`]: {
+        display: 'none', // Hide album in narrow mode to prioritize time display
       },
     },
   }),
 ])
 
 export const time = style([
-  sharedStyles.textEclipse,
   style({
     marginLeft: 'auto',
     flexShrink: 0,
+    whiteSpace: 'nowrap', // Prevent text wrapping
+    overflow: 'visible', // Ensure text is not cut off
+    fontSize: '0.875rem', // Slightly smaller font on narrow screens
     '@media': {
       [smallWidthMedia]: {
-        display: 'none',
+        fontSize: '0.8rem', // Even smaller font for very small screens
       },
     },
   }),

@@ -6,7 +6,6 @@ import { Controls } from '~/components/shared-player-components/controls/main-co
 import { VolumePanel } from '~/components/shared-player-components/volume/volume-panel'
 import { VolumeButton } from '~/components/shared-player-components/volume/volume-button'
 import { Info } from '~/components/shared-player-components/info/info'
-import { FavoriteButton } from '~/components/shared-player-components/info/favorite-button'
 import { Timeline } from '~/components/shared-player-components/timeline/timeline'
 import { clx, useResizeObserver } from '~/utils'
 import { useMenu } from '~/components/menu/menu'
@@ -61,7 +60,6 @@ export const ControlsPane = (props: FullPlayerProps): JSXElement => {
         <div class={styles.controls}>
           <div class={styles.info}>
             <Info bigTitle />
-            <FavoriteButton />
           </div>
           <Timeline />
           <Controls />

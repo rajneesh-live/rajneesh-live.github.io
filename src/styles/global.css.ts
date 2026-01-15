@@ -5,7 +5,7 @@ const root = 'html'
 
 globalStyle(root, {
   vars: defaultDarkTheme,
-  fontFamily: '"Fira Sans", system-ui, sans-serif',
+  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   fontSize: '14px',
   letterSpacing: '0.25px',
   color: vars.colors.onBackground,

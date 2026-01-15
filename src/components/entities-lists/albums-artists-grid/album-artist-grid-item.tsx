@@ -27,8 +27,9 @@ export const AlbumArtistGridItem = (
   const artists = () => {
     const item = props.itemData
     if (isAlbum(item)) {
-      const { artists: aList } = item
-      return aList.length ? aList.join(' ,') : UNKNOWN_WORD_STRING
+      const { artists: aList, year } = item
+      const artistsString = aList.length ? aList.join(' ,') : UNKNOWN_WORD_STRING
+      return year ? `${artistsString} • ${year}` : artistsString
     }
 
     return ''

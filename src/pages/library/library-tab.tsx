@@ -13,14 +13,14 @@ export const LibraryPage: VoidComponent<LibraryPageConfig> = (props) => {
 
   const itemsSelector = () => {
     switch (props.type) {
-      case MusicItemType.TRACK:
-        return dataState.tracks
       case MusicItemType.ALBUM:
         return dataState.albums
       case MusicItemType.ARTIST:
         return dataState.artists
       case MusicItemType.PLAYLIST:
         return dataState.playlists
+      case MusicItemType.HISTORY:
+        return {} // History component generates its own items from player store
       default:
         throw new Error('Wrong item type')
     }
@@ -28,8 +28,8 @@ export const LibraryPage: VoidComponent<LibraryPageConfig> = (props) => {
 
   const itemIds = createMemo(() => {
     const itemsArray = sortByKey(
-      [...Object.values<Track>(itemsSelector() as { [key: string]: Track })],
-      libraryState.sortKeys[props.type] as keyof Track,
+      [...Object.values<BaseMusicItem>(itemsSelector() as { [key: string]: BaseMusicItem })],
+      libraryState.sortKeys[props.type] as keyof BaseMusicItem,
     ) as unknown as BaseMusicItem[]
 
     return itemsArray.map((item) => item.id)
