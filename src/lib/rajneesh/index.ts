@@ -32,6 +32,8 @@ export {
   storeBlob,
   clearCache,
   getCacheStats,
+  downloadManager,
+  createDownloadManager,
 } from './cache'
 
 export type {
@@ -40,3 +42,10 @@ export type {
   DownloadState,
   DownloadProgress,
 } from './cache'
+
+// Stores exports
+export {
+  createDownloadStore,
+  DownloadStoreProvider,
+  useDownloadStore,
+} from './stores'

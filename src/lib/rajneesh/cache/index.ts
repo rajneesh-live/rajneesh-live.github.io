@@ -19,3 +19,8 @@ export {
   getCacheStats,
   listCachedUrls,
 } from './audio-cache'
+
+export {
+  createDownloadManager,
+  downloadManager,
+} from './download-manager'
