@@ -2,7 +2,7 @@
  * Playback module - Download-first URL resolution
  */
 
-export { resolveRemoteUrl, revokeBlobUrl } from './resolver'
+export { resolveRemoteUrl, resolveRemoteUrlWithDownload, revokeBlobUrl } from './resolver'
 
 export {
   isRemoteSource,

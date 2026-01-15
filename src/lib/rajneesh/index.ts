@@ -53,6 +53,7 @@ export {
 // Playback exports
 export {
   resolveRemoteUrl,
+  resolveRemoteUrlWithDownload,
   revokeBlobUrl,
   isRemoteSource,
   getRemoteUrl,

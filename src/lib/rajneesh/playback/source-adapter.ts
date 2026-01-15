@@ -28,11 +28,11 @@ export const getRemoteUrl = (fileWrapper: FileWrapper): string | null => {
 /**
  * Resolve a track's audio source to a playable format.
  * 
- * For remote sources (FileRemote), downloads to cache and returns blob URL.
+ * For remote sources (FileRemote), returns cached blob URL (null if not cached).
  * For local sources, returns the file directly (handled by upstream).
  * 
  * @param track - The track to resolve
- * @returns A File for local sources, or a blob URL string for remote sources
+ * @returns A File for local sources, blob URL for cached remote sources, or null if not available
  */
 export const resolveTrackSource = async (
   track: Track,
@@ -43,10 +43,11 @@ export const resolveTrackSource = async (
     return null
   }
 
-  // Handle remote sources - download first, then return blob URL
+  // Handle remote sources - return from cache only (no auto-download)
   if (fileWrapper.type === 'remote') {
     try {
       const blobUrl = await resolveRemoteUrl(fileWrapper.url)
+      // Returns null if not cached - user should download first
       return blobUrl
     } catch (error) {
       console.error(`[SourceAdapter] Failed to resolve remote source:`, error)

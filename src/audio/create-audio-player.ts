@@ -41,15 +41,20 @@ export const useAudioPlayer = (): void => {
       return undefined
     }
 
-    // Handle FileRemote sources - download first, then play from blob URL
+    // Handle FileRemote sources - play from cache only (no auto-download)
     if (RAJNEESH_FLAGS.AUDIO_CACHING && fileWrapper.type === 'remote') {
       try {
         const blobUrl = await resolveRemoteUrl(fileWrapper.url)
+        if (blobUrl === null) {
+          // Not cached - user needs to download first
+          return 'not_cached'
+        }
         // Return the blob URL as a string (handled differently in playback effect)
         return blobUrl
       } catch (error) {
         console.error('[AudioPlayer] Failed to resolve remote URL:', error)
-        return null
+        // Return error marker for cache access failures
+        return 'remote_error'
       }
     }
 
@@ -114,7 +119,33 @@ export const useAudioPlayer = (): void => {
       return
     }
 
-    // File permission was denied.
+    // Track not cached - user needs to download first
+    if (audioFile === 'not_cached') {
+      mutateTrackAudioFile(undefined)
+      playerActions.pause()
+
+      toast({
+        message: 'Track not downloaded yet. Please download the track first before playing.',
+        duration: false,
+      })
+
+      return
+    }
+
+    // Cache access failed
+    if (audioFile === 'remote_error') {
+      mutateTrackAudioFile(undefined)
+      playerActions.pause()
+
+      toast({
+        message: 'Failed to access cached track. Please try downloading again.',
+        duration: false,
+      })
+
+      return
+    }
+
+    // File permission was denied (for local fileRef sources).
     if (audioFile === null) {
       // Set undefined so we can request file again later.
       mutateTrackAudioFile(undefined)

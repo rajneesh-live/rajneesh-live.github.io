@@ -10,7 +10,37 @@
 import { getCachedBlob, storeBlob } from '../cache/audio-cache'
 
 /**
- * Resolve a remote URL to a playable blob URL.
+ * Resolve a remote URL from cache only (for playback).
+ * 
+ * Does NOT attempt to download - only returns cached content.
+ * Returns null if URL is not cached (user should download first).
+ * 
+ * @param url - The remote URL to resolve
+ * @returns A blob URL if cached, null if not cached
+ */
+export const resolveRemoteUrl = async (url: string): Promise<string | null> => {
+  console.log(`[Resolver] Resolving from cache: ${url}`)
+
+  const blob = await getCachedBlob(url)
+
+  if (!blob) {
+    console.log(`[Resolver] Not cached, download required: ${url}`)
+    return null
+  }
+
+  console.log(`[Resolver] Cache hit: ${url}`)
+
+  // Create blob URL for playback
+  const blobUrl = URL.createObjectURL(blob)
+  console.log(`[Resolver] Created blob URL: ${blobUrl}`)
+
+  return blobUrl
+}
+
+/**
+ * Resolve a remote URL, downloading if not cached.
+ * 
+ * Used by the download manager for explicit downloads.
  * 
  * 1. Check if URL is already cached in IndexedDB
  * 2. If cached, create blob URL from stored blob
@@ -19,8 +49,8 @@ import { getCachedBlob, storeBlob } from '../cache/audio-cache'
  * @param url - The remote URL to resolve (download source)
  * @returns A blob URL that can be used as audio.src
  */
-export const resolveRemoteUrl = async (url: string): Promise<string> => {
-  console.log(`[Resolver] Resolving: ${url}`)
+export const resolveRemoteUrlWithDownload = async (url: string): Promise<string> => {
+  console.log(`[Resolver] Resolving with download: ${url}`)
 
   // Check cache first
   let blob = await getCachedBlob(url)
