@@ -6,10 +6,10 @@ export const downloadButton = style([
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
-    padding: '4px 8px',
     borderRadius: '4px',
   }),
   {
+    padding: '4px 8px',
     fontSize: '12px',
     fontWeight: 500,
     border: 'none',
@@ -46,18 +46,14 @@ export const spinnerIcon = style({
   animation: `${spin} 1s linear infinite`,
 })
 
-export const cachedBadge = style([
-  sprinkles({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '2px',
-  }),
-  {
-    fontSize: '11px',
-    color: 'rgba(255, 255, 255, 0.6)',
-    marginRight: '4px',
-  },
-])
+export const cachedBadge = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '2px',
+  fontSize: '11px',
+  color: 'rgba(255, 255, 255, 0.6)',
+  marginRight: '4px',
+})
 
 export const checkIcon = style({
   width: '12px',

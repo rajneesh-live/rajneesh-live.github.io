@@ -40,7 +40,15 @@ export const MusicImage = (props: MusicImageProps): JSX.Element => {
 
   const imageURL = createMemo(() => {
     const itm = item()
-    const imageBlob = itm && itm.type !== MusicItemType.PLAYLIST && itm.image
+    const image = itm && itm.type !== MusicItemType.PLAYLIST && itm.image
+
+    // If image is a string URL, return it directly
+    if (typeof image === 'string') {
+      return image
+    }
+
+    // If image is a Blob, use the context to manage object URLs
+    const imageBlob = image instanceof Blob ? image : null
 
     onCleanup(() => {
       if (imageBlob) {

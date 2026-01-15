@@ -236,7 +236,14 @@ export const useAudioPlayer = (): void => {
       }
 
       const { image } = track
-      const newImageSrc = (image && musicImages?.get(image, imageKey)) || ''
+      // Handle both string URLs and Blob images
+      let newImageSrc = ''
+      const imageBlob = image instanceof Blob ? image : null
+      if (typeof image === 'string') {
+        newImageSrc = image
+      } else if (imageBlob && musicImages) {
+        newImageSrc = musicImages.get(imageBlob, imageKey)
+      }
 
       ms.metadata = new MediaMetadata({
         title: track.name,
@@ -250,8 +257,8 @@ export const useAudioPlayer = (): void => {
       })
 
       onCleanup(() => {
-        if (image) {
-          musicImages?.release(image, imageKey)
+        if (imageBlob) {
+          musicImages?.release(imageBlob, imageKey)
         }
       })
     })
