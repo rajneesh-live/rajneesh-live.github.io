@@ -7,3 +7,19 @@
 
 export { RAJNEESH_FLAGS } from './feature-flags'
 export type { RajneeshFlags } from './feature-flags'
+
+// Catalog exports
+export {
+  loadCatalog,
+  loadBundledCatalog,
+  normalizeToEntities,
+  validateCatalog,
+  ValidationError,
+} from './catalog'
+
+export type {
+  RajneeshCatalog,
+  RajneeshSeries,
+  RajneeshTrack,
+  NormalizedEntities,
+} from './catalog'

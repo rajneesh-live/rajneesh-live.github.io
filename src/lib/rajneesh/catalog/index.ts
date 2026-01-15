@@ -16,3 +16,8 @@ export {
   validateMetadata,
   ValidationError,
 } from './schema'
+
+export { loadCatalog, loadBundledCatalog } from './loader'
+
+export { normalizeToEntities } from './normalizer'
+export type { NormalizedEntities } from './normalizer'
