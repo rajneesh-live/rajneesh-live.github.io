@@ -59,3 +59,13 @@ export {
   resolveTrackSource,
   cleanupTrackSource,
 } from './playback'
+
+// Components exports
+export {
+  DownloadButton,
+  DownloadProgressDisplay,
+  getDownloadMenuText,
+  isDownloadMenuDisabled,
+} from './components'
+
+export type { DownloadButtonProps } from './components'
