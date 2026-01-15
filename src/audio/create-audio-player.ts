@@ -14,6 +14,9 @@ import { KeyboardCode } from '../utils/key-codes'
 import { MusicImagesContext } from '../components/music-image/data-context'
 import { toast } from '~/components/toast/toast'
 
+// Rajneesh playback integration
+import { RAJNEESH_FLAGS, resolveRemoteUrl } from '~/lib/rajneesh'
+
 const toastPlayerError = () => {
   toast({
     message: "Something went wrong. Player wasn't able to play selected track.",
@@ -38,29 +41,46 @@ export const useAudioPlayer = (): void => {
       return undefined
     }
 
-    if (fileWrapper.type === 'file') {
-      return fileWrapper.file
-    }
-
-    const fileRef = fileWrapper.file
-
-    let mode = await fileRef.queryPermission({ mode: 'read' })
-    if (mode !== 'granted') {
+    // Handle FileRemote sources - download first, then play from blob URL
+    if (RAJNEESH_FLAGS.AUDIO_CACHING && fileWrapper.type === 'remote') {
       try {
-        // Try to request permission if it's not denied.
-        if (mode === 'prompt') {
-          mode = await fileRef.requestPermission({ mode: 'read' })
-        }
-      } catch {
-        // User activation is required to request permission. Catch the error.
-      }
-
-      if (mode !== 'granted') {
+        const blobUrl = await resolveRemoteUrl(fileWrapper.url)
+        // Return the blob URL as a string (handled differently in playback effect)
+        return blobUrl
+      } catch (error) {
+        console.error('[AudioPlayer] Failed to resolve remote URL:', error)
         return null
       }
     }
 
-    return fileRef.getFile()
+    if (fileWrapper.type === 'file') {
+      return fileWrapper.file
+    }
+
+    // Handle fileRef type
+    if (fileWrapper.type === 'fileRef') {
+      const fileRef = fileWrapper.file
+
+      let mode = await fileRef.queryPermission({ mode: 'read' })
+      if (mode !== 'granted') {
+        try {
+          // Try to request permission if it's not denied.
+          if (mode === 'prompt') {
+            mode = await fileRef.requestPermission({ mode: 'read' })
+          }
+        } catch {
+          // User activation is required to request permission. Catch the error.
+        }
+
+        if (mode !== 'granted') {
+          return null
+        }
+      }
+
+      return fileRef.getFile()
+    }
+
+    return undefined
   })
 
   // createResource doesn't fetch when fetcher retuns undefined or null
@@ -115,7 +135,14 @@ export const useAudioPlayer = (): void => {
 
     try {
       if (!audio.src) {
-        audio.src = URL.createObjectURL(audioFile)
+        // Handle both File objects and blob URL strings
+        if (typeof audioFile === 'string') {
+          // Blob URL from remote source (already resolved)
+          audio.src = audioFile
+        } else {
+          // File object from local source
+          audio.src = URL.createObjectURL(audioFile)
+        }
       }
       // TODO: When active track is changed very rapidly this error occurs:
       // 'The play() request was interrupted by a new load request.'
