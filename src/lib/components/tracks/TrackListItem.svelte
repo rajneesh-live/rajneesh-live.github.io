@@ -3,6 +3,7 @@
 	import { formatDuration } from '$lib/helpers/utils/format-duration.ts'
 	import { formatArtists, formatNameOrUnknown } from '$lib/helpers/utils/text.ts'
 	import { createTrackQuery, type TrackData } from '$lib/library/get/value-queries.ts'
+	import { DownloadButton } from '$lib/rajneesh/components/index.ts'
 	import Artwork from '../Artwork.svelte'
 	import FavoriteButton from '../FavoriteButton.svelte'
 	import ListItem, { type MenuItem } from '../ListItem.svelte'
@@ -82,6 +83,12 @@
 				{formatDuration(track.duration)}
 			</div>
 
+			<DownloadButton
+				class="hidden @sm:flex"
+				trackId={track.uuid}
+				file={track.file}
+			/>
+
 			<FavoriteButton class="hidden @sm:flex" trackId={track.id} favorite={track.favorite} />
 		{/if}
 	</div>
@@ -96,14 +103,14 @@
 
 	@container (min-width: 24rem) {
 		.track-item {
-			--grid-cols: auto 1.5fr 74px 44px;
+			--grid-cols: auto 1.5fr 74px 36px 44px;
 		}
 	}
 
 	/* @container (theme('containers.4xl')) { */
 	@container (min-width: 56rem) {
 		.track-item {
-			--grid-cols: auto 1.5fr minmax(200px, 1fr) 74px 44px;
+			--grid-cols: auto 1.5fr minmax(200px, 1fr) 74px 36px 44px;
 		}
 	}
 </style>

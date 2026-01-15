@@ -8,6 +8,7 @@
 	import PlayerOverlay from '$lib/components/PlayerOverlay.svelte'
 	import SnackbarRenderer from '$lib/components/snackbar/SnackbarRenderer.svelte'
 	import { setupOverlaySnippets } from '$lib/layout-bottom-bar.svelte'
+	import { initializeRajneesh } from '$lib/rajneesh/init.ts'
 	import { MainStore } from '$lib/stores/main/store.svelte.ts'
 	import { setMainStoreContext } from '$lib/stores/main/use-store.ts'
 	import { PlayerStore } from '$lib/stores/player/player.svelte.ts'
@@ -24,6 +25,11 @@
 	// to allow better trees shaking and inlining
 	const mainStore = setMainStoreContext(new MainStore())
 	const player = setPlayerStoreContext(new PlayerStore())
+
+	// Initialize Rajneesh features (catalog, etc.)
+	if (browser) {
+		void initializeRajneesh()
+	}
 
 	let pageContainer = $state<HTMLElement | null>(null)
 

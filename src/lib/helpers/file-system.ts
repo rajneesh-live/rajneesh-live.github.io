@@ -1,8 +1,20 @@
 import { isMobile } from '$lib/helpers/utils/ua.ts'
+import type { RemoteFile } from '$lib/rajneesh/types.ts'
+import { isRemoteFile } from '$lib/rajneesh/types.ts'
 
 export const isFileSystemAccessSupported: boolean = 'showDirectoryPicker' in globalThis
 
-export type FileEntity = File | FileSystemFileHandle
+/**
+ * FileEntity represents a source for audio playback.
+ * - File: Legacy browser file input
+ * - FileSystemFileHandle: Modern File System Access API
+ * - RemoteFile: Remote audio that must be downloaded first (Rajneesh feature)
+ */
+export type FileEntity = File | FileSystemFileHandle | RemoteFile
+
+// Re-export for convenience
+export type { RemoteFile }
+export { isRemoteFile }
 
 const supportedExtensions = ['aac', 'mp3', 'ogg', 'wav', 'flac', 'm4a', 'opus', 'webm']
 

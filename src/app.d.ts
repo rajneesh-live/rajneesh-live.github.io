@@ -1,6 +1,17 @@
 import type { Snippet as SnippetInternal } from 'svelte'
 import type { ClassValue as ClassValueInternal } from 'svelte/elements'
 
+// Vite raw imports
+declare module '*.yaml?raw' {
+	const content: string
+	export default content
+}
+
+declare module '*.yml?raw' {
+	const content: string
+	export default content
+}
+
 declare global {
 	namespace App {
 		// interface Error {}

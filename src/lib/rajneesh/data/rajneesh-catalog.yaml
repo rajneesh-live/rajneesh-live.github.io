@@ -1,0 +1,82 @@
+# Rajneesh Content Library
+# This YAML file serves as the source of truth for all content
+
+metadata:
+  appName: "Rajneesh Digital Library"
+  version: "1.0.0"
+  lastUpdated: "2026-01-15"
+
+series:
+  - id: "kathopanishad-01-19"
+    name: "Kathopanishad 01-19"
+    description: "A series of 19 discourses on Kathopanishad. These discourses were given in Mount Abu during Oct 06-13, 1973."
+    year: "1973"
+    image: "/images/albums/sample-cover.webp"
+    tracks:
+      - id: "kath_001"
+        name: "Kathopanishad 01"
+        duration: 7043
+        trackNo: 1
+        audioUrl: "/audio/sample-audio.mp3"
+        description: "First discourse on Kathopanishad"
+        topics: ["kathopanishad", "upanishad", "meditation", "death", "naciketa"]
+
+      - id: "kath_002"
+        name: "Kathopanishad 02"
+        duration: 4502
+        trackNo: 2
+        audioUrl: "/audio/sample-audio.mp3"
+        description: "Second discourse on Kathopanishad"
+        topics: ["kathopanishad", "death", "afterlife", "wisdom"]
+
+      - id: "kath_003"
+        name: "Kathopanishad 03"
+        duration: 4774
+        trackNo: 3
+        audioUrl: "/audio/sample-audio.mp3"
+        description: "Third discourse on Kathopanishad"
+        topics: ["kathopanishad", "choice", "pleasure", "good"]
+
+  - id: "tao-upanishad-01-127"
+    name: "Tao Upanishad 01-127"
+    description: "A comprehensive series of 127 discourses on Tao Te Ching by Lao Tzu."
+    year: "1971"
+    image: "/images/albums/tao-upanishad-01-127.webp"
+    tracks:
+      - id: "tao_001"
+        name: "Tao Upanishad 01"
+        duration: 3600
+        trackNo: 1
+        audioUrl: "https://example.com/audio/tao_001.mp3"
+        description: "First discourse on Tao Te Ching"
+        topics: ["tao", "lao-tzu", "way", "virtue"]
+
+      - id: "tao_002"
+        name: "Tao Upanishad 02"
+        duration: 3720
+        trackNo: 2
+        audioUrl: "https://example.com/audio/tao_002.mp3"
+        description: "Second discourse on Tao Te Ching"
+        topics: ["tao", "non-action", "wu-wei"]
+
+  - id: "naye-bharat-ki-khoj-01-07"
+    name: "Naye Bharat Ki Khoj 01-07"
+    description: "A series of 7 discourses on the search for a new India."
+    year: "1970"
+    image: "/images/albums/naye-bharat-ki-khoj-01-07.webp"
+    tracks:
+      - id: "nbkk_001"
+        name: "Naye Bharat Ki Khoj 01"
+        duration: 4200
+        trackNo: 1
+        audioUrl: "https://example.com/audio/nbkk_001.mp3"
+        description: "First discourse on New India"
+        topics: ["india", "society", "transformation"]
+
+      - id: "nbkk_002"
+        name: "Naye Bharat Ki Khoj 02"
+        duration: 4350
+        trackNo: 2
+        audioUrl: "https://example.com/audio/nbkk_002.mp3"
+        description: "Second discourse on New India"
+        topics: ["india", "youth", "revolution"]
