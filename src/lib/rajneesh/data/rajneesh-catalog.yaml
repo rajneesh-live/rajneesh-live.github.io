@@ -11,13 +11,13 @@ series:
     name: "Kathopanishad 01-19"
     description: "A series of 19 discourses on Kathopanishad. These discourses were given in Mount Abu during Oct 06-13, 1973."
     year: "1973"
-    image: "/images/albums/kathopanishad-01-19.webp"
+    image: "/images/albums/sample-cover.webp"
     tracks:
       - id: "kath_001"
         name: "Kathopanishad 01"
         duration: 7043
         trackNo: 1
-        audioUrl: "/audio/kath_001.mp3"
+        audioUrl: "/audio/sample-audio.mp3"
         description: "First discourse on Kathopanishad"
         topics: ["kathopanishad", "upanishad", "meditation", "death", "naciketa"]
 
@@ -25,7 +25,7 @@ series:
         name: "Kathopanishad 02"
         duration: 4502
         trackNo: 2
-        audioUrl: "/audio/kath_002.mp3"
+        audioUrl: "/audio/sample-audio.mp3"
         description: "Second discourse on Kathopanishad"
         topics: ["kathopanishad", "death", "afterlife", "wisdom"]
 
@@ -33,7 +33,7 @@ series:
         name: "Kathopanishad 03"
         duration: 4774
         trackNo: 3
-        audioUrl: "/audio/kath_003.mp3"
+        audioUrl: "/audio/sample-audio.mp3"
         description: "Third discourse on Kathopanishad"
         topics: ["kathopanishad", "choice", "pleasure", "good"]
 
