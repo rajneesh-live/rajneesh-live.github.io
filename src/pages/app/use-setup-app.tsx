@@ -8,9 +8,15 @@ import { useDarkThemeEnabled } from '../../utils'
 import { colorsTheme } from '~/styles/vars.css'
 import * as styles from './app.css'
 import { toast } from '~/components/toast/toast'
+import { audioCache } from '~/lib/rajneesh'
 
 export const useSetupApp = (): void => {
   useAudioPlayer()
+
+  // Debug: Log cached URLs on startup
+  audioCache.listCachedUrls().then((urls) => {
+    console.log('[Debug] Cached audio URLs on startup:', urls)
+  })
 
   const [playerState] = usePlayerStore()
 
