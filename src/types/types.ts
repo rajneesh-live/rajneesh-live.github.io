@@ -8,9 +8,21 @@ interface FileHandle {
   file: FileSystemFileHandle
 }
 
-export type FileWrapper = FileLegacy | FileHandle
+/**
+ * FileRemote represents a remote audio source that must be downloaded before playback.
+ * The URL is a DOWNLOAD SOURCE, not a direct playback source.
+ * Audio is NEVER streamed directly - it is always downloaded to IndexedDB first,
+ * then played from a blob URL.
+ */
+interface FileRemote {
+  type: 'remote'
+  url: string
+}
 
-export type ImageType = Blob | undefined
+export type FileWrapper = FileLegacy | FileHandle | FileRemote
+
+// ImageType can be a Blob (local) or string URL (remote)
+export type ImageType = Blob | string | undefined
 
 export const MusicItemType = {
   TRACK: 0,
