@@ -17,8 +17,8 @@ const config = {
 		},
 		outDir: './.generated/svelte-kit',
 		adapter: adapter({
-			// When changing this, also update env variable
-			fallback: '200.html',
+			// GitHub Pages serves 404.html for unknown routes (SPA fallback)
+			fallback: '404.html',
 		}),
 		alias: {
 			$paraglide: './.generated/paraglide',
