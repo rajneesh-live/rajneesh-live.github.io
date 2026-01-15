@@ -1,6 +1,7 @@
 import {
   createMemo,
   createSignal,
+  createEffect,
   JSXElement,
   Show,
   VoidComponent,
@@ -17,7 +18,17 @@ import { MenuItem } from '../../menu/menu'
 import { useEntitiesStore, usePlayerStore } from '../../../stores/stores'
 import { useModals } from '../../modals/modals'
 import { ListItem } from '~/components/list-item/listi-tem'
+import { toast } from '~/components/toast/toast'
 import * as styles from './tracks-list.css'
+
+// Rajneesh download integration
+import {
+  RAJNEESH_FLAGS,
+  isUrlCached,
+  downloadManager,
+  getDownloadMenuText,
+  isDownloadMenuDisabled,
+} from '~/lib/rajneesh'
 
 const UNKNOWN_ITEM_STRING = '<unknown>'
 
@@ -54,6 +65,59 @@ const TrackListItem: VoidComponent<TracksListItemProps> = (props) => {
   const [playerState] = usePlayerStore()
 
   const track = () => entities.tracks[props.item] as Track
+
+  // Download status tracking for FileRemote tracks
+  const [isCached, setIsCached] = createSignal(false)
+  const [isDownloading, setIsDownloading] = createSignal(false)
+  const [downloadProgress, setDownloadProgress] = createSignal(0)
+
+  // Check cache status when track changes
+  createEffect(() => {
+    const trackItem = track()
+    if (!RAJNEESH_FLAGS.DOWNLOAD_UI || !trackItem?.fileWrapper) {
+      return
+    }
+
+    if (trackItem.fileWrapper.type === 'remote') {
+      isUrlCached(trackItem.fileWrapper.url)
+        .then(setIsCached)
+        .catch(() => setIsCached(false))
+    }
+  })
+
+  // Subscribe to download progress
+  createEffect(() => {
+    const trackItem = track()
+    if (!RAJNEESH_FLAGS.DOWNLOAD_UI || !trackItem) {
+      return
+    }
+
+    const unsubscribe = downloadManager.subscribeToProgress((progress) => {
+      if (progress.trackId === trackItem.id) {
+        setIsDownloading(progress.state === 'downloading' || progress.state === 'pending')
+        setDownloadProgress(progress.progress)
+
+        if (progress.state === 'complete') {
+          setIsCached(true)
+          setIsDownloading(false)
+        }
+      }
+    })
+
+    return unsubscribe
+  })
+
+  // Handle download action
+  const handleDownload = () => {
+    const trackItem = track()
+    if (trackItem.fileWrapper?.type === 'remote') {
+      toast({
+        message: `Downloading "${trackItem.name}"...`,
+        duration: 3000,
+      })
+      downloadManager.download(trackItem.id, trackItem.fileWrapper.url)
+    }
+  }
 
   const getMenuItems = () => {
     const trackItem = track()
@@ -100,6 +164,13 @@ const TrackListItem: VoidComponent<TracksListItemProps> = (props) => {
           modals.addToPlaylists.show({ trackIds: [trackId] })
         },
       },
+      // Download menu item for FileRemote tracks
+      RAJNEESH_FLAGS.DOWNLOAD_UI &&
+        trackItem.fileWrapper?.type === 'remote' && {
+          name: getDownloadMenuText(isCached(), isDownloading(), downloadProgress()),
+          action: handleDownload,
+          disabled: isDownloadMenuDisabled(isCached()),
+        },
       ...(props.additionalMenuItems?.(track(), entitiesActions) || []),
       {
         name: 'Remove from the library',
@@ -151,7 +222,11 @@ const TrackListItem: VoidComponent<TracksListItemProps> = (props) => {
         </Show>
       }
       text={track().name}
-      secondaryText={artistsToString(track().artists)}
+      secondaryText={
+        RAJNEESH_FLAGS.DOWNLOAD_UI && isCached()
+          ? `[cached] ${artistsToString(track().artists)}`
+          : artistsToString(track().artists)
+      }
       trailing={
         <>
           <div class={styles.album}>{track().album || UNKNOWN_ITEM_STRING}</div>
