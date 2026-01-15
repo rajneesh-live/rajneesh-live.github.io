@@ -23,3 +23,20 @@ export type {
   RajneeshTrack,
   NormalizedEntities,
 } from './catalog'
+
+// Cache exports
+export {
+  audioCache,
+  isUrlCached,
+  getCachedBlob,
+  storeBlob,
+  clearCache,
+  getCacheStats,
+} from './cache'
+
+export type {
+  CacheEntry,
+  CacheStats,
+  DownloadState,
+  DownloadProgress,
+} from './cache'
