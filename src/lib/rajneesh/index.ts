@@ -49,3 +49,13 @@ export {
   DownloadStoreProvider,
   useDownloadStore,
 } from './stores'
+
+// Playback exports
+export {
+  resolveRemoteUrl,
+  revokeBlobUrl,
+  isRemoteSource,
+  getRemoteUrl,
+  resolveTrackSource,
+  cleanupTrackSource,
+} from './playback'
