@@ -1,3 +1,6 @@
+// Databases that should never be deleted by cleanup
+const PROTECTED_DATABASES = ['RajneeshAudioCache']
+
 export const deleteIDBDatabases = async (
   baseName: string,
   latestVersion: number,
@@ -8,7 +11,8 @@ export const deleteIDBDatabases = async (
 
     const dbs = await idb.databases()
     dbs.forEach((db) => {
-      if (db.name !== fullName) {
+      // Skip protected databases and the current version
+      if (db.name && !PROTECTED_DATABASES.includes(db.name) && db.name !== fullName) {
         idb.deleteDatabase(db.name)
       }
     })
