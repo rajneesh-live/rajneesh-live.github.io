@@ -6,6 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "npx eslint src",
     "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier src --check",
@@ -35,7 +37,8 @@
     "vite": "^2.9.9",
     "vite-plugin-html": "^3.2.0",
     "vite-plugin-solid": "^2.2.6",
-    "vite-plugin-webfont-dl": "^2.0.0"
+    "vite-plugin-webfont-dl": "^2.0.0",
+    "vitest": "^0.34.6"
   },
   "dependencies": {
     "@a11y/focus-trap": "^1.0.5",

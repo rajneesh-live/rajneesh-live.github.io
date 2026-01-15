@@ -1,0 +1,11 @@
+# Invalid catalog - missing required fields
+metadata:
+  appName: "Test App"
+  # missing version and lastUpdated
+
+series:
+  - id: "bad-series"
+    # missing name
+    tracks:
+      - id: "bad-track"
+        # missing name, duration, trackNo, audioUrl

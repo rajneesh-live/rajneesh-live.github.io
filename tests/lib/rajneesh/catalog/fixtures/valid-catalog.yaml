@@ -1,0 +1,36 @@
+# Valid test catalog
+metadata:
+  appName: "Test App"
+  version: "1.0.0"
+  lastUpdated: "2026-01-01"
+
+series:
+  - id: "test-series-1"
+    name: "Test Series One"
+    description: "A test series"
+    year: "2025"
+    image: "/images/test.webp"
+    tracks:
+      - id: "track_001"
+        name: "Track One"
+        duration: 3600
+        trackNo: 1
+        audioUrl: "/audio/track_001.mp3"
+        description: "First track"
+        topics: ["test", "demo"]
+      - id: "track_002"
+        name: "Track Two"
+        duration: 4200
+        trackNo: 2
+        audioUrl: "https://example.com/track_002.mp3"
+        topics: ["test"]
+
+  - id: "test-series-2"
+    name: "Test Series Two"
+    year: "2024"
+    tracks:
+      - id: "track_003"
+        name: "Track Three"
+        duration: 2400
+        trackNo: 1
+        audioUrl: "/audio/track_003.mp3"
