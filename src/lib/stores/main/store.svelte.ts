@@ -63,6 +63,9 @@ export class MainStore {
 
 	appInstallPromptEvent: BeforeInstallPromptEvent | null = $state(null)
 
+	/** Whether the app is already installed (running in standalone mode) */
+	isAppInstalled: boolean = $state(false)
+
 	librarySplitLayoutEnabled: boolean = $state(true)
 
 	constructor() {
