@@ -49,6 +49,34 @@ self.addEventListener('fetch', (event) => {
 		return
 	}
 
+	// Catalog: Stale-While-Revalidate
+	// This allows independent weekly updates without app rebuilds
+	if (url.pathname === '/rajneesh/catalog.json') {
+		event.respondWith(
+			(async () => {
+				const cache = await caches.open(CACHE)
+				const cachedResponse = await cache.match(request)
+
+				const networkPromise = fetch(request).then((response) => {
+					// Update cache with new version if successful
+					if (response.ok) {
+						cache.put(request, response.clone())
+					}
+					return response
+				})
+
+				// If we have cached response, return it, but also ensure network update finishes
+				if (cachedResponse) {
+					event.waitUntil(networkPromise.catch(() => {}))
+					return cachedResponse
+				}
+
+				return networkPromise
+			})(),
+		)
+		return
+	}
+
 	const isNavigationRequest = request.mode === 'navigate'
 
 	// biome-ignore lint/complexity/useSimplifiedLogicExpression: for clarity

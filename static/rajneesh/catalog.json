@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "meta": {
+    "appName": "Rajneesh Digital Library",
+    "updatedAt": "2026-01-17",
+    "catalogVersion": "2026.01.17",
+    "artist": "Osho"
+  },
+  "legend": {
+    "albumTuple": [
+      "albumName",
+      "description",
+      "isStructured",
+      "structured",
+      "coverUrl"
+    ],
+    "structuredTuple": [
+      "count",
+      "trackIdTemplate",
+      "audioUrlPrefix",
+      "audioFileTemplate",
+      "urlPadWidth"
+    ],
+    "templateTokens": {
+      "{album}": "albumName",
+      "{i}": "track index (1..count) as string"
+    },
+    "runtimeRules": [
+      "Track title = albumName + ' ' + i (raw i, no padding).",
+      "trackId = trackIdTemplate with {i} substituted (raw i, no padding).",
+      "audioUrl = audioUrlPrefix + audioFileTemplate rendered by substituting {i} with i padded to urlPadWidth (if > 0).",
+      "Album duration can be computed at runtime by summing generated track durations if available, otherwise unknown."
+    ]
+  },
+  "albums": [
+    [
+      "Athato Bhakti Jigyasa",
+      "Hindi discourses",
+      true,
+      [
+        10,
+        "athato-bhakti-jigyasa-{i}",
+        "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/",
+        "OSHO-Athato_Bhakti_Jigyasa_{i}.mp3",
+        2
+      ],
+      null
+    ],
+    [
+      "Bharat Ka Bhavishya",
+      "Hindi discourses",
+      true,
+      [
+        10,
+        "bharat-ka-bhavishya-{i}",
+        "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/",
+        "OSHO-Bharat_Ka_Bhavishya_{i}.mp3",
+        2
+      ],
+      null
+    ],
+    [
+      "Tao Upanishad",
+      "Hindi discourses",
+      true,
+      [
+        10,
+        "tao-upanishad-{i}",
+        "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/",
+        "OSHO-Tao_Upanishad_{i}.mp3",
+        3
+      ],
+      null
+    ]
+  ]
+}

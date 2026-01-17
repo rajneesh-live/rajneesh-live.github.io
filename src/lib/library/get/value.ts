@@ -3,6 +3,8 @@ import { type DbKey, getDatabase } from '$lib/db/database.ts'
 import { type DatabaseChangeDetails, onDatabaseChange } from '$lib/db/events.ts'
 import type { Album, Artist, Playlist, Track } from '$lib/library/types.ts'
 import { FAVORITE_PLAYLIST_ID, FAVORITE_PLAYLIST_UUID, type LibraryStoreName } from '../types.ts'
+import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
+import { rajneeshGetLibraryValue } from '$lib/rajneesh/hooks/get-value.ts'
 
 type CacheKey<Store extends LibraryStoreName> = `${Store}:${string}`
 
@@ -46,6 +48,11 @@ export interface TrackData extends Track {
 
 const trackConfig: QueryConfig<TrackData> = {
 	fetch: async (id) => {
+		// RAJNEESH HOOK
+		if (isRajneeshEnabled()) {
+			return rajneeshGetLibraryValue('tracks', id)
+		}
+
 		const db = await getDatabase()
 		const tx = db.transaction(['tracks', 'playlistEntries'], 'readonly')
 
@@ -115,6 +122,12 @@ const dbGetValue = async <Store extends LibraryStoreName, const T extends string
 	type: T,
 	id: number,
 ) => {
+	// RAJNEESH HOOK
+	if (isRajneeshEnabled()) {
+		const val = await rajneeshGetLibraryValue(storeName, id)
+		return val
+	}
+
 	const db = await getDatabase()
 	const value = await db.get(storeName, id)
 	if (!value) {

@@ -30,25 +30,12 @@ export type { CacheEntry, CacheStats, DownloadProgress, DownloadState } from './
 
 // Catalog
 export {
-	loadCatalog,
-	loadBundledCatalog,
-	loadCatalogFromUrl,
-	normalizeCatalog,
-	normalizeTrack,
-	normalizeTrackWithId,
-	normalizeSeries,
-	findTrackById,
-	getTracksForAlbum,
-	validateCatalog,
-	CatalogValidationError,
+	parseCatalogJson,
 	CATALOG_DIRECTORY_ID,
 } from './catalog/index.ts'
 export type {
-	RajneeshCatalog,
-	RajneeshSeries,
-	RajneeshTrack,
-	RajneeshCatalogMetadata,
 	NormalizedCatalog,
+	CompactCatalogV1,
 } from './catalog/index.ts'
 
 // Initialization
@@ -61,7 +48,6 @@ export {
 	isCatalogLoading,
 	getCatalogError,
 	isCatalogInitialized,
-	clearCatalogData,
 } from './stores/index.ts'
 export {
 	getDownloadProgressState,

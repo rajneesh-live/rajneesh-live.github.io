@@ -1,6 +1,13 @@
 import type { IDBPIndex } from 'idb'
 import { type AppDB, type AppIndexNames, getDatabase } from '$lib/db/database.ts'
 import type { LibraryStoreName } from '../types.ts'
+import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
+import {
+	rajneeshGetLibraryItemIds,
+	rajneeshGetAlbumTracksIdsByName,
+	rajneeshGetArtistTracksIdsByName,
+	rajneeshGetIdFromUuid,
+} from '$lib/rajneesh/hooks/get-ids.ts'
 
 export type SortOrder = 'asc' | 'desc'
 export type LibraryItemSortKey<Store extends LibraryStoreName> = Exclude<
@@ -42,6 +49,11 @@ export const getLibraryItemIds = async <Store extends LibraryStoreName>(
 	store: Store,
 	options: SortOptions<Store>,
 ): Promise<number[]> => {
+	// RAJNEESH HOOK
+	if (isRajneeshEnabled()) {
+		return rajneeshGetLibraryItemIds(store, options)
+	}
+
 	const db = await getDatabase()
 	const storeIndex = db.transaction(store).store.index(options.sort)
 
@@ -63,6 +75,11 @@ export const getLibraryItemIds = async <Store extends LibraryStoreName>(
 }
 
 export const dbGetAlbumTracksIdsByName = async (albumName: string): Promise<number[]> => {
+	// RAJNEESH HOOK
+	if (isRajneeshEnabled()) {
+		return rajneeshGetAlbumTracksIdsByName(albumName)
+	}
+
 	const db = await getDatabase()
 	const tracksIds = await db.getAllKeysFromIndex(
 		'tracks',
@@ -74,6 +91,11 @@ export const dbGetAlbumTracksIdsByName = async (albumName: string): Promise<numb
 }
 
 export const dbGetArtistTracksIdsByName = async (artistName: string): Promise<number[]> => {
+	// RAJNEESH HOOK
+	if (isRajneeshEnabled()) {
+		return rajneeshGetArtistTracksIdsByName(artistName)
+	}
+
 	const db = await getDatabase()
 	const tracksIds = await db.getAllKeysFromIndex(
 		'tracks',
@@ -82,4 +104,18 @@ export const dbGetArtistTracksIdsByName = async (artistName: string): Promise<nu
 	)
 
 	return tracksIds
+}
+
+export const getLibraryItemIdFromUuid = async (
+	storeName: LibraryStoreName,
+	uuid: string,
+): Promise<number | undefined> => {
+	// RAJNEESH HOOK
+	if (isRajneeshEnabled()) {
+		return rajneeshGetIdFromUuid(storeName, uuid)
+	}
+
+	const db = await getDatabase()
+	// @ts-expect-error - we know UUID index exists for all stores we query
+	return db.getKeyFromIndex(storeName, 'uuid', uuid)
 }

@@ -2,7 +2,11 @@ import { error, redirect } from '@sveltejs/kit'
 import { goto } from '$app/navigation'
 import { type DbValue, getDatabase } from '$lib/db/database.ts'
 import { createPageQuery, type PageQueryResult } from '$lib/db/query/page-query.svelte.ts'
-import { dbGetAlbumTracksIdsByName } from '$lib/library/get/ids.ts'
+import {
+	dbGetAlbumTracksIdsByName,
+	dbGetArtistTracksIdsByName,
+	getLibraryItemIdFromUuid,
+} from '$lib/library/get/ids.ts'
 import { getLibraryValue } from '$lib/library/get/value.ts'
 import {
 	FAVORITE_PLAYLIST_ID,
@@ -51,13 +55,11 @@ const createTracksPageQuery = <Slug extends Exclude<DetailsSlug, 'playlists'>>(
 	const query = createPageQuery({
 		key: () => [storeName, itemName()],
 		fetcher: async ([, name]): Promise<TracksQueryRegularResult> => {
-			const db = await getDatabase()
-
 			let keys: number[]
 			if (storeName === 'albums') {
 				keys = await dbGetAlbumTracksIdsByName(name)
 			} else {
-				keys = await db.getAllKeysFromIndex('tracks', 'artists', IDBKeyRange.only(name))
+				keys = await dbGetArtistTracksIdsByName(name)
 			}
 
 			return { tracksIds: keys, playlistIdMap: null }
@@ -67,7 +69,6 @@ const createTracksPageQuery = <Slug extends Exclude<DetailsSlug, 'playlists'>>(
 				if (change.storeName === 'tracks') {
 					// We can't know the order
 					actions.refetch()
-
 					break
 				}
 			}
@@ -147,8 +148,7 @@ export const load: PageLoad = async (event): Promise<LoadResult> => {
 	if (uuid === FAVORITE_PLAYLIST_UUID) {
 		id = FAVORITE_PLAYLIST_ID
 	} else {
-		const db = await getDatabase()
-		id = await db.getKeyFromIndex(slug, 'uuid', uuid)
+		id = await getLibraryItemIdFromUuid(slug, uuid)
 	}
 
 	if (!id) {

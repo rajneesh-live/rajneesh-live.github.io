@@ -1,10 +1,17 @@
 import { getDatabase } from '$lib/db/database.ts'
 import { createPageQuery, type PageQueryResult } from '$lib/db/query/page-query.svelte.ts'
+import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
+import { rajneeshGetTracksCount } from '$lib/rajneesh/hooks/get-ids.ts'
 
 export const createTracksCountPageQuery = (): Promise<PageQueryResult<number>> =>
 	createPageQuery({
 		key: [],
 		fetcher: async () => {
+			// RAJNEESH HOOK
+			if (isRajneeshEnabled()) {
+				return rajneeshGetTracksCount()
+			}
+
 			const db = await getDatabase()
 
 			return db.count('tracks')

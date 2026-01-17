@@ -6,10 +6,6 @@
 import { rajneeshLog, isRajneeshEnabled } from './feature-flags.ts'
 import { initializeCatalog } from './stores/catalog.svelte.ts'
 
-// Import the catalog YAML as raw text
-// This will be bundled into the app
-import catalogYaml from './data/rajneesh-catalog.yaml?raw'
-
 let initialized = false
 
 /**
@@ -30,13 +26,27 @@ export const initializeRajneesh = async (): Promise<void> => {
 	rajneeshLog('Initializing Rajneesh features...')
 
 	try {
+		// Fetch the catalog JSON
+		rajneeshLog('Fetching catalog from /catalog.json...')
+		const response = await fetch('/rajneesh/catalog.json')
+
+		if (!response.ok) {
+			throw new Error(
+				`Failed to fetch catalog: ${response.status} ${response.statusText}`,
+			)
+		}
+
+		const json = await response.json()
+
 		// Initialize the catalog
-		await initializeCatalog(catalogYaml)
+		await initializeCatalog(json)
 		initialized = true
 		rajneeshLog('Rajneesh initialization complete')
 	} catch (error) {
 		rajneeshLog('Rajneesh initialization failed:', error)
-		throw error
+		// We don't throw here to avoid crashing the whole app init, 
+		// but the catalog won't be available.
+		console.error(error)
 	}
 }
 

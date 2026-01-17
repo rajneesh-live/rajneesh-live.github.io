@@ -2,7 +2,9 @@ import '../app.css'
 import { browser } from '$app/environment'
 import { snackbar } from '$lib/components/snackbar/snackbar'
 import { registerServiceWorker } from '$lib/helpers/register-sw'
+import { initializeRajneesh } from '$lib/rajneesh/init.ts'
 import { baseLocale, isLocale, overwriteGetLocale, overwriteSetLocale } from '$paraglide/runtime'
+import type { LayoutLoad } from './$types.d.ts'
 
 export const ssr = false
 export const prerender = false
@@ -37,4 +39,10 @@ if (browser) {
 			})
 		},
 	})
+}
+
+export const load: LayoutLoad = async () => {
+	if (browser) {
+		await initializeRajneesh()
+	}
 }
