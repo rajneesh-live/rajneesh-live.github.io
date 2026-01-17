@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { createManagedArtwork } from '$lib/helpers/create-managed-artwork.svelte'
 	import { formatDuration } from '$lib/helpers/utils/format-duration.ts'
-	import { formatArtists, formatNameOrUnknown } from '$lib/helpers/utils/text.ts'
+	import { formatNameOrUnknown } from '$lib/helpers/utils/text.ts'
 	import { createTrackQuery, type TrackData } from '$lib/library/get/value-queries.ts'
 	import { DownloadButton } from '$lib/rajneesh/components/index.ts'
 	import Artwork from '../Artwork.svelte'
-	import FavoriteButton from '../FavoriteButton.svelte'
 	import ListItem, { type MenuItem } from '../ListItem.svelte'
 
 	interface Props {
@@ -66,13 +65,8 @@
 				Error loading track with id {trackId}
 			</div>
 		{:else if track}
-			<div class="flex flex-col truncate">
-				<div class={[active ? 'text-primary' : 'color-onSurface', 'truncate']}>
-					{track.name}
-				</div>
-				<div class="truncate overflow-hidden">
-					{formatArtists(track.artists)}
-				</div>
+			<div class={[active ? 'text-primary' : 'color-onSurface', 'line-clamp-2 break-words']}>
+				{track.name}
 			</div>
 
 			<div class="hidden @4xl:block">
@@ -84,33 +78,30 @@
 			</div>
 
 			<DownloadButton
-				class="hidden @sm:flex"
 				trackId={track.uuid}
 				file={track.file}
 			/>
-
-			<FavoriteButton class="hidden @sm:flex" trackId={track.id} favorite={track.favorite} />
 		{/if}
 	</div>
 </ListItem>
 
 <style>
 	.track-item {
-		--grid-cols: auto 1fr;
+		--grid-cols: auto 1fr 36px;
 		display: grid;
 		grid-template-columns: var(--grid-cols);
 	}
 
 	@container (min-width: 24rem) {
 		.track-item {
-			--grid-cols: auto 1.5fr 74px 36px 44px;
+			--grid-cols: auto 1.5fr 74px 36px;
 		}
 	}
 
 	/* @container (theme('containers.4xl')) { */
 	@container (min-width: 56rem) {
 		.track-item {
-			--grid-cols: auto 1.5fr minmax(200px, 1fr) 74px 36px 44px;
+			--grid-cols: auto 1.5fr minmax(200px, 1fr) 74px 36px;
 		}
 	}
 </style>
