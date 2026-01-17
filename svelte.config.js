@@ -28,10 +28,12 @@ const config = {
 				'default-src': ['none'],
 				'script-src': ['self', 'https://gc.zgo.at/'],
 				'style-src': ['self', 'unsafe-inline'],
-				'img-src': ['self', 'blob:', 'https://snaeplayer.goatcounter.com/count'],
-				'media-src': ['self', 'blob:'],
-				'font-src': ['self'],
-				'connect-src': ['self', 'https://snaeplayer.goatcounter.com'],
+				// Allow remote images/audio (e.g. archive.org) to be displayed/played
+				'img-src': ['self', 'blob:', 'data:', 'https:', 'http:'],
+				'media-src': ['self', 'blob:', 'data:', 'https:', 'http:'],
+				'font-src': ['self', 'data:', 'https:', 'http:'],
+				// Required for `fetch()` downloads / metadata checks against remote origins
+				'connect-src': ['self', 'blob:', 'data:', 'https:', 'http:'],
 				'form-action': ['none'],
 				'manifest-src': ['self'],
 				'base-uri': ['none'],
