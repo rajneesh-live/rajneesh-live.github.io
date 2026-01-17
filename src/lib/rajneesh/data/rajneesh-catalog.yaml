@@ -4,79 +4,167 @@
 metadata:
   appName: "Rajneesh Digital Library"
   version: "1.0.0"
-  lastUpdated: "2026-01-15"
+  lastUpdated: "2026-01-17"
 
 series:
-  - id: "kathopanishad-01-19"
-    name: "Kathopanishad 01-19"
-    description: "A series of 19 discourses on Kathopanishad. These discourses were given in Mount Abu during Oct 06-13, 1973."
-    year: "1973"
-    image: "/images/albums/sample-cover.webp"
+  - id: "athato-bhakti-jigyasa-01-10"
+    name: "Athato Bhakti Jigyasa 01-10"
     tracks:
-      - id: "kath_001"
-        name: "Kathopanishad 01"
-        duration: 7043
+      - id: "abj_01"
+        name: "Athato Bhakti Jigyasa 01"
+        duration: 0
         trackNo: 1
-        audioUrl: "/audio/sample-audio.mp3"
-        description: "First discourse on Kathopanishad"
-        topics: ["kathopanishad", "upanishad", "meditation", "death", "naciketa"]
-
-      - id: "kath_002"
-        name: "Kathopanishad 02"
-        duration: 4502
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_01.mp3"
+      - id: "abj_02"
+        name: "Athato Bhakti Jigyasa 02"
+        duration: 0
         trackNo: 2
-        audioUrl: "/audio/sample-audio.mp3"
-        description: "Second discourse on Kathopanishad"
-        topics: ["kathopanishad", "death", "afterlife", "wisdom"]
-
-      - id: "kath_003"
-        name: "Kathopanishad 03"
-        duration: 4774
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_02.mp3"
+      - id: "abj_03"
+        name: "Athato Bhakti Jigyasa 03"
+        duration: 0
         trackNo: 3
-        audioUrl: "/audio/sample-audio.mp3"
-        description: "Third discourse on Kathopanishad"
-        topics: ["kathopanishad", "choice", "pleasure", "good"]
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_03.mp3"
+      - id: "abj_04"
+        name: "Athato Bhakti Jigyasa 04"
+        duration: 0
+        trackNo: 4
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_04.mp3"
+      - id: "abj_05"
+        name: "Athato Bhakti Jigyasa 05"
+        duration: 0
+        trackNo: 5
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_05.mp3"
+      - id: "abj_06"
+        name: "Athato Bhakti Jigyasa 06"
+        duration: 0
+        trackNo: 6
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_06.mp3"
+      - id: "abj_07"
+        name: "Athato Bhakti Jigyasa 07"
+        duration: 0
+        trackNo: 7
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_07.mp3"
+      - id: "abj_08"
+        name: "Athato Bhakti Jigyasa 08"
+        duration: 0
+        trackNo: 8
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_08.mp3"
+      - id: "abj_09"
+        name: "Athato Bhakti Jigyasa 09"
+        duration: 0
+        trackNo: 9
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_09.mp3"
+      - id: "abj_10"
+        name: "Athato Bhakti Jigyasa 10"
+        duration: 0
+        trackNo: 10
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/005-Athato%20Bhakti%20Jigyasa/OSHO-Athato_Bhakti_Jigyasa_10.mp3"
 
-  - id: "tao-upanishad-01-127"
-    name: "Tao Upanishad 01-127"
-    description: "A comprehensive series of 127 discourses on Tao Te Ching by Lao Tzu."
-    year: "1971"
-    image: "/images/albums/tao-upanishad-01-127.webp"
+  - id: "bharat-ka-bhavishya-01-10"
+    name: "Bharat Ka Bhavishya 01-10"
+    tracks:
+      - id: "bkb_01"
+        name: "Bharat Ka Bhavishya 01"
+        duration: 0
+        trackNo: 1
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_01.mp3"
+      - id: "bkb_02"
+        name: "Bharat Ka Bhavishya 02"
+        duration: 0
+        trackNo: 2
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_02.mp3"
+      - id: "bkb_03"
+        name: "Bharat Ka Bhavishya 03"
+        duration: 0
+        trackNo: 3
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_03.mp3"
+      - id: "bkb_04"
+        name: "Bharat Ka Bhavishya 04"
+        duration: 0
+        trackNo: 4
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_04.mp3"
+      - id: "bkb_05"
+        name: "Bharat Ka Bhavishya 05"
+        duration: 0
+        trackNo: 5
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_05.mp3"
+      - id: "bkb_06"
+        name: "Bharat Ka Bhavishya 06"
+        duration: 0
+        trackNo: 6
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_06.mp3"
+      - id: "bkb_07"
+        name: "Bharat Ka Bhavishya 07"
+        duration: 0
+        trackNo: 7
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_07.mp3"
+      - id: "bkb_08"
+        name: "Bharat Ka Bhavishya 08"
+        duration: 0
+        trackNo: 8
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_08.mp3"
+      - id: "bkb_09"
+        name: "Bharat Ka Bhavishya 09"
+        duration: 0
+        trackNo: 9
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_09.mp3"
+      - id: "bkb_10"
+        name: "Bharat Ka Bhavishya 10"
+        duration: 0
+        trackNo: 10
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/023-Bharat%20Ka%20Bhavishya%20%28%E0%A4%AD%E0%A4%BE%E0%A4%B0%E0%A4%A4%20%E0%A4%95%E0%A4%BE%20%E0%A4%AD%E0%A4%B5%E0%A4%BF%E0%A4%B7%E0%A5%8D%E0%A4%AF%29%201-12%20%E2%80%93%20Osho%20World/OSHO-Bharat_Ka_Bhavishya_10.mp3"
+
+  - id: "tao-upanishad-001-010"
+    name: "Tao Upanishad 001-010"
     tracks:
       - id: "tao_001"
-        name: "Tao Upanishad 01"
-        duration: 3600
+        name: "Tao Upanishad 001"
+        duration: 0
         trackNo: 1
-        audioUrl: "https://example.com/audio/tao_001.mp3"
-        description: "First discourse on Tao Te Ching"
-        topics: ["tao", "lao-tzu", "way", "virtue"]
-
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_001.mp3"
       - id: "tao_002"
-        name: "Tao Upanishad 02"
-        duration: 3720
+        name: "Tao Upanishad 002"
+        duration: 0
         trackNo: 2
-        audioUrl: "https://example.com/audio/tao_002.mp3"
-        description: "Second discourse on Tao Te Ching"
-        topics: ["tao", "non-action", "wu-wei"]
-
-  - id: "naye-bharat-ki-khoj-01-07"
-    name: "Naye Bharat Ki Khoj 01-07"
-    description: "A series of 7 discourses on the search for a new India."
-    year: "1970"
-    image: "/images/albums/naye-bharat-ki-khoj-01-07.webp"
-    tracks:
-      - id: "nbkk_001"
-        name: "Naye Bharat Ki Khoj 01"
-        duration: 4200
-        trackNo: 1
-        audioUrl: "https://example.com/audio/nbkk_001.mp3"
-        description: "First discourse on New India"
-        topics: ["india", "society", "transformation"]
-
-      - id: "nbkk_002"
-        name: "Naye Bharat Ki Khoj 02"
-        duration: 4350
-        trackNo: 2
-        audioUrl: "https://example.com/audio/nbkk_002.mp3"
-        description: "Second discourse on New India"
-        topics: ["india", "youth", "revolution"]
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_002.mp3"
+      - id: "tao_003"
+        name: "Tao Upanishad 003"
+        duration: 0
+        trackNo: 3
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_003.mp3"
+      - id: "tao_004"
+        name: "Tao Upanishad 004"
+        duration: 0
+        trackNo: 4
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_004.mp3"
+      - id: "tao_005"
+        name: "Tao Upanishad 005"
+        duration: 0
+        trackNo: 5
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_005.mp3"
+      - id: "tao_006"
+        name: "Tao Upanishad 006"
+        duration: 0
+        trackNo: 6
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_006.mp3"
+      - id: "tao_007"
+        name: "Tao Upanishad 007"
+        duration: 0
+        trackNo: 7
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_007.mp3"
+      - id: "tao_008"
+        name: "Tao Upanishad 008"
+        duration: 0
+        trackNo: 8
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_008.mp3"
+      - id: "tao_009"
+        name: "Tao Upanishad 009"
+        duration: 0
+        trackNo: 9
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_009.mp3"
+      - id: "tao_010"
+        name: "Tao Upanishad 010"
+        duration: 0
+        trackNo: 10
+        audioUrl: "https://archive.org/download/osho-audio-discourses-collection/OSHO_WORLD/Hindi/170-Tao%20Upanishad%2001-127%20%E2%80%93%20Osho%20World/OSHO-Tao_Upanishad_010.mp3"
