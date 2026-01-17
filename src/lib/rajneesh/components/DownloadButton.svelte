@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ripple } from '$lib/attachments/ripple.ts'
 	import { isRemoteFile, type FileEntity } from '$lib/helpers/file-system.ts'
 	import { isUrlCached } from '../cache/audio-cache.ts'
 	import { downloadTrack, getDownloadProgressState, initializeDownloadStore } from '../stores/download.svelte.ts'
@@ -60,10 +61,12 @@
 		<!-- Cached indicator -->
 		<span
 			class={[
-				'flex size-6 items-center justify-center text-green-500',
+				'flex w-14 shrink-0 items-center justify-center self-stretch text-green-500',
 				className,
 			]}
 			title="Downloaded"
+			onpointerdown={(e) => e.stopPropagation()}
+			onclick={(e) => e.stopPropagation()}
 		>
 			<svg
 				width="16"
@@ -77,9 +80,9 @@
 	{:else}
 		<!-- Download button -->
 		<button
+			{@attach ripple({ stopPropagation: true })}
 			class={[
-				'flex size-8 shrink-0 items-center justify-center rounded-full',
-				'hover:bg-surface-container-highest active:bg-surface-container-highest/80',
+				'relative flex w-14 shrink-0 items-center justify-center self-stretch overflow-hidden',
 				'disabled:opacity-50',
 				className,
 			]}
@@ -100,7 +103,9 @@
 						<circle cx="12" cy="12" r="10" class="opacity-25" />
 						<path d="M12 2a10 10 0 0 1 10 10" class="opacity-75" />
 					</svg>
-					<span class="absolute text-[8px] font-medium">{progress}</span>
+					{#if progress > 0}
+						<span class="absolute text-[8px] font-medium">{progress}</span>
+					{/if}
 				</div>
 			{:else}
 				<!-- Download icon -->

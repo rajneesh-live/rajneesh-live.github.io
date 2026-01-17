@@ -71,7 +71,7 @@
 		<IconButton
 			tabindex={-1}
 			icon="moreVertical"
-			class="text-onSurfaceVariant"
+			class="relative w-14 rounded-none! text-onSurfaceVariant self-stretch! h-auto!"
 			tooltip={m.moreOptions()}
 			onclick={(e) => {
 				e.stopPropagation()
