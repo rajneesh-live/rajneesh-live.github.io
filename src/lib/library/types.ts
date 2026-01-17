@@ -1,6 +1,6 @@
 import type { FileEntity } from '$lib/helpers/file-system.ts'
 
-export type LibraryStoreName = 'tracks' | 'albums' | 'artists' | 'playlists'
+export type LibraryStoreName = 'tracks' | 'albums' | 'artists' | 'playlists' | 'home' | 'explore'
 
 /**
  * Used in browsers where `showDirectoryPicker` is not supported.

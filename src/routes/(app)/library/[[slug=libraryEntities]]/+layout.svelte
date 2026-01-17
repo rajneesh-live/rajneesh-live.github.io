@@ -17,6 +17,9 @@
 	import { useSetOverlaySnippet } from '$lib/layout-bottom-bar.svelte.ts'
 	import { FAVORITE_PLAYLIST_ID } from '$lib/library/playlists-actions.ts'
 	import { getPlaylistMenuItems } from '$lib/menu-actions/playlists.ts'
+	import Home from '$lib/rajneesh/pages/home/Home.svelte'
+	import ExploreListContainer from '$lib/rajneesh/pages/explore/ExploreListContainer.svelte'
+	import { getNavItems } from '$lib/rajneesh/ui/nav-items.ts'
 	import Search from './Search.svelte'
 
 	const { data, children } = $props()
@@ -38,28 +41,7 @@
 		icon: IconType
 	}
 
-	const navItems: NavItem[] = [
-		{
-			slug: 'tracks',
-			title: m.tracks(),
-			icon: 'musicNote',
-		},
-		{
-			slug: 'albums',
-			title: m.albums(),
-			icon: 'album',
-		},
-		{
-			slug: 'artists',
-			title: m.artists(),
-			icon: 'person',
-		},
-		{
-			slug: 'playlists',
-			title: m.playlists(),
-			icon: 'playlist',
-		},
-	]
+	const navItems = getNavItems()
 
 	const isWideLayout = $derived(data.isWideLayout())
 	const layoutMode = $derived(
@@ -135,7 +117,9 @@
 	{#snippet list(mode)}
 		<div class={[isHandHeldDevice ? 'sm:pl-20' : 'pl-20', 'flex grow flex-col']}>
 			<div class={[mode === 'both' && 'w-100', 'flex grow flex-col px-4']}>
-				<Search name={data.pluralTitle()} sortOptions={data.sortOptions} store={data.store} />
+				{#if slug !== 'home'}
+					<Search name={data.pluralTitle()} sortOptions={data.sortOptions} store={data.store} />
+				{/if}
 
 				{#if slug === 'playlists'}
 					<div class="mb-4 flex items-center justify-end">
@@ -152,7 +136,7 @@
 					</div>
 				{/if}
 
-				{#if data.tracksCountQuery.value === 0 && slug !== 'playlists'}
+				{#if data.tracksCountQuery.value === 0 && slug !== 'playlists' && slug !== 'home'}
 					<div class="my-auto flex flex-col items-center text-center">
 						<div class="mb-1 text-title-lg">{m.libraryEmpty()}</div>
 						{m.libraryStartByAdding()}
@@ -163,7 +147,9 @@
 					</div>
 				{:else}
 					<div class={['flex w-full grow flex-col']}>
-						{#if itemsIds.length === 0}
+						{#if slug === 'home'}
+							<Home />
+						{:else if itemsIds.length === 0}
 							<div class="relative m-auto flex flex-col items-center text-center">
 								<Icon type="magnify" class="my-auto size-35 opacity-54" />
 
@@ -178,6 +164,8 @@
 							<TracksListContainer items={itemsIds} />
 						{:else if slug === 'albums'}
 							<AlbumsListContainer items={itemsIds} />
+						{:else if slug === 'explore'}
+							<ExploreListContainer items={itemsIds} />
 						{:else if slug === 'artists'}
 							<ArtistListContainer items={itemsIds} />
 						{:else if slug === 'playlists'}

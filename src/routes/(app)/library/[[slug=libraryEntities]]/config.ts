@@ -2,6 +2,8 @@ import type { DbValue } from '$lib/db/database.ts'
 import type { LibraryItemSortKey } from '$lib/library/get/ids.ts'
 import type { LibraryStoreName } from '$lib/library/types'
 
+import { exploreConfig, homeConfig } from '$lib/rajneesh/config/library-config.ts'
+
 export type LibrarySearchFn<Value> = (value: Value, searchTerm: string) => boolean
 
 export type SortOption<Store extends LibraryStoreName> = {
@@ -109,4 +111,6 @@ export const configsMap: LibraryRouteConfigsMap = {
 	albums: albumConfig,
 	artists: artistConfig,
 	playlists: playlistConfig,
+	home: homeConfig,
+	explore: exploreConfig,
 }

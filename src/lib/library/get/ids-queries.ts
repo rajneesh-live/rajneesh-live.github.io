@@ -20,12 +20,13 @@ const preloadLibraryListValues = async <Store extends LibraryStoreName>(
 		storeName === 'tracks' ||
 		storeName === 'albums' ||
 		storeName === 'artists' ||
-		storeName === 'playlists'
+		storeName === 'playlists' ||
+		storeName === 'explore'
 	) {
 		const preload = Array.from({ length: Math.min(keys.length, 12) }, (_, index) => {
 			const id = keys[index]
 			if (id) {
-				return preloadLibraryValue(storeName, id)
+				return preloadLibraryValue(storeName === 'explore' ? 'albums' : storeName, id)
 			}
 
 			return null

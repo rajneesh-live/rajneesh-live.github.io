@@ -68,7 +68,7 @@
 	>
 		<Icon type="github" />
 	</IconButton>
-	<Button as="a" href="/library/tracks" kind="outlined">Launch Player</Button>
+	<Button as="a" href="/library/home" kind="outlined">Launch Player</Button>
 </Header>
 
 <section
@@ -88,7 +88,7 @@
 		</p>
 
 		<div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
-			<Button as="a" href="/library/tracks" kind="filled" class="w-full sm:w-60">
+			<Button as="a" href="/library/home" kind="filled" class="w-full sm:w-60">
 				Start Listening
 			</Button>
 			<div class="text-body-md text-onSurfaceVariant">Free • No sign-up • Fully offline</div>
@@ -181,7 +181,7 @@
 			Start exploring your music collection in a whole new way. It's free, private, and ready to use
 			right now.
 		</p>
-		<Button as="a" href="/library/tracks" kind="filled">
+		<Button as="a" href="/library/home" kind="filled">
 			Open {m.appName()}
 		</Button>
 	</div>

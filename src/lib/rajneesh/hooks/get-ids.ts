@@ -1,18 +1,28 @@
 import { getCatalog } from '../stores/catalog.svelte.ts'
 import type { SortOptions } from '$lib/library/get/ids.ts'
 import type { LibraryStoreName } from '$lib/library/types.ts'
+import { getLibraryItemIds } from '$lib/library/get/ids.ts'
 
 /**
  * Hook for getLibraryItemIds
  * Queries the in-memory Rajneesh catalog instead of IndexedDB
  */
-export const rajneeshGetLibraryItemIds = <Store extends LibraryStoreName>(
+export const rajneeshGetLibraryItemIds = async <Store extends LibraryStoreName>(
 	store: Store,
 	options: SortOptions<Store>,
-): number[] => {
+): Promise<number[]> => {
 	const catalog = getCatalog()
 	
 	if (!catalog) {
+		// Fallback or handling for explore which reuses albums logic but might want to use native DB if catalog is empty/not used in this context
+		// Note: The original implementation was synchronous returning number[], but the interface expects Promise<number[]>
+		// The original code in ids.ts awaits this if isRajneeshEnabled() is true.
+		
+		if (store === 'explore') {
+			// Reuse albums logic for explore
+			return getLibraryItemIds('albums', options as any)
+		}
+		
 		return []
 	}
 
@@ -20,7 +30,7 @@ export const rajneeshGetLibraryItemIds = <Store extends LibraryStoreName>(
 
 	if (store === 'tracks') {
 		items = catalog.tracks
-	} else if (store === 'albums') {
+	} else if (store === 'albums' || store === 'explore') {
 		items = catalog.albums
 	} else if (store === 'artists') {
 		items = [catalog.artist]
@@ -110,7 +120,7 @@ export const rajneeshGetIdFromUuid = (
 	if (storeName === 'tracks') {
 		return catalog.tracks.find((t) => t.uuid === uuid)?.id
 	}
-	if (storeName === 'albums') {
+	if (storeName === 'albums' || storeName === 'explore') {
 		return catalog.albums.find((a) => a.uuid === uuid)?.id
 	}
 	if (storeName === 'artists') {

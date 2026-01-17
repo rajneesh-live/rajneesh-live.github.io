@@ -34,6 +34,15 @@ const loadData = async <Slug extends LibraryStoreName>(
 	const searchFn = config.search ?? defaultSearchFn
 	const store = new LibraryStore(slug)
 
+	if (slug === 'home') {
+		return {
+			...config,
+			store,
+			itemsIdsQuery: { value: [] },
+			tracksCountQuery: { value: 0 },
+		} as any
+	}
+
 	const itemsIdsQueryPromise = createLibraryItemKeysPageQuery(slug, {
 		key: () => [slug, store.sortByKey, store.order, store.searchTerm],
 		fetcher: async ([name, sortKey, order, searchTerm]) => {
@@ -77,12 +86,12 @@ type LoadResult = LoadDataResult<LibraryStoreName> & {
 export const load: LayoutLoad = async (event): Promise<LoadResult> => {
 	const { slug } = event.params
 	if (!slug) {
-		redirect(301, '/library/tracks')
+		redirect(301, '/library/home')
 	}
 
 	const data = await loadData(slug)
 
-	if (data.tracksCountQuery.value === 0) {
+	if (data.tracksCountQuery.value === 0 && slug !== 'home') {
 		const hasV1Data = await checkForV1LegacyDatabaseData()
 
 		if (hasV1Data) {

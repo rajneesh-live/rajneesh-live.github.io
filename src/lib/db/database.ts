@@ -74,6 +74,16 @@ export interface AppDB extends DBSchema {
 			notAllowedOperations: undefined
 		}
 	}
+	home: {
+		key: number
+		value: { id: number; name: string }
+		indexes: { name: string }
+	}
+	explore: {
+		key: number
+		value: Album
+		indexes: Pick<Album, 'uuid' | 'name' | 'artists' | 'year'>
+	}
 }
 
 export type AppStoreNames = StoreNames<AppDB>
