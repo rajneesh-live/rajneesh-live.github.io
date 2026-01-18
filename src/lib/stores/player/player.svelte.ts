@@ -21,6 +21,8 @@ export class PlayerStore {
 
 	#audio = new Audio()
 
+	static readonly PLAYBACK_RATES = [1, 1.25, 1.5, 1.75, 2] as const
+
 	shuffle: boolean = $state(false)
 
 	repeat: PlayerRepeat = $state('none')
@@ -32,6 +34,8 @@ export class PlayerStore {
 	duration: number = $state(0)
 
 	#volume = $state(100)
+
+	playbackRate: (typeof PlayerStore.PLAYBACK_RATES)[number] = $state(1)
 
 	get volume() {
 		if (!this.#main.volumeSliderEnabled) {
@@ -129,6 +133,10 @@ export class PlayerStore {
 			// so we adjust the volume to match that perception
 			const k = 0.5
 			audio.volume = (this.volume / 100) ** k
+		})
+
+		$effect(() => {
+			audio.playbackRate = this.playbackRate
 		})
 
 		const reset = debounce(() => {
@@ -336,6 +344,12 @@ export class PlayerStore {
 			this.#itemsIdsShuffled = null
 			this.#activeTrackIndex = this.#itemsIdsOriginalOrder.indexOf(activeTrackId)
 		}
+	}
+
+	togglePlaybackRate = (): void => {
+		const currentIndex = PlayerStore.PLAYBACK_RATES.indexOf(this.playbackRate)
+		const nextIndex = (currentIndex + 1) % PlayerStore.PLAYBACK_RATES.length
+		this.playbackRate = PlayerStore.PLAYBACK_RATES[nextIndex]
 	}
 
 	addToQueue = (trackId: number | number[]): void => {
