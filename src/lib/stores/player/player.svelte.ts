@@ -9,6 +9,14 @@ import { formatArtists } from '$lib/helpers/utils/text.ts'
 import { throttle } from '$lib/helpers/utils/throttle.ts'
 import { createTrackQuery, type TrackData } from '$lib/library/get/value-queries.ts'
 import { cleanupTrackAudio, loadTrackAudio } from './audio.ts'
+import {
+	addActiveMinute,
+	clearActiveMinutesForTrack,
+	getLatestActiveMinutesByTrack,
+	type ActiveMinuteDraft,
+} from '$lib/db/active-minutes.ts'
+import type { ActiveMinute } from '$lib/db/database.ts'
+import { rajneeshLog } from '$lib/rajneesh/index.ts'
 
 export interface PlayTrackOptions {
 	shuffle?: boolean
@@ -36,6 +44,9 @@ export class PlayerStore {
 	#volume = $state(100)
 
 	playbackRate: (typeof PlayerStore.PLAYBACK_RATES)[number] = $state(1)
+
+	currentActiveMinute: ActiveMinuteDraft | null = $state(null)
+	#activeMinutesByTrack = $state(new Map<string, ActiveMinute>())
 
 	get volume() {
 		if (!this.#main.volumeSliderEnabled) {
@@ -84,6 +95,8 @@ export class PlayerStore {
 
 		const audio = this.#audio
 
+		void this.#loadActiveMinutesCache()
+
 		$effect(() => {
 			// If audio state matches our state
 			// we do not need to do anything
@@ -104,6 +117,12 @@ export class PlayerStore {
 		}
 
 		audio.onended = () => {
+			if (this.activeTrack) {
+				rajneeshLog('[ActiveMinute] Track ended, clearing progress', this.activeTrack.uuid)
+				this.destroyCurrentActiveMinute()
+				void this.clearTrackTimestamp(this.activeTrack.uuid)
+			}
+
 			if (this.repeat === 'one') {
 				this.playTrack(this.#activeTrackIndex)
 
@@ -117,8 +136,18 @@ export class PlayerStore {
 			this.playNext()
 		}
 
-		audio.onpause = onAudioPlayPauseHandler
-		audio.onplay = onAudioPlayPauseHandler
+		audio.onpause = () => {
+			onAudioPlayPauseHandler()
+			rajneeshLog('[ActiveMinute] Pause, discarding current minute')
+			this.destroyCurrentActiveMinute()
+		}
+		audio.onplay = () => {
+			onAudioPlayPauseHandler()
+			if (this.activeTrack) {
+				rajneeshLog('[ActiveMinute] Play, ensuring minute', this.activeTrack.uuid, audio.currentTime)
+				this.ensureActiveMinuteForCurrentTime(this.activeTrack.uuid, audio.currentTime)
+			}
+		}
 
 		audio.ondurationchange = () => {
 			this.duration = audio.duration
@@ -126,6 +155,9 @@ export class PlayerStore {
 
 		audio.ontimeupdate = throttle(() => {
 			this.currentTime = audio.currentTime
+			if (this.activeTrack) {
+				this.saveTrackTimestamp(this.activeTrack.uuid, audio.currentTime)
+			}
 		}, 1000)
 
 		$effect(() => {
@@ -158,6 +190,8 @@ export class PlayerStore {
 
 				reset.cancel()
 				this.resetAudio()
+				const savedTimestamp = this.getSavedTrackTimestamp(track.uuid)
+				this.currentTime = savedTimestamp
 				void loadTrackAudio(this.#audio, track.file).then(async (loaded) => {
 					if (prevTrack?.id !== track.id) {
 						// Track was changed while loading
@@ -169,6 +203,19 @@ export class PlayerStore {
 					}
 
 					prevTrack.loaded = loaded
+
+					const targetTime = this.currentTime
+					if (targetTime > 0) {
+						if (audio.readyState >= 1) {
+							audio.currentTime = targetTime
+						} else {
+							const setTimeOnLoad = () => {
+								audio.currentTime = targetTime
+								audio.removeEventListener('loadedmetadata', setTimeOnLoad)
+							}
+							audio.addEventListener('loadedmetadata', setTimeOnLoad)
+						}
+					}
 
 					await audio.play()
 				})
@@ -307,6 +354,127 @@ export class PlayerStore {
 	seek = (time: number): void => {
 		this.currentTime = time
 		this.#audio.currentTime = time
+	}
+
+	#getActiveMinuteTimestamp = (timestampMs: number): number => {
+		return Math.floor(timestampMs / 60000) * 60000
+	}
+
+	#updateLatestActiveMinute = (minute: ActiveMinute): void => {
+		const next = new Map(this.#activeMinutesByTrack)
+		const existing = next.get(minute.trackId)
+		if (!existing || minute.activeMinuteTimestampMs >= existing.activeMinuteTimestampMs) {
+			next.set(minute.trackId, minute)
+			this.#activeMinutesByTrack = next
+		}
+	}
+
+	#persistActiveMinute = async (minute: ActiveMinuteDraft): Promise<void> => {
+		const payload: ActiveMinuteDraft = {
+			activeMinuteTimestampMs: minute.activeMinuteTimestampMs,
+			trackId: minute.trackId,
+			trackTimestampMs: minute.trackTimestampMs,
+			playbackRate: minute.playbackRate,
+		}
+		rajneeshLog('[ActiveMinute] Persisting completed minute', payload)
+		const saved = await addActiveMinute(payload)
+		this.#updateLatestActiveMinute(saved)
+	}
+
+	#loadActiveMinutesCache = async (): Promise<void> => {
+		const latest = await getLatestActiveMinutesByTrack()
+		this.#activeMinutesByTrack = latest
+		rajneeshLog('[ActiveMinute] Cache loaded', latest.size)
+	}
+
+	ensureActiveMinuteForCurrentTime = (trackId: string, trackTimestampSeconds: number): void => {
+		const currentMinuteTimestamp = this.#getActiveMinuteTimestamp(Date.now())
+		const isNewMinute =
+			!this.currentActiveMinute ||
+			this.currentActiveMinute.activeMinuteTimestampMs !== currentMinuteTimestamp
+
+		if (isNewMinute && this.currentActiveMinute) {
+			void this.#persistActiveMinute(this.currentActiveMinute)
+		}
+
+		const trackTimestampMs = Math.round(trackTimestampSeconds * 1000)
+		const playbackRate = this.playbackRate
+		if (isNewMinute) {
+			this.currentActiveMinute = {
+				activeMinuteTimestampMs: currentMinuteTimestamp,
+				trackId,
+				trackTimestampMs,
+				playbackRate,
+			}
+			rajneeshLog('[ActiveMinute] New minute started', {
+				activeMinuteTimestampMs: currentMinuteTimestamp,
+				trackId,
+				trackTimestampMs,
+				playbackRate,
+			})
+		} else {
+			this.currentActiveMinute = {
+				...this.currentActiveMinute,
+				trackId,
+				trackTimestampMs,
+				playbackRate,
+			}
+			rajneeshLog('[ActiveMinute] Minute updated', {
+				activeMinuteTimestampMs: currentMinuteTimestamp,
+				trackId,
+				trackTimestampMs,
+				playbackRate,
+			})
+		}
+	}
+
+	destroyCurrentActiveMinute = (): void => {
+		if (this.currentActiveMinute) {
+			rajneeshLog('[ActiveMinute] Discarding in-progress minute', {
+				activeMinuteTimestampMs: this.currentActiveMinute.activeMinuteTimestampMs,
+				trackId: this.currentActiveMinute.trackId,
+				trackTimestampMs: this.currentActiveMinute.trackTimestampMs,
+				playbackRate: this.currentActiveMinute.playbackRate,
+			})
+			this.currentActiveMinute = null
+		}
+	}
+
+	saveTrackTimestamp = (trackId: string, timestampSeconds: number): void => {
+		if (!Number.isFinite(this.duration)) {
+			return
+		}
+
+		if (timestampSeconds <= 5 || timestampSeconds >= this.duration - 10) {
+			return
+		}
+
+		rajneeshLog('[ActiveMinute] Saving timestamp', {
+			trackId,
+			timestampSeconds,
+			duration: this.duration,
+		})
+		this.ensureActiveMinuteForCurrentTime(trackId, timestampSeconds)
+	}
+
+	getSavedTrackTimestamp = (trackId: string): number => {
+		const saved = this.#activeMinutesByTrack.get(trackId)
+		if (!saved) {
+			return 0
+		}
+		return saved.trackTimestampMs / 1000
+	}
+
+	clearTrackTimestamp = async (trackId: string): Promise<void> => {
+		await clearActiveMinutesForTrack(trackId)
+		const next = new Map(this.#activeMinutesByTrack)
+		next.delete(trackId)
+		this.#activeMinutesByTrack = next
+
+		if (this.currentActiveMinute?.trackId === trackId) {
+			rajneeshLog('[ActiveMinute] Clearing current minute for track', trackId)
+			this.currentActiveMinute = null
+		}
 	}
 
 	toggleRepeat = (): void => {
