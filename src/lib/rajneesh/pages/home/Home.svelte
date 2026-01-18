@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import Artwork from '$lib/components/Artwork.svelte'
 	import Button from '$lib/components/Button.svelte'
 	import IconButton from '$lib/components/IconButton.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
+	import Separator from '$lib/components/Separator.svelte'
 	import { getDatabase } from '$lib/db/database.ts'
 	import { createQuery } from '$lib/db/query/query.ts'
 	import { createManagedArtwork } from '$lib/helpers/create-managed-artwork.svelte'
@@ -12,6 +14,7 @@
 	import type { Album } from '$lib/library/types.ts'
 
 	const player = usePlayer()
+	const menu = useMenu()
 
 	type ResumeCardData = {
 		track: TrackData
@@ -84,18 +87,70 @@
 
 		player.playTrack(0, [trackId])
 	}
+
+	const openExploreSearch = () => {
+		void goto('/library/explore?focus=1')
+	}
 </script>
+
+{#snippet searchBar()}
+	<div
+		class="@container sticky top-2 z-1 mt-2 mb-4 ml-auto flex w-full max-w-125 items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
+	>
+		<input
+			type="text"
+			name="search"
+			placeholder={m.librarySearch()}
+			class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
+			onfocus={openExploreSearch}
+			onclick={openExploreSearch}
+		/>
+
+		<Separator vertical class="my-auto hidden h-6 @sm:flex" />
+
+		<IconButton
+			ariaLabel={m.libraryOpenApplicationMenu()}
+			tooltip={m.libraryOpenApplicationMenu()}
+			icon="moreVertical"
+			onclick={(e) => {
+				const menuItems = [
+					{
+						label: m.settings(),
+						action: () => {
+							goto('/settings')
+						},
+					},
+					{
+						label: m.about(),
+						action: () => {
+							goto('/about')
+						},
+					},
+				]
+
+				menu.showFromEvent(e, menuItems, {
+					width: 200,
+					anchor: true,
+					preferredAlignment: {
+						vertical: 'top',
+						horizontal: 'right',
+					},
+				})
+			}}
+		/>
+	</div>
+{/snippet}
 
 {#if resumeData}
 	<div class="flex grow flex-col px-4 pb-4">
-		<section
-			class="relative flex w-full flex-col items-center justify-center gap-6 overflow-clip py-4 @2xl:min-h-60 @2xl:flex-row"
-		>
+		{@render searchBar()}
+
+		<section class="relative flex w-full flex-col gap-6 overflow-clip py-4 sm:flex-row sm:items-stretch">
 			<Artwork
 				src={artworkSrc()}
 				fallbackIcon="album"
 				alt={resumeData.track.name}
-				class="h-49 shrink-0 rounded-2xl @2xl:h-full"
+				class="h-49 w-full shrink-0 rounded-2xl sm:w-49"
 			/>
 
 			<div class="relative z-0 flex h-full w-full flex-col overflow-clip rounded-2xl bg-surfaceContainerHigh">
@@ -106,8 +161,10 @@
 					</div>
 				</div>
 
-				<div class="mt-auto flex items-center gap-2 py-4 pr-2 pl-4">
-					<Button kind="filled" class="my-1" onclick={resume}>Resume</Button>
+				<div class="mt-auto flex flex-col gap-2 py-4 pr-2 pl-4 sm:flex-row sm:items-center">
+					<Button kind="filled" class="my-1 w-full sm:w-auto" onclick={resume}>
+						Continue listening
+					</Button>
 
 					<IconButton
 						class="ml-auto"
@@ -120,8 +177,12 @@
 		</section>
 	</div>
 {:else}
-	<div class="flex h-full flex-col items-center justify-center gap-4 text-center">
-		<Icon type="home" class="size-24 opacity-20" />
-		<h1 class="text-headline-lg font-bold">Welcome</h1>
+	<div class="flex grow flex-col px-4 pb-4">
+		{@render searchBar()}
+
+		<div class="flex h-full flex-col items-center justify-center gap-4 text-center">
+			<Icon type="home" class="size-24 opacity-20" />
+			<h1 class="text-headline-lg font-bold">Welcome</h1>
+		</div>
 	</div>
 {/if}

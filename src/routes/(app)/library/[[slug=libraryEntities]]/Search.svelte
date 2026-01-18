@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
 	import IconButton from '$lib/components/IconButton.svelte'
 	import Separator from '$lib/components/Separator.svelte'
 	import { debounce } from '$lib/helpers/utils/debounce.ts'
@@ -14,11 +15,21 @@
 
 	const { name, sortOptions, store }: Props = $props()
 
+	let searchInput = $state<HTMLInputElement | null>(null)
+
 	const searchHandler = debounce((e: InputEvent) => {
 		const term = (e.target as HTMLInputElement).value
 
 		store.searchTerm = term
 	}, 300)
+
+	$effect(() => {
+		if (page.url.searchParams.get('focus') !== '1') {
+			return
+		}
+
+		searchInput?.focus()
+	})
 
 	const menu = useMenu()
 
@@ -79,6 +90,7 @@
 	class="@container sticky top-2 z-1 mt-2 mb-4 ml-auto flex w-full max-w-125 items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
 >
 	<input
+		bind:this={searchInput}
 		value={store.searchTerm}
 		type="text"
 		name="search"

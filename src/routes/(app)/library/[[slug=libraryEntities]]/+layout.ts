@@ -106,7 +106,7 @@ export const load: LayoutLoad = async (event): Promise<LoadResult> => {
 		isWide: boolean,
 		itemUuid: string | undefined,
 	): LayoutMode => {
-		if (slug === 'tracks') {
+		if (slug === 'tracks' || slug === 'home') {
 			return 'list'
 		}
 
