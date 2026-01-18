@@ -12,6 +12,7 @@
 	import { dbGetAlbumTracksIdsByName, getLibraryItemIdFromUuid } from '$lib/library/get/ids.ts'
 	import { getLibraryValue, type TrackData } from '$lib/library/get/value.ts'
 	import type { Album } from '$lib/library/types.ts'
+	import InstallAppBanner from '$lib/rajneesh/components/InstallAppBanner.svelte'
 
 	const player = usePlayer()
 	const menu = useMenu()
@@ -159,6 +160,7 @@
 {#if resumeData}
 	<div class="flex grow flex-col px-4 pb-4">
 		{@render searchBar()}
+		<InstallAppBanner class="mb-4" />
 
 		<section class="relative flex w-full flex-col gap-6 overflow-clip py-4 sm:flex-row sm:items-stretch">
 			<Artwork
@@ -187,6 +189,7 @@
 {:else}
 	<div class="flex grow flex-col px-4 pb-4">
 		{@render searchBar()}
+		<InstallAppBanner class="mb-4" />
 
 		<div class="flex h-full flex-col items-center justify-center gap-4 text-center">
 			<Icon type="home" class="size-24 opacity-20" />
