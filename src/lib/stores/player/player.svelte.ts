@@ -69,6 +69,7 @@ export class PlayerStore {
 	#activeTrackIndex = $state(-1)
 	#itemsIdsOriginalOrder = $state<number[]>([])
 	#itemsIdsShuffled = $state<number[] | null>(null)
+	#autoplayOnLoad = true
 
 	itemsIds: readonly number[] = $derived(
 		this.#itemsIdsShuffled ? this.#itemsIdsShuffled : this.#itemsIdsOriginalOrder,
@@ -192,6 +193,8 @@ export class PlayerStore {
 				this.resetAudio()
 				const savedTimestamp = this.getSavedTrackTimestamp(track.uuid)
 				this.currentTime = savedTimestamp
+				const shouldAutoplay = this.#autoplayOnLoad
+				this.#autoplayOnLoad = true
 				void loadTrackAudio(this.#audio, track.file).then(async (loaded) => {
 					if (prevTrack?.id !== track.id) {
 						// Track was changed while loading
@@ -217,7 +220,12 @@ export class PlayerStore {
 						}
 					}
 
-					await audio.play()
+					if (shouldAutoplay) {
+						await audio.play()
+					} else {
+						audio.pause()
+						this.playing = false
+					}
 				})
 			} else {
 				untrack(() => {
@@ -329,6 +337,7 @@ export class PlayerStore {
 		queue?: readonly number[],
 		options: PlayTrackOptions = {},
 	): void => {
+		this.#autoplayOnLoad = true
 		if (queue) {
 			this.#itemsIdsOriginalOrder = [...queue]
 			// Unless explicitly set, shuffle is reset when new queue is passed
@@ -349,6 +358,33 @@ export class PlayerStore {
 		this.#activeTrackIndex = options.shuffle ? 0 : trackIndex
 		this.currentTime = 0
 		this.togglePlay(true)
+	}
+
+	prepareTrack = (
+		trackIndex: number,
+		queue?: readonly number[],
+		options: PlayTrackOptions = {},
+	): void => {
+		this.#autoplayOnLoad = false
+		if (queue) {
+			this.#itemsIdsOriginalOrder = [...queue]
+			this.shuffle = options.shuffle ?? false
+
+			if (this.shuffle) {
+				this.#itemsIdsShuffled = toShuffledArray(this.#itemsIdsOriginalOrder)
+			} else if (this.#itemsIdsShuffled) {
+				this.#itemsIdsShuffled = null
+			}
+		}
+
+		if (this.itemsIds.length === 0) {
+			this.#activeTrackIndex = -1
+			return
+		}
+
+		this.#activeTrackIndex = options.shuffle ? 0 : trackIndex
+		this.currentTime = 0
+		this.playing = false
 	}
 
 	seek = (time: number): void => {

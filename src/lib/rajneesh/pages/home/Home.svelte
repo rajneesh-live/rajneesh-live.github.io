@@ -91,6 +91,21 @@
 	const openExploreSearch = () => {
 		void goto('/library/explore?focus=1')
 	}
+
+	$effect(() => {
+		if (!resumeData || !player.isQueueEmpty) {
+			return
+		}
+
+		const { albumTrackIds, trackId } = resumeData
+		if (albumTrackIds.length > 0) {
+			const startIndex = albumTrackIds.indexOf(trackId)
+			player.prepareTrack(Math.max(0, startIndex), albumTrackIds)
+			return
+		}
+
+		player.prepareTrack(0, [trackId])
+	})
 </script>
 
 {#snippet searchBar()}
