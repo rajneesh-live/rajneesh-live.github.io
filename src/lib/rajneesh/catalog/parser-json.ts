@@ -28,6 +28,7 @@ export const parseCatalogJson = (json: CompactCatalogV1): NormalizedCatalog => {
 	const tracks: Track[] = []
 	const albums: Album[] = []
 	const artistName = json.meta.artist || RAJNEESH_ARTIST
+	const fallbackImage = json.fallbackImage || undefined
 
 	for (const albumTuple of json.albums) {
 		const [
@@ -47,7 +48,7 @@ export const parseCatalogJson = (json: CompactCatalogV1): NormalizedCatalog => {
 			name: albumName,
 			artists: [artistName],
 			year: undefined, // Not in tuple
-			image: coverUrl || undefined,
+			image: coverUrl || fallbackImage,
 		}
 		albums.push(album)
 
