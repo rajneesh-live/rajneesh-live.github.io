@@ -4,6 +4,7 @@
 	import { getDatabase } from '$lib/db/database.ts'
 	import type { TrackData } from '$lib/library/get/value.ts'
 	import { toggleFavoriteTrack } from '$lib/library/playlists-actions'
+	import { canPlayTrackFile } from '$lib/rajneesh/hooks/can-play-track.ts'
 	import type { MenuItem } from '../ListItem.svelte'
 	import { snackbar } from '../snackbar/snackbar.ts'
 	import VirtualContainer from '../VirtualContainer.svelte'
@@ -148,7 +149,11 @@
 			class="virtual-item top-0 left-0 w-full"
 			ariaRowIndex={item.index}
 			menuItems={(track) => getMenuItems(track, item.index)}
-			onclick={(track) => {
+			onclick={async (track) => {
+				if (!(await canPlayTrackFile(track.file))) {
+					return
+				}
+
 				onItemClick({
 					track,
 					items,
