@@ -48,7 +48,10 @@
 	{ariaRowIndex}
 	onclick={() => onclick?.(track!)}
 >
-	<div role="cell" class="track-item h-full grow items-center gap-5">
+	<div
+		role="cell"
+		class={['track-item h-full grow items-center gap-5', track && track.duration <= 0 && 'no-duration']}
+	>
 		<Artwork
 			src={artworkSrc()}
 			alt={track?.name}
@@ -98,6 +101,10 @@
 		.track-item {
 			--grid-cols: auto 1.5fr 74px 56px;
 		}
+
+	.track-item.no-duration {
+		--grid-cols: auto 1.5fr 56px;
+	}
 	}
 
 	/* @container (theme('containers.4xl')) { */
@@ -105,5 +112,9 @@
 		.track-item {
 			--grid-cols: auto 1.5fr minmax(200px, 1fr) 74px 56px;
 		}
+
+	.track-item.no-duration {
+		--grid-cols: auto 1.5fr minmax(200px, 1fr) 56px;
+	}
 	}
 </style>
