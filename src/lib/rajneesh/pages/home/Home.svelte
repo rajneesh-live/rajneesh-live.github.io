@@ -165,13 +165,6 @@
 					<Button kind="filled" class="my-1 w-full sm:w-auto" onclick={resume}>
 						Continue listening
 					</Button>
-
-					<IconButton
-						class="ml-auto"
-						icon="moreVertical"
-						tooltip={m.more()}
-						disabled
-					/>
 				</div>
 			</div>
 		</section>
