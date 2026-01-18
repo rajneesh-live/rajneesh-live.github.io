@@ -50,7 +50,7 @@ const scheduleCleanup = (artwork: Artwork) => {
 	}, thirtySeconds)
 }
 
-export const createManagedArtwork = (getImage: () => Blob | undefined | null) => {
+export const createManagedArtwork = (getImage: () => Blob | string | undefined | null) => {
 	const key = Symbol()
 
 	const artwork = $derived.by(() => {
@@ -58,6 +58,10 @@ export const createManagedArtwork = (getImage: () => Blob | undefined | null) =>
 
 		if (!image) {
 			return null
+		}
+
+		if (typeof image === 'string') {
+			return image
 		}
 
 		let artwork = cache.get(image)
@@ -76,7 +80,7 @@ export const createManagedArtwork = (getImage: () => Blob | undefined | null) =>
 		// Need to use variable here so cleanup uses
 		// previous value instead of the current one
 		const savedArtwork = artwork
-		if (!savedArtwork) {
+		if (!savedArtwork || typeof savedArtwork === 'string') {
 			return
 		}
 
@@ -95,5 +99,15 @@ export const createManagedArtwork = (getImage: () => Blob | undefined | null) =>
 		}
 	})
 
-	return () => artwork?.url
+	return () => {
+		if (!artwork) {
+			return undefined
+		}
+
+		if (typeof artwork === 'string') {
+			return artwork
+		}
+
+		return artwork.url
+	}
 }

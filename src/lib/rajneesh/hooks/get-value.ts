@@ -15,8 +15,18 @@ export const rajneeshGetLibraryValue = async <Store extends LibraryStoreName>(
 	if (storeName === 'tracks') {
 		const track = catalog.tracks.find((t) => t.id === id)
 		if (track) {
+			const album = catalog.albums.find((a) => a.name === track.album)
+			const fallbackImage = track.image ?? (album?.image
+				? {
+						optimized: true,
+						small: album.image as unknown as Blob,
+						full: album.image as unknown as Blob,
+					}
+				: undefined)
+
 			return {
 				...track,
+				image: fallbackImage,
 				type: 'track',
 				favorite: false, // Favorites not implemented in memory yet
 			}
