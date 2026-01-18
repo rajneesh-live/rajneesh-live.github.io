@@ -62,7 +62,7 @@ export const parseCatalogJson = (json: CompactCatalogV1): NormalizedCatalog => {
 				const iPadded = urlPadWidth > 0 ? iStr.padStart(urlPadWidth, '0') : iStr
 				
 				// Generate values
-				const trackName = `${albumName} ${iStr}`
+				const trackName = `${albumName} ${iStr}/${count}`
 				const trackUuid = trackIdTpl.replace('{i}', iStr)
 				const audioUrl = urlPrefix + fileTpl.replace('{i}', iPadded)
 
