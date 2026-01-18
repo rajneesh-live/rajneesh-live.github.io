@@ -9,6 +9,13 @@ import type {
 	Track,
 } from '$lib/library/types.ts'
 
+export interface ActiveMinute {
+	trackId: string
+	trackTimestampMs: number
+	activeMinuteTimestampMs: number
+	playbackRate: number
+}
+
 export interface AppDB extends DBSchema {
 	tracks: {
 		key: number
@@ -84,6 +91,15 @@ export interface AppDB extends DBSchema {
 		value: Album
 		indexes: Pick<Album, 'uuid' | 'name' | 'artists' | 'year'>
 	}
+	activeMinutes: {
+		key: number
+		value: ActiveMinute
+		indexes: {
+			trackId: string
+			activeMinuteTimestampMs: number
+			trackIdActiveMinuteTimestampMs: [trackId: string, activeMinuteTimestampMs: number]
+		}
+	}
 }
 
 export type AppStoreNames = StoreNames<AppDB>
@@ -109,7 +125,7 @@ const createStore = <DBTypes extends DBSchema | unknown, Name extends StoreNames
 	})
 
 const openAppDatabase = () =>
-	openDB<AppDB>('snae-app-data', 2, {
+	openDB<AppDB>('snae-app-data', 4, {
 		async upgrade(db, oldVersion, _newVersion, tx) {
 			const { objectStoreNames } = db
 
@@ -202,18 +218,52 @@ const openAppDatabase = () =>
 			if (!objectStoreNames.contains('directories')) {
 				createStore(db, 'directories')
 			}
+
+			const shouldRecreateActiveMinutes =
+				oldVersion < 4 && objectStoreNames.contains('activeMinutes')
+			if (shouldRecreateActiveMinutes) {
+				db.deleteObjectStore('activeMinutes')
+			}
+
+			if (shouldRecreateActiveMinutes || !objectStoreNames.contains('activeMinutes')) {
+				const store = db.createObjectStore('activeMinutes', {
+					keyPath: 'activeMinuteTimestampMs',
+				})
+				createIndexes(store, ['trackId', 'activeMinuteTimestampMs'])
+				store.createIndex('trackIdActiveMinuteTimestampMs', ['trackId', 'activeMinuteTimestampMs'], {
+					unique: false,
+				})
+			}
 		},
 	})
 
 type AppIDBDatabase = IDBPDatabase<AppDB>
 let dbPromise: Promise<AppIDBDatabase> | AppIDBDatabase | null = null
+let schemaResetAttempted = false
+
+const deleteDatabase = (): Promise<void> =>
+	new Promise((resolve, reject) => {
+		const request = indexedDB.deleteDatabase('snae-app-data')
+		request.onsuccess = () => resolve()
+		request.onerror = () => reject(request.error)
+		request.onblocked = () => resolve()
+	})
 
 export const getDatabase = (): Promise<AppIDBDatabase> | AppIDBDatabase => {
 	if (dbPromise) {
 		return dbPromise
 	}
 
-	dbPromise = openAppDatabase()
+	dbPromise = openAppDatabase().then(async (db) => {
+		if (!db.objectStoreNames.contains('activeMinutes') && !schemaResetAttempted) {
+			schemaResetAttempted = true
+			db.close()
+			await deleteDatabase()
+			return openAppDatabase()
+		}
+
+		return db
+	})
 
 	dbPromise
 		.then((db) => {
