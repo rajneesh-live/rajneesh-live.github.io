@@ -1,10 +1,10 @@
 <script lang="ts" module>
 	import { goto } from '$app/navigation'
 	import { resolve } from '$app/paths'
-	import { getDatabase } from '$lib/db/database.ts'
 	import type { TrackData } from '$lib/library/get/value.ts'
 	import { toggleFavoriteTrack } from '$lib/library/playlists-actions'
 	import { canPlayTrackFile } from '$lib/rajneesh/hooks/can-play-track.ts'
+	import { getRelatedUuid } from '$lib/rajneesh/hooks/get-related-uuid.ts'
 	import type { MenuItem } from '../ListItem.svelte'
 	import { snackbar } from '../snackbar/snackbar.ts'
 	import VirtualContainer from '../VirtualContainer.svelte'
@@ -53,13 +53,19 @@
 
 	const viewRelated = async (store: 'albums' | 'artists', name: string) => {
 		try {
-			const db = await getDatabase()
-			const album = await db.getFromIndex(store, 'name', name)
-			invariant(album)
+			const uuid = await getRelatedUuid(store, name)
+			if (!uuid) {
+				snackbar({
+					id: 'related-not-found',
+					message: m.libraryNoResults(),
+					duration: 5000,
+				})
+				return
+			}
 
 			const path = resolve('/(app)/library/[[slug=libraryEntities]]/[uuid]', {
 				slug: store,
-				uuid: album.uuid,
+				uuid,
 			})
 
 			await goto(path)
