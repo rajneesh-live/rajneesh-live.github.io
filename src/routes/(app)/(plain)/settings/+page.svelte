@@ -12,6 +12,7 @@
 	import { Debounced } from '$lib/helpers/debounced.svelte.ts'
 	import { isFileSystemAccessSupported } from '$lib/helpers/file-system.ts'
 	import { debounce } from '$lib/helpers/utils/debounce.ts'
+	import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
 	import type { AppMotionOption, AppThemeOption } from '$lib/stores/main/store.svelte.ts'
 	import { getLocale, type Locale, setLocale } from '$paraglide/runtime.js'
 	import DirectoriesList from './components/DirectoriesList.svelte'
@@ -73,30 +74,32 @@
 	const isDatabasePending = $derived(isDatabasePendingGetter.current)
 </script>
 
-<section class="card settings-max-width mx-auto w-full overflow-clip">
-	<div class="flex flex-col p-4">
-		<div class="flex items-center gap-2 text-title-sm">
-			{m.settingsDirectories()}
-		</div>
-		<div class="mt-1 mb-4 text-body-sm text-onSurfaceVariant">
-			{m.settingsAllDataLocal()}
-		</div>
-
-		{#if !isFileSystemAccessSupported}
-			<MissingFsApiBanner />
-		{/if}
-		<DirectoriesList disabled={isDatabasePending} {directories} />
-
-		{#if isDatabasePending}
-			<div
-				class="mt-4 flex w-full items-center justify-center gap-4 rounded-md bg-tertiaryContainer/20 py-4"
-			>
-				{m.settingsDbOperationInProgress()}
-				<Spinner class="size-8" />
+{#if !isRajneeshEnabled()}
+	<section class="card settings-max-width mx-auto w-full overflow-clip">
+		<div class="flex flex-col p-4">
+			<div class="flex items-center gap-2 text-title-sm">
+				{m.settingsDirectories()}
 			</div>
-		{/if}
-	</div>
-</section>
+			<div class="mt-1 mb-4 text-body-sm text-onSurfaceVariant">
+				{m.settingsAllDataLocal()}
+			</div>
+
+			{#if !isFileSystemAccessSupported}
+				<MissingFsApiBanner />
+			{/if}
+			<DirectoriesList disabled={isDatabasePending} {directories} />
+
+			{#if isDatabasePending}
+				<div
+					class="mt-4 flex w-full items-center justify-center gap-4 rounded-md bg-tertiaryContainer/20 py-4"
+				>
+					{m.settingsDbOperationInProgress()}
+					<Spinner class="size-8" />
+				</div>
+			{/if}
+		</div>
+	</section>
+{/if}
 
 <InstallAppBanner class="settings-max-width mt-6" />
 

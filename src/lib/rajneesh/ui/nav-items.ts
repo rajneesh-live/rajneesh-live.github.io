@@ -19,10 +19,5 @@ export const getNavItems = (): NavItem[] => {
             title: 'Explore',
             icon: 'compass',
         },
-        {
-            slug: 'playlists',
-            title: m.playlists(),
-            icon: 'playlist',
-        },
     ]
 }
