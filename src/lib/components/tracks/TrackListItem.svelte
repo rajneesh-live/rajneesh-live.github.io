@@ -73,9 +73,11 @@
 				{formatNameOrUnknown(track.album)}
 			</div>
 
-			<div class="hidden tabular-nums @sm:block">
-				{formatDuration(track.duration)}
-			</div>
+			{#if track.duration > 0}
+				<div class="hidden tabular-nums @sm:block">
+					{formatDuration(track.duration)}
+				</div>
+			{/if}
 
 			<DownloadButton
 				trackId={track.uuid}
