@@ -1,17 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import Artwork from '$lib/components/Artwork.svelte'
-	import Button from '$lib/components/Button.svelte'
 	import IconButton from '$lib/components/IconButton.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
 	import Separator from '$lib/components/Separator.svelte'
 	import { getDatabase } from '$lib/db/database.ts'
 	import { createQuery } from '$lib/db/query/query.ts'
-	import { createManagedArtwork } from '$lib/helpers/create-managed-artwork.svelte'
-	import { formatNameOrUnknown } from '$lib/helpers/utils/text.ts'
 	import { dbGetAlbumTracksIdsByName, getLibraryItemIdFromUuid } from '$lib/library/get/ids.ts'
 	import { getLibraryValue, type TrackData } from '$lib/library/get/value.ts'
 	import type { Album } from '$lib/library/types.ts'
+	import ContinueListeningCard from '$lib/rajneesh/components/ContinueListeningCard.svelte'
 	import InstallAppBanner from '$lib/rajneesh/components/InstallAppBanner.svelte'
 
 	const player = usePlayer()
@@ -22,37 +19,87 @@
 		album: Album | undefined
 		albumTrackIds: number[]
 		trackId: number
+		lastPlayedAt: number
 	}
 
 	const latestResumeQuery = createQuery({
 		key: [],
-		fetcher: async (): Promise<ResumeCardData | null> => {
+		fetcher: async (): Promise<ResumeCardData[]> => {
 			const db = await getDatabase()
+			const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000
 			const tx = db.transaction('activeMinutes')
 			const index = tx.store.index('activeMinuteTimestampMs')
-			const cursor = await index.openCursor(null, 'prev')
-			const latest = cursor?.value
+			const minutes = []
 
-			if (!latest) {
-				return null
+			for await (const cursor of index.iterate(IDBKeyRange.lowerBound(cutoff))) {
+				minutes.push(cursor.value)
 			}
 
-			const trackId = await getLibraryItemIdFromUuid('tracks', latest.trackId)
-			if (!trackId) {
-				return null
+			const latestByTrack = new Map<string, (typeof minutes)[number]>()
+			for (const minute of minutes) {
+				const existing = latestByTrack.get(minute.trackId)
+				if (!existing || minute.activeMinuteTimestampMs > existing.activeMinuteTimestampMs) {
+					latestByTrack.set(minute.trackId, minute)
+				}
 			}
 
-			const track = await getLibraryValue('tracks', trackId, true)
-			if (!track) {
-				return null
+			const resolvedTracks = await Promise.all(
+				Array.from(latestByTrack.values()).map(async (minute) => {
+					const trackId = await getLibraryItemIdFromUuid('tracks', minute.trackId)
+					if (!trackId) {
+						return null
+					}
+
+					const track = await getLibraryValue('tracks', trackId, true)
+					if (!track) {
+						return null
+					}
+
+					return {
+						track,
+						trackId,
+						lastPlayedAt: minute.activeMinuteTimestampMs,
+					}
+				}),
+			)
+
+			const latestByAlbum = new Map<string, (typeof resolvedTracks)[number]>()
+			for (const item of resolvedTracks) {
+				if (!item) {
+					continue
+				}
+
+				const albumName = item.track.album
+				const existing = latestByAlbum.get(albumName)
+				if (!existing || item.lastPlayedAt > existing.lastPlayedAt) {
+					latestByAlbum.set(albumName, item)
+				}
 			}
 
-			const [album, albumTrackIds] = await Promise.all([
-				db.getFromIndex('albums', 'name', track.album),
-				dbGetAlbumTracksIdsByName(track.album),
-			])
+			const cards = await Promise.all(
+				Array.from(latestByAlbum.values()).map(async (item) => {
+					if (!item) {
+						return null
+					}
 
-			return { track, album, albumTrackIds, trackId }
+					const [album, albumTrackIds] = await Promise.all([
+						db.getFromIndex('albums', 'name', item.track.album),
+						dbGetAlbumTracksIdsByName(item.track.album),
+					])
+
+					return {
+						track: item.track,
+						trackId: item.trackId,
+						lastPlayedAt: item.lastPlayedAt,
+						album,
+						albumTrackIds,
+					}
+				}),
+			)
+
+			return cards
+				.filter((card): card is ResumeCardData => !!card)
+				.sort((a, b) => b.lastPlayedAt - a.lastPlayedAt)
 		},
 		onDatabaseChange: (changes, { refetch }) => {
 			for (const change of changes) {
@@ -68,16 +115,10 @@
 		},
 	})
 
-	const resumeData = $derived(latestResumeQuery.value)
+	const resumeCards = $derived(latestResumeQuery.value ?? [])
 
-	const artworkSrc = createManagedArtwork(() => resumeData?.album?.image ?? resumeData?.track?.image?.small)
-
-	const resume = () => {
-		if (!resumeData) {
-			return
-		}
-
-		const { albumTrackIds, trackId } = resumeData
+	const resume = (card: ResumeCardData) => {
+		const { albumTrackIds, trackId } = card
 		if (albumTrackIds.length > 0) {
 			const startIndex = albumTrackIds.indexOf(trackId)
 			if (startIndex >= 0) {
@@ -94,11 +135,12 @@
 	}
 
 	$effect(() => {
-		if (!resumeData || !player.isQueueEmpty) {
+		const firstCard = resumeCards[0]
+		if (!firstCard || !player.isQueueEmpty) {
 			return
 		}
 
-		const { albumTrackIds, trackId } = resumeData
+		const { albumTrackIds, trackId } = firstCard
 		if (albumTrackIds.length > 0) {
 			const startIndex = albumTrackIds.indexOf(trackId)
 			player.prepareTrack(Math.max(0, startIndex), albumTrackIds)
@@ -157,33 +199,15 @@
 	</div>
 {/snippet}
 
-{#if resumeData}
+{#if resumeCards.length > 0}
 	<div class="flex grow flex-col px-4 pb-4">
 		{@render searchBar()}
 		<InstallAppBanner class="mb-4" />
 
-		<section class="relative flex w-full flex-col gap-6 overflow-clip py-4 sm:flex-row sm:items-stretch">
-			<Artwork
-				src={artworkSrc()}
-				fallbackIcon="album"
-				alt={resumeData.track.name}
-				class="h-49 w-full shrink-0 rounded-2xl sm:w-49"
-			/>
-
-			<div class="relative z-0 flex h-full w-full flex-col overflow-clip rounded-2xl bg-surfaceContainerHigh">
-				<div class="flex grow flex-col p-4">
-					<div class="text-headline-md">{formatNameOrUnknown(resumeData.track.name)}</div>
-					<div class="mt-1 text-body-lg text-onSurfaceVariant">
-						{formatNameOrUnknown(resumeData.track.album)}
-					</div>
-				</div>
-
-				<div class="mt-auto flex flex-col gap-2 py-4 pr-2 pl-4 sm:flex-row sm:items-center">
-					<Button kind="filled" class="my-1 w-full sm:w-auto" onclick={resume}>
-						Continue listening
-					</Button>
-				</div>
-			</div>
+		<section class="relative grid w-full gap-4 overflow-clip py-4 sm:grid-cols-2 lg:grid-cols-3">
+			{#each resumeCards as card (card.trackId)}
+				<ContinueListeningCard card={card} onResume={() => resume(card)} />
+			{/each}
 		</section>
 	</div>
 {:else}
