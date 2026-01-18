@@ -17,6 +17,8 @@
 	import Slider from '$lib/components/Slider.svelte'
 	import TracksListContainer from '$lib/components/tracks/TracksListContainer.svelte'
 	import { formatArtists } from '$lib/helpers/utils/text.ts'
+	import { isRajneeshEnabled } from '$lib/rajneesh/index.ts'
+	import SpeedControlButton from '$lib/rajneesh/components/player/SpeedControlButton.svelte'
 
 	const { data } = $props()
 
@@ -75,7 +77,11 @@
 
 					<PlayNextButton />
 
-					<RepeatButton />
+					{#if isRajneeshEnabled()}
+						<SpeedControlButton />
+					{:else}
+						<RepeatButton />
+					{/if}
 				</div>
 
 				{#if mainStore.volumeSliderEnabled}
@@ -122,6 +128,7 @@
 {/snippet}
 
 {#snippet queueActions()}
+	<RepeatButton />
 	<IconButton
 		tooltip={m.playerClearQueue()}
 		disabled={player.isQueueEmpty}

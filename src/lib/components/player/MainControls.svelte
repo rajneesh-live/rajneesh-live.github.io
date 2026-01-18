@@ -4,6 +4,8 @@
 	import PlayTogglePillButton from './buttons/PlayTogglePillButton.svelte'
 	import RepeatButton from './buttons/RepeatButton.svelte'
 	import ShuffleButton from './buttons/ShuffleButton.svelte'
+	import { isRajneeshEnabled } from '$lib/rajneesh/index.ts'
+	import SpeedControlButton from '$lib/rajneesh/components/player/SpeedControlButton.svelte'
 
 	const { class: className }: { class?: ClassValue } = $props()
 </script>
@@ -17,5 +19,9 @@
 
 	<PlayNextButton />
 
-	<RepeatButton />
+	{#if isRajneeshEnabled()}
+		<SpeedControlButton />
+	{:else}
+		<RepeatButton />
+	{/if}
 </div>
