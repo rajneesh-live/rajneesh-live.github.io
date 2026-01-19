@@ -216,14 +216,6 @@
 	</div>
 </section>
 
-<section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
-	<div class="flex items-center justify-between p-4">
-		<div>{m.about()}</div>
-
-		<IconButton as="a" href="/about" tooltip={m.about()} icon="chevronRight" />
-	</div>
-</section>
-
 <style lang="postcss">
 	@reference '../../../../app.css';
 
