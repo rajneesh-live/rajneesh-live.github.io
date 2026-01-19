@@ -6,6 +6,7 @@
 	import IconButton from '$lib/components/IconButton.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
 	import TracksListContainer from '$lib/components/tracks/TracksListContainer.svelte'
+	import { isRajneeshEnabled } from '$lib/rajneesh/index.ts'
 	import { initPageQueries } from '$lib/db/query/page-query.svelte.ts'
 	import { createManagedArtwork } from '$lib/helpers/create-managed-artwork.svelte'
 	import { formatArtists, formatNameOrUnknown } from '$lib/helpers/utils/text.ts'
@@ -183,19 +184,23 @@
 					{m.play()}
 				</Button>
 
-				<Button
-					kind="flat"
-					class="my-1 mr-auto"
-					disabled={tracks.tracksIds.length === 0}
-					onclick={() => {
-						player.playTrack(0, tracks.tracksIds, {
-							shuffle: true,
-						})
-					}}
-				>
-					{m.shuffle()}
-					<Icon type="shuffle" />
-				</Button>
+				{#if !isRajneeshEnabled()}
+					<Button
+						kind="flat"
+						class="my-1 mr-auto"
+						disabled={tracks.tracksIds.length === 0}
+						onclick={() => {
+							player.playTrack(0, tracks.tracksIds, {
+								shuffle: true,
+							})
+						}}
+					>
+						{m.shuffle()}
+						<Icon type="shuffle" />
+					</Button>
+				{:else}
+					<span class="mr-auto"></span>
+				{/if}
 
 				{#if menuItems}
 					<IconButton
