@@ -75,56 +75,13 @@
 	}
 
 	const getMenuItems = (track: TrackData, index: number) => {
-		const albumName = track.album
-		// In a future we should handle ability to view multiple artists
-		const artistName = track.artists[0]
-
 		type FalsyValue = false | undefined | null | ''
 		const predefinedMenuItemsList: (PredefinedMenuItem | FalsyValue)[] = [
-			{
-				predefinedKey: 'addToPlaylist',
-				label: m.libraryAddToPlaylist(),
-				action: () => {
-					main.addTrackToPlaylistDialogOpen = [track.id]
-				},
-			},
-			{
-				predefinedKey: 'addToFavorites',
-				label: track.favorite ? m.trackRemoveFromFavorites() : m.trackAddToFavorites(),
-				action: () => {
-					void toggleFavoriteTrack(track.favorite, track.id)
-				},
-			},
 			{
 				predefinedKey: 'addToQueue',
 				label: m.playerAddToQueue(),
 				action: () => {
 					player.addToQueue(track.id)
-				},
-			},
-			albumName && {
-				predefinedKey: 'viewAlbum',
-				label: m.trackViewAlbum(),
-				action: () => {
-					void viewRelated('albums', albumName)
-				},
-			},
-			artistName && {
-				predefinedKey: 'viewArtist',
-				label: m.trackViewArtist(),
-				action: () => {
-					void viewRelated('artists', artistName)
-				},
-			},
-			{
-				predefinedKey: 'removeFromLibrary',
-				label: m.libraryRemoveFromLibrary(),
-				action: () => {
-					main.removeLibraryItemOpen = {
-						name: track.name,
-						id: track.id,
-						storeName: 'tracks',
-					}
 				},
 			},
 		]
@@ -140,7 +97,7 @@
 			return !isExplicitlyDisabled
 		}) as MenuItem[]
 
-		return [...predefinedItems, ...(menuItems ? menuItems(track, index) : [])]
+		return predefinedItems
 	}
 </script>
 
