@@ -11,6 +11,7 @@ export type CompactCatalogV1 = {
 		catalogVersion: string
 		artist: string
 	}
+	directContactLink?: string
 	fallbackImage?: string
 	legend: unknown // Ignore legend at runtime
 	albums: AlbumTuple[]

@@ -5,6 +5,7 @@
 	import Separator from '$lib/components/Separator.svelte'
 	import { debounce } from '$lib/helpers/utils/debounce.ts'
 	import { navigateToExternal } from '$lib/helpers/utils/navigate.ts'
+	import { getCatalog } from '$lib/rajneesh/index.ts'
 	import type { PageData } from './$types.ts'
 
 	interface Props {
@@ -32,6 +33,7 @@
 	})
 
 	const menu = useMenu()
+	const directContactLink = $derived.by(() => getCatalog()?.directContactLink)
 
 	const generalMenuHandler = (e: MouseEvent) => {
 		const menuItems = [
@@ -41,19 +43,13 @@
 					goto('/settings')
 				},
 			},
-			{
-				label: m.about(),
-				action: () => {
-					goto('/about')
-				},
-			},
-			{
+			directContactLink && {
 				label: m.foundAnIssue(),
 				action: () => {
-					navigateToExternal('https://github.com/minht11/local-music-pwa/issues/new')
+					navigateToExternal(directContactLink)
 				},
 			},
-		]
+		].filter(Boolean) as { label: string; action: () => void }[]
 
 		menu.showFromEvent(e, menuItems, {
 			width: 200,

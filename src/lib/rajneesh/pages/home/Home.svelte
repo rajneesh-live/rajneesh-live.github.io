@@ -5,14 +5,17 @@
 	import Separator from '$lib/components/Separator.svelte'
 	import { getDatabase } from '$lib/db/database.ts'
 	import { createQuery } from '$lib/db/query/query.ts'
+	import { navigateToExternal } from '$lib/helpers/utils/navigate.ts'
 	import { dbGetAlbumTracksIdsByName, getLibraryItemIdFromUuid } from '$lib/library/get/ids.ts'
 	import { getLibraryValue, type TrackData } from '$lib/library/get/value.ts'
 	import type { Album } from '$lib/library/types.ts'
 	import ContinueListeningCard from '$lib/rajneesh/components/ContinueListeningCard.svelte'
 	import InstallAppBanner from '$lib/rajneesh/components/InstallAppBanner.svelte'
+	import { getCatalog } from '$lib/rajneesh/index.ts'
 
 	const player = usePlayer()
 	const menu = useMenu()
+	const directContactLink = $derived.by(() => getCatalog()?.directContactLink)
 
 	type ResumeCardData = {
 		track: TrackData
@@ -178,13 +181,14 @@
 							goto('/settings')
 						},
 					},
-					{
-						label: m.about(),
+					directContactLink && {
+						label: m.foundAnIssue(),
 						action: () => {
-							goto('/about')
+							navigateToExternal(directContactLink)
 						},
 					},
 				]
+					.filter(Boolean) as { label: string; action: () => void }[]
 
 				menu.showFromEvent(e, menuItems, {
 					width: 200,

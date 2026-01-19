@@ -22,6 +22,7 @@ export interface NormalizedCatalog {
 	tracks: Track[]
 	albums: Album[]
 	artist: { id: number; uuid: string; name: string }
+	directContactLink?: string
 }
 
 export const parseCatalogJson = (json: CompactCatalogV1): NormalizedCatalog => {
@@ -29,6 +30,7 @@ export const parseCatalogJson = (json: CompactCatalogV1): NormalizedCatalog => {
 	const albums: Album[] = []
 	const artistName = json.meta.artist || RAJNEESH_ARTIST
 	const fallbackImage = json.fallbackImage || undefined
+	const directContactLink = json.directContactLink || undefined
 
 	for (const albumTuple of json.albums) {
 		const [
@@ -106,5 +108,6 @@ export const parseCatalogJson = (json: CompactCatalogV1): NormalizedCatalog => {
 			uuid: artistName.toLowerCase(),
 			name: artistName,
 		},
+		directContactLink,
 	}
 }
