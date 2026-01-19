@@ -156,7 +156,7 @@
 			ariaRowIndex={item.index}
 			menuItems={(track) => getMenuItems(track, item.index)}
 			onclick={async (track) => {
-				if (!(await canPlayTrackFile(track.file))) {
+				if (!(await canPlayTrackFile(track.file, track.uuid))) {
 					return
 				}
 

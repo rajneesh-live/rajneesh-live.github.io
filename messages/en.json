@@ -18,6 +18,7 @@
 	"artists": "Artists",
 	"cancel": "Cancel",
 	"directoryIsIncludedInParent": "\"{newDir}\" is subdirectory of \"{existingDir}\" which is already in your Library. You do not need to add it again.",
+	"download": "Download",
 	"dismiss": "Dismiss",
 	"duration": "Duration",
 

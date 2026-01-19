@@ -18,6 +18,7 @@
 	"artists": "Künstler",
 	"cancel": "Abbrechen",
 	"directoryIsIncludedInParent": "\"{newDir}\" ist ein Unterverzeichnis von \"{existingDir}\" das bereits in Ihrer Bibliothek vorhanden ist. Eine erneute Hinzufügung ist nicht erforderlich.",
+	"download": "Herunterladen",
 	"dismiss": "Schließen",
 	"duration": "Dauer",
 

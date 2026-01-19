@@ -195,7 +195,7 @@ export class PlayerStore {
 				this.currentTime = savedTimestamp
 				const shouldAutoplay = this.#autoplayOnLoad
 				this.#autoplayOnLoad = true
-				void loadTrackAudio(this.#audio, track.file).then(async (loaded) => {
+				void loadTrackAudio(this.#audio, track.file, track.uuid).then(async (loaded) => {
 					if (prevTrack?.id !== track.id) {
 						// Track was changed while loading
 						return

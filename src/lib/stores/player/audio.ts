@@ -1,6 +1,6 @@
 import type { FileEntity } from '$lib/helpers/file-system'
 import { isRemoteFile } from '$lib/helpers/file-system'
-import { getCachedBlob } from '$lib/rajneesh/index.ts'
+import { downloadTrack, getCachedBlob } from '$lib/rajneesh/index.ts'
 import { snackbarItems } from '$lib/components/snackbar/store.svelte.ts'
 
 export type PlayerRepeat = 'none' | 'one' | 'all'
@@ -60,6 +60,7 @@ export const cleanupTrackAudio = (audio: HTMLAudioElement): void => {
 export const loadTrackAudio = async (
 	audio: HTMLAudioElement,
 	entity: FileEntity,
+	trackId?: string,
 ): Promise<boolean> => {
 	cleanupTrackAudio(audio)
 
@@ -77,6 +78,14 @@ export const loadTrackAudio = async (
 			const snackbarData = {
 				id: snackbarId,
 				message: 'Download this track first to play it offline',
+				controls: {
+					label: m.download(),
+					action: () => {
+						if (trackId) {
+							downloadTrack(trackId, entity.url)
+						}
+					},
+				},
 				duration: 4000,
 			}
 			if (existingIndex > -1) {
