@@ -34,6 +34,14 @@
 
 	const menu = useMenu()
 	const directContactLink = $derived.by(() => getCatalog()?.directContactLink)
+	const searchPlaceholder = $derived.by(() => {
+		const slug = page.params.slug
+		if (slug === 'albums' || slug === 'explore') {
+			return m.librarySearch()
+		}
+
+		return `${m.librarySearch()} ${name.toLowerCase()}`
+	})
 
 	const generalMenuHandler = (e: MouseEvent) => {
 		const menuItems = [
@@ -90,7 +98,7 @@
 		value={store.searchTerm}
 		type="text"
 		name="search"
-		placeholder={`${m.librarySearch()} ${name.toLowerCase()}`}
+		placeholder={searchPlaceholder}
 		class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
 		oninput={(e) => searchHandler(e as unknown as InputEvent)}
 	/>
