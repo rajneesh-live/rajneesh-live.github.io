@@ -202,7 +202,7 @@
 					<span class="mr-auto"></span>
 				{/if}
 
-				{#if menuItems}
+				{#if menuItems && slug !== 'albums'}
 					<IconButton
 						icon="moreVertical"
 						tooltip={m.more()}
