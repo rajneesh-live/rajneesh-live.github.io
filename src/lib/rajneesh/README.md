@@ -10,4 +10,8 @@ Guidelines:
 - If you must edit upstream code, do the smallest possible change and
   keep the behavior gated/isolated.
 
+Analytics:
+- PostHog setup lives in `src/lib/rajneesh/analytics/posthog.ts` with hardcoded
+  credentials (API key/host) for easy updates.
+
 Goal: reduce conflicts with upstream updates while keeping fork behavior clear.

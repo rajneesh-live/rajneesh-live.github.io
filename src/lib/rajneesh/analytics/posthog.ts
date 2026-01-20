@@ -1,0 +1,51 @@
+import { browser } from '$app/environment'
+import posthog from 'posthog-js'
+
+const POSTHOG_API_KEY = 'phc_UV64HQ0zEhktp0y5NHWBPoY97oLwEwz19Ur0rRJ3dz0'
+const POSTHOG_HOST = 'https://app.posthog.com'
+
+let initialized = false
+
+export const initPosthog = () => {
+	if (!browser || initialized) {
+		return
+	}
+
+	if (!POSTHOG_API_KEY || POSTHOG_API_KEY === 'REPLACE_ME') {
+		return
+	}
+
+	posthog.init(POSTHOG_API_KEY, {
+		api_host: POSTHOG_HOST,
+		autocapture: true,
+		capture_pageview: false,
+		capture_pageleave: true,
+		disable_session_recording: false,
+		loaded: (client) => {
+			if (import.meta.env.DEV) {
+				client.debug(true)
+			}
+		},
+	})
+
+	initialized = true
+}
+
+export const trackPageview = (url?: string) => {
+	if (!browser) {
+		return
+	}
+
+	if (!initialized) {
+		initPosthog()
+	}
+
+	if (!initialized) {
+		return
+	}
+
+	posthog.capture('$pageview', {
+		$current_url: url ?? window.location.href,
+		$pathname: window.location.pathname,
+	})
+}

@@ -26,7 +26,11 @@ const config = {
 		csp: {
 			directives: {
 				'default-src': ['none'],
-				'script-src': ['self', 'https://gc.zgo.at/'],
+				'script-src': [
+					'self',
+					'https://gc.zgo.at/',
+					'https://us-assets.i.posthog.com/',
+				],
 				'style-src': ['self', 'unsafe-inline'],
 				// Allow remote images/audio (e.g. archive.org) to be displayed/played
 				'img-src': ['self', 'blob:', 'data:', 'https:', 'http:'],
