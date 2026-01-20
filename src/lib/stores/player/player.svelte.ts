@@ -17,6 +17,7 @@ import {
 } from '$lib/db/active-minutes.ts'
 import type { ActiveMinute } from '$lib/db/database.ts'
 import { rajneeshLog } from '$lib/rajneesh/index.ts'
+import { trackListenedMinute } from '$lib/rajneesh/analytics/posthog'
 
 export interface PlayTrackOptions {
 	shuffle?: boolean
@@ -415,6 +416,7 @@ export class PlayerStore {
 		rajneeshLog('[ActiveMinute] Persisting completed minute', payload)
 		const saved = await addActiveMinute(payload)
 		this.#updateLatestActiveMinute(saved)
+		trackListenedMinute(payload)
 	}
 
 	#loadActiveMinutesCache = async (): Promise<void> => {

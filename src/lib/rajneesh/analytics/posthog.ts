@@ -11,7 +11,7 @@ export const initPosthog = () => {
 		return
 	}
 
-	if (!POSTHOG_API_KEY || POSTHOG_API_KEY === 'REPLACE_ME') {
+	if (!POSTHOG_API_KEY) {
 		return
 	}
 
@@ -47,5 +47,30 @@ export const trackPageview = (url?: string) => {
 	posthog.capture('$pageview', {
 		$current_url: url ?? window.location.href,
 		$pathname: window.location.pathname,
+	})
+}
+
+type ListenedMinutePayload = {
+	activeMinuteTimestampMs: number
+	trackId: string
+	trackTimestampMs: number
+	playbackRate: number
+}
+
+export const trackListenedMinute = (payload: ListenedMinutePayload) => {
+	if (!browser) {
+		return
+	}
+
+	if (!initialized) {
+		initPosthog()
+	}
+
+	if (!initialized) {
+		return
+	}
+
+	posthog.capture('listened_minute', {
+		...payload,
 	})
 }
