@@ -18,11 +18,20 @@
 
 	let searchInput = $state<HTMLInputElement | null>(null)
 
-	const searchHandler = debounce((e: InputEvent) => {
-		const term = (e.target as HTMLInputElement).value
-
+	const searchHandler = debounce((term: string) => {
 		store.searchTerm = term
 	}, 300)
+
+	const getSearchValue = (event: Event) =>
+		(event.currentTarget as HTMLInputElement | null)?.value ?? ''
+
+	const onSearchInput = (event: Event) => {
+		searchHandler(getSearchValue(event))
+	}
+
+	const onSearchCommit = (event: Event) => {
+		store.searchTerm = getSearchValue(event)
+	}
 
 	$effect(() => {
 		if (page.url.searchParams.get('focus') !== '1') {
@@ -100,7 +109,9 @@
 		name="search"
 		placeholder={searchPlaceholder}
 		class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
-		oninput={(e) => searchHandler(e as unknown as InputEvent)}
+		oninput={onSearchInput}
+		onchange={onSearchCommit}
+		oncompositionend={onSearchCommit}
 	/>
 
 	<Separator vertical class="my-auto hidden h-6 @sm:flex" />
