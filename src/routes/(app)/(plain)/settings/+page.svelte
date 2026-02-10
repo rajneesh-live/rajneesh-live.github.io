@@ -147,6 +147,22 @@
 	</section>
 {/if}
 
+{#if isRajneeshEnabled()}
+	<section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
+		<div class="px-4 pt-4 text-title-sm">Content</div>
+		<div class="flex items-center justify-between p-4">
+			<div class="flex flex-col">
+				<div>Hindi only</div>
+				<div class="text-body-sm text-onSurfaceVariant">
+					Hide English discourses
+				</div>
+			</div>
+
+			<Switch bind:checked={mainStore.hindiOnly} />
+		</div>
+	</section>
+{/if}
+
 {#if !isRajneeshEnabled()}
 	<section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
 		<div class="px-4 pt-4 text-title-sm">{m.settingsAppearance()}</div>

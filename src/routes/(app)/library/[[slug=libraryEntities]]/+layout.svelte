@@ -19,6 +19,7 @@
 	import { getPlaylistMenuItems } from '$lib/menu-actions/playlists.ts'
 	import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
 	import Home from '$lib/rajneesh/pages/home/Home.svelte'
+	import ShortsView from '$lib/rajneesh/pages/shorts/ShortsView.svelte'
 	import ExploreListContainer from '$lib/rajneesh/pages/explore/ExploreListContainer.svelte'
 	import { getNavItems } from '$lib/rajneesh/ui/nav-items.ts'
 	import Search from './Search.svelte'
@@ -118,7 +119,7 @@
 	{#snippet list(mode)}
 		<div class={[isHandHeldDevice ? 'sm:pl-20' : 'pl-20', 'flex grow flex-col']}>
 			<div class={[mode === 'both' && 'w-100', 'flex grow flex-col px-4']}>
-				{#if slug !== 'home'}
+				{#if slug !== 'home' && slug !== 'shorts'}
 					<Search name={data.pluralTitle()} sortOptions={data.sortOptions} store={data.store} />
 				{/if}
 
@@ -137,7 +138,7 @@
 					</div>
 				{/if}
 
-				{#if data.tracksCountQuery.value === 0 && slug !== 'playlists' && slug !== 'home' && !isRajneeshEnabled()}
+				{#if data.tracksCountQuery.value === 0 && slug !== 'playlists' && slug !== 'home' && slug !== 'shorts' && !isRajneeshEnabled()}
 					<div class="my-auto flex flex-col items-center text-center">
 						<div class="mb-1 text-title-lg">{m.libraryEmpty()}</div>
 						{m.libraryStartByAdding()}
@@ -150,6 +151,8 @@
 					<div class={['flex w-full grow flex-col']}>
 						{#if slug === 'home'}
 							<Home />
+						{:else if slug === 'shorts'}
+							<ShortsView />
 						{:else if itemsIds.length === 0}
 							<div class="relative m-auto flex flex-col items-center text-center">
 								<Icon type="magnify" class="my-auto size-35 opacity-54" />

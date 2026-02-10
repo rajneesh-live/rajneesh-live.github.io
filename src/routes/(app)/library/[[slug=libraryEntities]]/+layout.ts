@@ -36,7 +36,7 @@ const loadData = async <Slug extends LibraryStoreName>(
 	const searchFn = config.search ?? defaultSearchFn
 	const store = new LibraryStore(slug)
 
-	if (slug === 'home') {
+	if (slug === 'home' || slug === 'shorts') {
 		return {
 			...config,
 			store,
@@ -98,7 +98,7 @@ export const load: LayoutLoad = async (event): Promise<LoadResult> => {
 
 	const data = await loadData(slug)
 
-	if (data.tracksCountQuery.value === 0 && slug !== 'home') {
+	if (data.tracksCountQuery.value === 0 && slug !== 'home' && slug !== 'shorts') {
 		const hasV1Data = await checkForV1LegacyDatabaseData()
 
 		if (hasV1Data) {
@@ -113,7 +113,7 @@ export const load: LayoutLoad = async (event): Promise<LoadResult> => {
 		isWide: boolean,
 		itemUuid: string | undefined,
 	): LayoutMode => {
-		if (slug === 'tracks' || slug === 'home') {
+		if (slug === 'tracks' || slug === 'home' || slug === 'shorts') {
 			return 'list'
 		}
 

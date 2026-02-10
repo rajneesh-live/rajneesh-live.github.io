@@ -39,6 +39,7 @@
 	const { children } = $props()
 
 	let overlayContentHeight = $state(0)
+	const isShortsPage = $derived(page.url.pathname.includes('/library/shorts'))
 
 	$effect(() => {
 		document.documentElement.style.setProperty(
@@ -146,13 +147,15 @@
 			</div>
 		</div> -->
 
-		{#if !page.data.noPlayerOverlay}
+		{#if !page.data.noPlayerOverlay && !isShortsPage}
 			<div class="px-4 pb-4 sm:pb-2">
 				<PlayerOverlay />
 			</div>
 		{/if}
 
-		{@render overlaySnippets.bottomBar?.()}
+		{#if !isShortsPage}
+			{@render overlaySnippets.bottomBar?.()}
+		{/if}
 	</div>
 </div>
 

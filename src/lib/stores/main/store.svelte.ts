@@ -21,6 +21,9 @@ export interface RemoveLibraryItemOptions {
 export const getPersistedLibrarySplitLayoutEnabled = (): boolean =>
 	getPersistedValue('main', 'librarySplitLayoutEnabled', true)
 
+export const getPersistedHindiOnly = (): boolean =>
+	getPersistedValue('main', 'hindiOnly', true)
+
 export class MainStore {
 	theme: AppThemeOption = $state('auto')
 
@@ -68,6 +71,9 @@ export class MainStore {
 
 	librarySplitLayoutEnabled: boolean = $state(true)
 
+	/** When true, only Hindi discourses are shown (English filtered out). Default: true */
+	hindiOnly: boolean = $state(true)
+
 	constructor() {
 		persist('main', this, [
 			'theme',
@@ -76,6 +82,7 @@ export class MainStore {
 			'customThemePaletteHex',
 			'volumeSliderEnabled',
 			'librarySplitLayoutEnabled',
+			'hindiOnly',
 		])
 	}
 }

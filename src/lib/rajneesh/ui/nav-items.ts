@@ -15,6 +15,11 @@ export const getNavItems = (): NavItem[] => {
             icon: 'home',
         },
         {
+            slug: 'shorts',
+            title: 'Shorts',
+            icon: 'musicNote',
+        },
+        {
             slug: 'explore',
             title: 'Explore',
             icon: 'compass',

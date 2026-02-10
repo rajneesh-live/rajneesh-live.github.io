@@ -20,6 +20,13 @@ export const homeConfig: LibraryRouteConfig<'home'> = {
 	sortOptions: () => [],
 }
 
+export const shortsConfig: LibraryRouteConfig<'shorts'> = {
+	slug: 'shorts',
+	singularTitle: () => 'Shorts',
+	pluralTitle: () => 'Shorts',
+	sortOptions: () => [],
+}
+
 export const exploreConfig: LibraryRouteConfig<'explore'> = {
 	slug: 'explore',
 	singularTitle: () => 'Explore',

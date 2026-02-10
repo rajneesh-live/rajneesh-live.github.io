@@ -92,6 +92,11 @@ export interface AppDB extends DBSchema {
 		value: { id: number; name: string }
 		indexes: { name: string }
 	}
+	shorts: {
+		key: number
+		value: { id: number; name: string }
+		indexes: { name: string }
+	}
 	explore: {
 		key: number
 		value: Album
@@ -139,7 +144,7 @@ const createStore = <DBTypes extends DBSchema | unknown, Name extends StoreNames
 	})
 
 const openAppDatabase = () =>
-	openDB<AppDB>('snae-app-data', 5, {
+	openDB<AppDB>('snae-app-data', 6, {
 		async upgrade(db, oldVersion, _newVersion, tx) {
 			const { objectStoreNames } = db
 
@@ -231,6 +236,11 @@ const openAppDatabase = () =>
 
 			if (!objectStoreNames.contains('directories')) {
 				createStore(db, 'directories')
+			}
+
+			if (!objectStoreNames.contains('shorts')) {
+				const store = createStore(db, 'shorts')
+				createIndexes(store, ['name'])
 			}
 
 			const shouldRecreateActiveMinutes =
