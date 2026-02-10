@@ -10,6 +10,8 @@ import {
 } from '$lib/library/get/ids-queries.ts'
 import { createTracksCountPageQuery } from '$lib/library/tracks-queries.ts'
 import { FAVORITE_PLAYLIST_ID, type LibraryStoreName } from '$lib/library/types.ts'
+import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
+import { whenCatalogReady } from '$lib/rajneesh/stores/catalog.svelte.ts'
 import { getPersistedLibrarySplitLayoutEnabled } from '$lib/stores/main/store.svelte.ts'
 import { defineViewTransitionMatcher } from '$lib/view-transitions.svelte.ts'
 import type { LayoutLoad } from './$types.ts'
@@ -88,6 +90,10 @@ export const load: LayoutLoad = async (event): Promise<LoadResult> => {
 	const { slug } = event.params
 	if (!slug) {
 		redirect(301, '/library/home')
+	}
+
+	if (isRajneeshEnabled() && slug !== 'home') {
+		await whenCatalogReady()
 	}
 
 	const data = await loadData(slug)

@@ -109,14 +109,16 @@
 		<IconButton icon="sort" tooltip={m.libraryOpenSortMenu()} onclick={sortMenuHandler} />
 	{/if}
 
-	<IconButton
-		class={[store.order === 'desc' && 'rotate-180', 'transition-transform']}
-		icon="sortAscending"
-		tooltip={m.libraryToggleSortOrder()}
-		onclick={() => {
-			store.order = store.order === 'asc' ? 'desc' : 'asc'
-		}}
-	/>
+	{#if page.params.slug !== 'explore'}
+		<IconButton
+			class={[store.order === 'desc' && 'rotate-180', 'transition-transform']}
+			icon="sortAscending"
+			tooltip={m.libraryToggleSortOrder()}
+			onclick={() => {
+				store.order = store.order === 'asc' ? 'desc' : 'asc'
+			}}
+		/>
+	{/if}
 
 	<Separator vertical class="my-auto hidden h-6 @sm:flex" />
 

@@ -17,6 +17,7 @@
 	import { useSetOverlaySnippet } from '$lib/layout-bottom-bar.svelte.ts'
 	import { FAVORITE_PLAYLIST_ID } from '$lib/library/playlists-actions.ts'
 	import { getPlaylistMenuItems } from '$lib/menu-actions/playlists.ts'
+	import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
 	import Home from '$lib/rajneesh/pages/home/Home.svelte'
 	import ExploreListContainer from '$lib/rajneesh/pages/explore/ExploreListContainer.svelte'
 	import { getNavItems } from '$lib/rajneesh/ui/nav-items.ts'
@@ -136,7 +137,7 @@
 					</div>
 				{/if}
 
-				{#if data.tracksCountQuery.value === 0 && slug !== 'playlists' && slug !== 'home'}
+				{#if data.tracksCountQuery.value === 0 && slug !== 'playlists' && slug !== 'home' && !isRajneeshEnabled()}
 					<div class="my-auto flex flex-col items-center text-center">
 						<div class="mb-1 text-title-lg">{m.libraryEmpty()}</div>
 						{m.libraryStartByAdding()}
