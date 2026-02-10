@@ -18,30 +18,11 @@
 
 	let searchInput = $state<HTMLInputElement | null>(null)
 
-	const searchHandler = debounce((term: string) => {
+	const searchHandler = debounce((e: InputEvent) => {
+		const term = (e.target as HTMLInputElement).value
+
 		store.searchTerm = term
 	}, 300)
-
-	const getSearchValue = (event: Event) =>
-		(event.currentTarget as HTMLInputElement | null)?.value ?? ''
-
-	const onSearchInput = (event: Event) => {
-		const term = getSearchValue(event)
-		console.info('[library/search] input', {
-			slug: page.params.slug,
-			term,
-		})
-		searchHandler(term)
-	}
-
-	const onSearchCommit = (event: Event) => {
-		const term = getSearchValue(event)
-		console.info('[library/search] commit', {
-			slug: page.params.slug,
-			term,
-		})
-		store.searchTerm = term
-	}
 
 	$effect(() => {
 		if (page.url.searchParams.get('focus') !== '1') {
@@ -119,9 +100,7 @@
 		name="search"
 		placeholder={searchPlaceholder}
 		class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
-		oninput={onSearchInput}
-		onchange={onSearchCommit}
-		oncompositionend={onSearchCommit}
+		oninput={(e) => searchHandler(e as unknown as InputEvent)}
 	/>
 
 	<Separator vertical class="my-auto hidden h-6 @sm:flex" />

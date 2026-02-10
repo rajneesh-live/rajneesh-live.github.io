@@ -46,21 +46,12 @@ const loadData = async <Slug extends LibraryStoreName>(
 	const itemsIdsQueryPromise = createLibraryItemKeysPageQuery(slug, {
 		key: () => [slug, store.sortByKey, store.order, store.searchTerm],
 		fetcher: async ([name, sortKey, order, searchTerm]) => {
-			console.info('[library/search] fetch', {
-				slug: name,
-				sortKey,
-				order,
-				searchTerm,
-			})
+			const normalizedSearchTerm = searchTerm.toLowerCase()
 			const result = await getLibraryItemIds(name, {
 				sort: sortKey,
 				order,
-				searchTerm,
-				searchFn: (value) => searchFn(value, searchTerm),
-			})
-			console.info('[library/search] result', {
-				slug: name,
-				count: result.length,
+				searchTerm: normalizedSearchTerm,
+				searchFn: (value) => searchFn(value, normalizedSearchTerm),
 			})
 
 			if (slug === 'playlists') {
