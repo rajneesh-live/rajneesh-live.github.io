@@ -179,40 +179,40 @@
 			class="shorts-slide relative flex min-h-[100dvh] shrink-0 flex-col items-center justify-center gap-6 px-6 text-onSurface"
 			use:observeSlide
 		>
-			{#if activeIndex === i && isLoading}
-				<div class="loader"></div>
-			{:else}
+			<div class="flex flex-col items-center gap-3 text-center">
+				<div class="text-body-sm opacity-50">From</div>
+				<div class="text-title-md">
+					{item.albumName} - {item.trackIndex}
+				</div>
+
+				{#if item.albumUuid}
+					<Button
+						kind="outlined"
+						class="mt-1"
+						onclick={(e) => {
+							e.stopPropagation()
+							void goto(`/library/albums/${item.albumUuid}`)
+						}}
+					>
+						<Icon type="album" class="size-4" />
+						Open Album
+					</Button>
+				{/if}
+
 				{#if activeIndex === i && autoplayBlocked}
 					<span class="text-base opacity-60">Tap to play</span>
 				{/if}
 
-				<div class="flex flex-col items-center gap-3 text-center">
-					<div class="text-body-sm opacity-50">From</div>
-					<div class="text-title-md">
-						{item.albumName} - {item.trackIndex}
-					</div>
-
-					{#if item.albumUuid}
-						<Button
-							kind="outlined"
-							class="mt-1"
-							onclick={(e) => {
-								e.stopPropagation()
-								void goto(`/library/albums/${item.albumUuid}`)
-							}}
-						>
-							<Icon type="album" class="size-4" />
-							Open Album
-						</Button>
-					{/if}
-				</div>
-
-				{#if i === 0 && showScrollTip}
-					<div class="scroll-tip absolute bottom-24 flex flex-col items-center gap-1 opacity-60">
-						<Icon type="chevronUp" class="size-6 animate-bounce" />
-						<span class="text-body-sm">Swipe up for more</span>
-					</div>
+				{#if activeIndex === i && isLoading}
+					<div class="loader-inline mt-1"></div>
 				{/if}
+			</div>
+
+			{#if i === 0 && showScrollTip}
+				<div class="scroll-tip absolute bottom-24 flex flex-col items-center gap-1 opacity-60">
+					<Icon type="chevronUp" class="size-6 animate-bounce" />
+					<span class="text-body-sm">Swipe up for more</span>
+				</div>
 			{/if}
 		</div>
 	{/each}
@@ -227,14 +227,13 @@
 		scroll-snap-align: start;
 		scroll-snap-stop: always;
 	}
-	.loader {
-		width: 40px;
-		height: 40px;
-		border: 3px solid currentColor;
+	.loader-inline {
+		width: 14px;
+		height: 14px;
+		border: 2px solid currentColor;
 		border-bottom-color: transparent;
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
-		opacity: 0.6;
 	}
 	@keyframes spin {
 		to {
