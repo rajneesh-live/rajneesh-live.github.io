@@ -8,6 +8,8 @@ import { debounce } from '$lib/helpers/utils/debounce.ts'
 import { formatArtists } from '$lib/helpers/utils/text.ts'
 import { throttle } from '$lib/helpers/utils/throttle.ts'
 import { createTrackQuery, type TrackData } from '$lib/library/get/value-queries.ts'
+import { getLibraryValue } from '$lib/library/get/value.ts'
+import { dbGetAlbumTracksIdsByName, getLibraryItemIdFromUuid } from '$lib/library/get/ids.ts'
 import { cleanupTrackAudio, loadTrackAudio } from './audio.ts'
 import {
 	addActiveMinute,
@@ -18,6 +20,11 @@ import {
 import type { ActiveMinute } from '$lib/db/database.ts'
 import { rajneeshLog } from '$lib/rajneesh/index.ts'
 import { trackListenedMinute } from '$lib/rajneesh/analytics/posthog'
+import {
+	ensureCompletedTracksLoaded,
+	isTrackCompleted,
+	markTrackCompleted,
+} from '$lib/stores/completed-tracks.svelte.ts'
 
 export interface PlayTrackOptions {
 	shuffle?: boolean
@@ -48,6 +55,7 @@ export class PlayerStore {
 
 	currentActiveMinute: ActiveMinuteDraft | null = $state(null)
 	#activeMinutesByTrack = $state(new Map<string, ActiveMinute>())
+	#didRestoreFromHistory = false
 
 	get volume() {
 		if (!this.#main.volumeSliderEnabled) {
@@ -97,7 +105,7 @@ export class PlayerStore {
 
 		const audio = this.#audio
 
-		void this.#loadActiveMinutesCache()
+		void this.#initializeFromHistory()
 
 		$effect(() => {
 			// If audio state matches our state
@@ -120,6 +128,7 @@ export class PlayerStore {
 
 		audio.onended = () => {
 			if (this.activeTrack) {
+				void markTrackCompleted(this.activeTrack.uuid)
 				rajneeshLog('[ActiveMinute] Track ended, clearing progress', this.activeTrack.uuid)
 				this.destroyCurrentActiveMinute()
 				void this.clearTrackTimestamp(this.activeTrack.uuid)
@@ -423,6 +432,47 @@ export class PlayerStore {
 		const latest = await getLatestActiveMinutesByTrack()
 		this.#activeMinutesByTrack = latest
 		rajneeshLog('[ActiveMinute] Cache loaded', latest.size)
+	}
+
+	#initializeFromHistory = async (): Promise<void> => {
+		await this.#loadActiveMinutesCache()
+		await this.#restoreLastPlayedTrack()
+	}
+
+	#restoreLastPlayedTrack = async (): Promise<void> => {
+		if (this.#didRestoreFromHistory || !this.isQueueEmpty) {
+			return
+		}
+
+		this.#didRestoreFromHistory = true
+		await ensureCompletedTracksLoaded()
+
+		const latestMinute = Array.from(this.#activeMinutesByTrack.values())
+			.filter((minute) => !isTrackCompleted(minute.trackId))
+			.sort((a, b) => b.activeMinuteTimestampMs - a.activeMinuteTimestampMs)[0]
+
+		if (!latestMinute) {
+			return
+		}
+
+		const trackId = await getLibraryItemIdFromUuid('tracks', latestMinute.trackId)
+		if (!trackId) {
+			return
+		}
+
+		const track = await getLibraryValue('tracks', trackId, true)
+		if (!track) {
+			return
+		}
+
+		const albumTrackIds = await dbGetAlbumTracksIdsByName(track.album)
+		if (albumTrackIds.length > 0) {
+			const startIndex = albumTrackIds.indexOf(trackId)
+			this.prepareTrack(Math.max(0, startIndex), albumTrackIds)
+			return
+		}
+
+		this.prepareTrack(0, [trackId])
 	}
 
 	ensureActiveMinuteForCurrentTime = (trackId: string, trackTimestampSeconds: number): void => {

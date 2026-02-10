@@ -12,7 +12,9 @@
 	import { Debounced } from '$lib/helpers/debounced.svelte.ts'
 	import { isFileSystemAccessSupported } from '$lib/helpers/file-system.ts'
 	import { debounce } from '$lib/helpers/utils/debounce.ts'
+	import { navigateToExternal } from '$lib/helpers/utils/navigate.ts'
 	import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
+	import { getCatalog } from '$lib/rajneesh/index.ts'
 	import type { AppMotionOption, AppThemeOption } from '$lib/stores/main/store.svelte.ts'
 	import { getLocale, type Locale, setLocale } from '$paraglide/runtime.js'
 	import DirectoriesList from './components/DirectoriesList.svelte'
@@ -27,6 +29,9 @@
 	const mainStore = useMainStore()
 
 	const directories = $derived(data.directoriesQuery.value)
+	const listenedMinutes = $derived(data.listenedMinutesQuery.value ?? 0)
+	const completedTracks = $derived(data.completedTracksQuery.value ?? 0)
+	const totalTracks = $derived(data.totalTracksQuery.value ?? 0)
 
 	const themeOptions: { name: string; value: AppThemeOption }[] = [
 		{
@@ -72,6 +77,16 @@
 	// This prevents UI from flickering
 	const isDatabasePendingGetter = new Debounced(() => isDatabaseOperationPending(), 200)
 	const isDatabasePending = $derived(isDatabasePendingGetter.current)
+
+	const directContactLink = $derived.by(() => getCatalog()?.directContactLink)
+
+	const listeningStatLabel = $derived.by(() => {
+		if (listenedMinutes < 60) {
+			return m.settingsStatsListeningMinutes({ minutes: listenedMinutes })
+		}
+
+		return m.settingsStatsListeningHours({ hours: Math.floor(listenedMinutes / 60) })
+	})
 </script>
 
 {#if !isRajneeshEnabled()}
@@ -104,117 +119,148 @@
 <InstallAppBanner class="settings-max-width mt-6" />
 
 <section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
-	<div class="px-4 pt-4 text-title-sm">{m.settingsAppearance()}</div>
-
-	<div class="flex items-center justify-between p-4">
-		<div>{m.settingsApplicationTheme()}</div>
-
-		<Select
-			bind:selected={mainStore.theme}
-			items={themeOptions}
-			key="value"
-			labelKey="name"
-			class="w-40"
-		/>
-	</div>
-
-	<div class="flex items-center justify-between p-4">
-		<div>{m.settingPickColorFromArtwork()}</div>
-
-		<Switch bind:checked={mainStore.pickColorFromArtwork} />
-	</div>
-
-	<div class="flex flex-col items-center gap-x-2 gap-y-4 p-4 sm:flex-row">
-		<div class="mr-auto flex items-center gap-2">
-			{m.settingsPrimaryColor()}
-
-			{#if mainStore.customThemePaletteHex}
-				<div
-					class="pointer-events-none size-6 shrink-0 items-center justify-center rounded-md ring ring-outline/40"
-					style:background={mainStore.customThemePaletteHex}
-				></div>
-			{/if}
+	<div class="px-4 pt-4 text-title-sm">{m.settingsStatsTitle()}</div>
+	<div class="flex flex-col gap-2 p-4 text-body-md">
+		<div>{listeningStatLabel}</div>
+		<div>
+			{m.settingsStatsCompletedTracks({ completed: completedTracks, total: totalTracks })}
 		</div>
+	</div>
+</section>
 
-		<div class="flex items-center gap-2 max-sm:w-full">
-			{#if mainStore.customThemePaletteHex}
-				<Button
-					kind="outlined"
-					class="max-sm:w-full"
-					disabled={!mainStore.customThemePaletteHex}
-					onclick={() => {
-						mainStore.customThemePaletteHex = null
-					}}
-				>
-					{m.settingsColorReset()}
-				</Button>
-			{/if}
-
+{#if directContactLink}
+	<section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
+		<div class="px-4 pt-4 text-title-sm">{m.settingsIssueTitle()}</div>
+		<div class="flex items-center justify-between p-4">
+			<div class="text-body-md text-onSurfaceVariant">
+				{m.settingsIssueSubtitle()}
+			</div>
 			<Button
-				kind="toned"
-				class="max-sm:w-full"
+				kind="outlined"
 				onclick={() => {
-					const colorPicker = document.getElementById('color-picker') as HTMLInputElement
-					colorPicker.click()
+					navigateToExternal(directContactLink)
 				}}
 			>
-				<Icon type="eyedropper" class="size-5" />
-
-				{m.settingsColorPick()}
-
-				<input
-					id="color-picker"
-					type="color"
-					tabindex="-1"
-					bind:value={
-						() => mainStore.customThemePaletteHex ?? '#000000', (value) => updateMainColor(value)
-					}
-					class="pointer-events-none absolute inset-0 h-full w-full appearance-none opacity-0"
-				/>
+				{m.settingsIssueCta()}
 			</Button>
 		</div>
-	</div>
+	</section>
+{/if}
 
-	<Separator />
+{#if !isRajneeshEnabled()}
+	<section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
+		<div class="px-4 pt-4 text-title-sm">{m.settingsAppearance()}</div>
 
-	<div class="flex items-center justify-between p-4">
-		<div>{m.settingsMotion()}</div>
-
-		<Select
-			bind:selected={mainStore.motion}
-			items={motionOptions}
-			key="value"
-			labelKey="name"
-			class="w-40"
-		/>
-	</div>
-
-	<Separator />
-
-	{#if supportsChangingAudioVolume()}
 		<div class="flex items-center justify-between p-4">
-			<div>
-				{m.settingsDisplayVolumeSlider()}
+			<div>{m.settingsApplicationTheme()}</div>
+
+			<Select
+				bind:selected={mainStore.theme}
+				items={themeOptions}
+				key="value"
+				labelKey="name"
+				class="w-40"
+			/>
+		</div>
+
+		<div class="flex items-center justify-between p-4">
+			<div>{m.settingPickColorFromArtwork()}</div>
+
+			<Switch bind:checked={mainStore.pickColorFromArtwork} />
+		</div>
+
+		<div class="flex flex-col items-center gap-x-2 gap-y-4 p-4 sm:flex-row">
+			<div class="mr-auto flex items-center gap-2">
+				{m.settingsPrimaryColor()}
+
+				{#if mainStore.customThemePaletteHex}
+					<div
+						class="pointer-events-none size-6 shrink-0 items-center justify-center rounded-md ring ring-outline/40"
+						style:background={mainStore.customThemePaletteHex}
+					></div>
+				{/if}
 			</div>
 
-			<Switch bind:checked={mainStore.volumeSliderEnabled} />
+			<div class="flex items-center gap-2 max-sm:w-full">
+				{#if mainStore.customThemePaletteHex}
+					<Button
+						kind="outlined"
+						class="max-sm:w-full"
+						disabled={!mainStore.customThemePaletteHex}
+						onclick={() => {
+							mainStore.customThemePaletteHex = null
+						}}
+					>
+						{m.settingsColorReset()}
+					</Button>
+				{/if}
+
+				<Button
+					kind="toned"
+					class="max-sm:w-full"
+					onclick={() => {
+						const colorPicker = document.getElementById('color-picker') as HTMLInputElement
+						colorPicker.click()
+					}}
+				>
+					<Icon type="eyedropper" class="size-5" />
+
+					{m.settingsColorPick()}
+
+					<input
+						id="color-picker"
+						type="color"
+						tabindex="-1"
+						bind:value={
+							() => mainStore.customThemePaletteHex ?? '#000000', (value) => updateMainColor(value)
+						}
+						class="pointer-events-none absolute inset-0 h-full w-full appearance-none opacity-0"
+					/>
+				</Button>
+			</div>
 		</div>
-	{/if}
-</section>
 
-<section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
-	<div class="flex items-center justify-between p-4">
-		<div>{m.settingsLanguage()}</div>
+		<Separator />
 
-		<Select
-			bind:selected={() => getLocale(), setLocale}
-			items={languageOptions}
-			key="value"
-			labelKey="name"
-			class="w-40"
-		/>
-	</div>
-</section>
+		<div class="flex items-center justify-between p-4">
+			<div>{m.settingsMotion()}</div>
+
+			<Select
+				bind:selected={mainStore.motion}
+				items={motionOptions}
+				key="value"
+				labelKey="name"
+				class="w-40"
+			/>
+		</div>
+
+		<Separator />
+
+		{#if supportsChangingAudioVolume()}
+			<div class="flex items-center justify-between p-4">
+				<div>
+					{m.settingsDisplayVolumeSlider()}
+				</div>
+
+				<Switch bind:checked={mainStore.volumeSliderEnabled} />
+			</div>
+		{/if}
+	</section>
+
+	<section class="card settings-max-width mx-auto mt-6 w-full text-body-lg">
+		<div class="flex items-center justify-between p-4">
+			<div>{m.settingsLanguage()}</div>
+
+			<Select
+				bind:selected={() => getLocale(), setLocale}
+				items={languageOptions}
+				key="value"
+				labelKey="name"
+				class="w-40"
+			/>
+		</div>
+	</section>
+{/if}
 
 <style lang="postcss">
 	@reference '../../../../app.css';

@@ -4,8 +4,6 @@
 	import IconButton from '$lib/components/IconButton.svelte'
 	import Separator from '$lib/components/Separator.svelte'
 	import { debounce } from '$lib/helpers/utils/debounce.ts'
-	import { navigateToExternal } from '$lib/helpers/utils/navigate.ts'
-	import { getCatalog } from '$lib/rajneesh/index.ts'
 	import type { PageData } from './$types.ts'
 
 	interface Props {
@@ -33,7 +31,6 @@
 	})
 
 	const menu = useMenu()
-	const directContactLink = $derived.by(() => getCatalog()?.directContactLink)
 	const searchPlaceholder = $derived.by(() => {
 		const slug = page.params.slug
 		if (slug === 'albums' || slug === 'explore') {
@@ -49,12 +46,6 @@
 				label: m.settings(),
 				action: () => {
 					goto('/settings')
-				},
-			},
-			directContactLink && {
-				label: m.foundAnIssue(),
-				action: () => {
-					navigateToExternal(directContactLink)
 				},
 			},
 		].filter(Boolean) as { label: string; action: () => void }[]

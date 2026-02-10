@@ -4,6 +4,10 @@
 	import { formatNameOrUnknown } from '$lib/helpers/utils/text.ts'
 	import { createTrackQuery, type TrackData } from '$lib/library/get/value-queries.ts'
 	import { DownloadButton } from '$lib/rajneesh/components/index.ts'
+	import {
+		ensureCompletedTracksLoaded,
+		isTrackCompleted,
+	} from '$lib/stores/completed-tracks.svelte.ts'
 	import Artwork from '../Artwork.svelte'
 	import ListItem, { type MenuItem } from '../ListItem.svelte'
 
@@ -33,6 +37,12 @@
 	const artworkSrc = createManagedArtwork(() => track?.image?.small)
 
 	const menuItemsWithItem = $derived(track && menuItems?.bind(null, track))
+
+	$effect(() => {
+		if (track) {
+			void ensureCompletedTracksLoaded()
+		}
+	})
 </script>
 
 <ListItem
@@ -68,8 +78,15 @@
 				Error loading track with id {trackId}
 			</div>
 		{:else if track}
-			<div class={[active ? 'text-primary' : 'color-onSurface', 'line-clamp-2 break-words']}>
-				{track.name}
+			<div class="flex flex-col gap-1">
+				<div class={[active ? 'text-primary' : 'color-onSurface', 'line-clamp-2 break-words']}>
+					{track.name}
+				</div>
+				{#if isTrackCompleted(track.uuid)}
+					<div class="text-body-sm text-onSurface/60">
+						{m.libraryCompleted()}
+					</div>
+				{/if}
 			</div>
 
 			<div class="hidden @4xl:block">

@@ -5,6 +5,12 @@
 	import { toggleFavoriteTrack } from '$lib/library/playlists-actions'
 	import { canPlayTrackFile } from '$lib/rajneesh/hooks/can-play-track.ts'
 	import { getRelatedUuid } from '$lib/rajneesh/hooks/get-related-uuid.ts'
+	import {
+		ensureCompletedTracksLoaded,
+		isTrackCompleted,
+		markTrackCompleted,
+		unmarkTrackCompleted,
+	} from '$lib/stores/completed-tracks.svelte.ts'
 	import type { MenuItem } from '../ListItem.svelte'
 	import { snackbar } from '../snackbar/snackbar.ts'
 	import VirtualContainer from '../VirtualContainer.svelte'
@@ -15,6 +21,7 @@
 		| 'addToPlaylist'
 		| 'removeFromLibrary'
 		| 'addToFavorites'
+		| 'toggleCompleted'
 		| 'viewAlbum'
 		| 'viewArtist'
 
@@ -46,6 +53,10 @@
 		predefinedMenuItems = {},
 		onItemClick = defaultOnItemClick,
 	}: Props = $props()
+
+	$effect(() => {
+		void ensureCompletedTracksLoaded()
+	})
 
 	interface PredefinedMenuItem extends MenuItem {
 		predefinedKey: PredefinedTrackMenuItems
@@ -82,6 +93,19 @@
 				label: m.playerAddToQueue(),
 				action: () => {
 					player.addToQueue(track.id)
+				},
+			},
+			{
+				predefinedKey: 'toggleCompleted',
+				label: isTrackCompleted(track.uuid)
+					? m.libraryMarkTrackIncomplete()
+					: m.libraryMarkTrackCompleted(),
+				action: async () => {
+					if (isTrackCompleted(track.uuid)) {
+						await unmarkTrackCompleted(track.uuid)
+					} else {
+						await markTrackCompleted(track.uuid)
+					}
 				},
 			},
 		]

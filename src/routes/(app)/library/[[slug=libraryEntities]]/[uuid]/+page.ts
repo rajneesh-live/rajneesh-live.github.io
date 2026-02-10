@@ -13,6 +13,8 @@ import {
 	FAVORITE_PLAYLIST_UUID,
 	type LibraryStoreName,
 } from '$lib/library/types.ts'
+import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
+import { whenCatalogReady } from '$lib/rajneesh/stores/catalog.svelte.ts'
 import type { PageLoad } from './$types.d.ts'
 
 type DetailsSlug = Exclude<LibraryStoreName, 'tracks'>
@@ -142,6 +144,10 @@ export const load: PageLoad = async (event): Promise<LoadResult> => {
 	const uuid = event.params.uuid
 	if (!uuid) {
 		error(404)
+	}
+
+	if (isRajneeshEnabled()) {
+		await whenCatalogReady()
 	}
 
 	let id: number | undefined

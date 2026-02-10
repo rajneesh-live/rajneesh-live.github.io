@@ -16,6 +16,12 @@ export interface ActiveMinute {
 	playbackRate: number
 }
 
+export interface CompletedTrack {
+	id?: number
+	trackId: string
+	completedAt: number
+}
+
 export interface AppDB extends DBSchema {
 	tracks: {
 		key: number
@@ -100,6 +106,14 @@ export interface AppDB extends DBSchema {
 			trackIdActiveMinuteTimestampMs: [trackId: string, activeMinuteTimestampMs: number]
 		}
 	}
+	completedTracks: {
+		key: number
+		value: CompletedTrack
+		indexes: {
+			trackId: string
+			completedAt: number
+		}
+	}
 }
 
 export type AppStoreNames = StoreNames<AppDB>
@@ -125,7 +139,7 @@ const createStore = <DBTypes extends DBSchema | unknown, Name extends StoreNames
 	})
 
 const openAppDatabase = () =>
-	openDB<AppDB>('snae-app-data', 4, {
+	openDB<AppDB>('snae-app-data', 5, {
 		async upgrade(db, oldVersion, _newVersion, tx) {
 			const { objectStoreNames } = db
 
@@ -233,6 +247,12 @@ const openAppDatabase = () =>
 				store.createIndex('trackIdActiveMinuteTimestampMs', ['trackId', 'activeMinuteTimestampMs'], {
 					unique: false,
 				})
+			}
+
+			if (!objectStoreNames.contains('completedTracks')) {
+				const store = createStore(db, 'completedTracks')
+				createIndexes(store, ['trackId'], { unique: true })
+				createIndexes(store, ['completedAt'])
 			}
 		},
 	})
