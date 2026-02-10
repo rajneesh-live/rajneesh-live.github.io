@@ -26,11 +26,21 @@
 		(event.currentTarget as HTMLInputElement | null)?.value ?? ''
 
 	const onSearchInput = (event: Event) => {
-		searchHandler(getSearchValue(event))
+		const term = getSearchValue(event)
+		console.info('[library/search] input', {
+			slug: page.params.slug,
+			term,
+		})
+		searchHandler(term)
 	}
 
 	const onSearchCommit = (event: Event) => {
-		store.searchTerm = getSearchValue(event)
+		const term = getSearchValue(event)
+		console.info('[library/search] commit', {
+			slug: page.params.slug,
+			term,
+		})
+		store.searchTerm = term
 	}
 
 	$effect(() => {
