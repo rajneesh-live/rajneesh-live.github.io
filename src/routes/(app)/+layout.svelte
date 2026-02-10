@@ -153,9 +153,7 @@
 			</div>
 		{/if}
 
-		{#if !isShortsPage}
-			{@render overlaySnippets.bottomBar?.()}
-		{/if}
+		{@render overlaySnippets.bottomBar?.()}
 	</div>
 </div>
 

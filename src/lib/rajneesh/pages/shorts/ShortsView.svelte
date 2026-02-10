@@ -9,12 +9,22 @@
 	let shorts = $state(getShortsItems())
 
 	const LOAD_MORE_THRESHOLD = 5 // load more when within 5 slides of the end
+	const SCROLL_TIP_KEY = 'shorts-scroll-tip-shown'
 
 	let viewportEl: HTMLDivElement
 	let activeIndex = $state<number>(-1)
 	let isLoading = $state(true)
 	let autoplayBlocked = $state(false)
+	let showScrollTip = $state(!localStorage.getItem(SCROLL_TIP_KEY))
 	let observer: IntersectionObserver | null = null
+
+	// Dismiss the tip once user scrolls away from first slide
+	$effect(() => {
+		if (showScrollTip && activeIndex > 0) {
+			showScrollTip = false
+			localStorage.setItem(SCROLL_TIP_KEY, '1')
+		}
+	})
 
 	// Audio pool: preloaded Audio elements keyed by slide index
 	const audioPool = new Map<number, HTMLAudioElement>()
@@ -58,7 +68,6 @@
 
 	function playSlide(index: number) {
 		if (index < 0 || index >= shorts.length) return
-		if (document.visibilityState === 'hidden') return
 
 		if (currentAudio) {
 			currentAudio.pause()
@@ -92,13 +101,6 @@
 		if (activeIndex >= 0) playSlide(activeIndex)
 	}
 
-	function stopAudio() {
-		if (currentAudio) {
-			currentAudio.pause()
-			currentAudio = null
-		}
-	}
-
 	function destroyPool() {
 		for (const [, audio] of audioPool) {
 			audio.pause()
@@ -118,23 +120,6 @@
 			setLastShortsIndex(activeIndex)
 			maybeLoadMore(activeIndex)
 		}
-	})
-
-	$effect(() => {
-		if (typeof document === 'undefined') return
-		const onVisibility = () => {
-			if (document.visibilityState === 'hidden') {
-				stopAudio()
-			} else if (lastShortsIndex >= 0 && viewportEl) {
-				viewportEl.scrollTo({
-					top: lastShortsIndex * viewportEl.clientHeight,
-					behavior: 'auto',
-				})
-				playSlide(lastShortsIndex)
-			}
-		}
-		document.addEventListener('visibilitychange', onVisibility)
-		return () => document.removeEventListener('visibilitychange', onVisibility)
 	})
 
 	$effect(() => {
@@ -191,7 +176,7 @@
 	{#each shorts as item, i (i)}
 		<div
 			data-slide-index={i}
-			class="shorts-slide flex min-h-[100dvh] shrink-0 flex-col items-center justify-center gap-6 px-6 text-onSurface"
+			class="shorts-slide relative flex min-h-[100dvh] shrink-0 flex-col items-center justify-center gap-6 px-6 text-onSurface"
 			use:observeSlide
 		>
 			{#if activeIndex === i && isLoading}
@@ -221,6 +206,13 @@
 						</Button>
 					{/if}
 				</div>
+
+				{#if i === 0 && showScrollTip}
+					<div class="scroll-tip absolute bottom-24 flex flex-col items-center gap-1 opacity-60">
+						<Icon type="chevronUp" class="size-6 animate-bounce" />
+						<span class="text-body-sm">Swipe up for more</span>
+					</div>
+				{/if}
 			{/if}
 		</div>
 	{/each}
