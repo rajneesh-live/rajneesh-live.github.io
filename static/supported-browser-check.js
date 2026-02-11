@@ -61,9 +61,9 @@
 	// --- Supported browser: clean up and let app boot ---
 
 	if (!shouldBlock) {
-		var fallback = document.getElementById('startup-fallback');
-		if (fallback) {
-			fallback.style.display = 'none';
+		var fb = document.getElementById('startup-fallback');
+		if (fb) {
+			fb.parentNode.removeChild(fb);
 		}
 		return;
 	}
@@ -97,81 +97,77 @@
 		? 'This in-app browser is blocked. Open this page in Chrome to continue.'
 		: 'This browser is missing required web features. Open this page in Chrome.';
 
-	// Inject a <style> that force-hides #app and force-shows fallback.
-	// Re-check on every tick that it's still in the DOM (some WebViews strip injected nodes).
-	function ensureBlockStyles() {
-		var existing = document.getElementById('snae-block');
-		if (existing && existing.parentNode) {
-			return;
+	// The single function that makes the block state real.
+	// It is fully self-contained: it ensures the style exists, the fallback
+	// div exists, and the fallback div has the correct content.
+	// Safe to call many times — it only writes when something is missing.
+	function enforce() {
+		// 1. Ensure block <style> is in the document.
+		var style = document.getElementById('snae-block');
+		if (!style || !style.parentNode) {
+			style = document.createElement('style');
+			style.id = 'snae-block';
+			style.textContent =
+				'#app{display:none!important}' +
+				'#startup-fallback{display:flex!important;position:fixed!important;' +
+				'inset:0!important;z-index:2147483646!important;' +
+				'background:#121212!important;color:#fff!important;' +
+				'flex-direction:column!important;justify-content:center!important;' +
+				'align-items:center!important;padding:24px!important;' +
+				'text-align:center!important;' +
+				'font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif!important}';
+			(document.head || document.documentElement).appendChild(style);
 		}
-		var s = document.createElement('style');
-		s.id = 'snae-block';
-		s.textContent =
-			'#app{display:none!important}' +
-			'#startup-fallback{display:flex!important;position:fixed!important;inset:0!important;z-index:2147483646!important}';
-		var target = document.head || document.documentElement;
-		target.appendChild(s);
-	}
 
-	// Build the fallback overlay content once into #startup-fallback.
-	function buildFallbackContent() {
+		// 2. Ensure fallback div exists in the document.
 		var el = document.getElementById('startup-fallback');
-		if (!el) {
+		if (!el || !el.parentNode) {
 			el = document.createElement('div');
 			el.id = 'startup-fallback';
 			(document.body || document.documentElement).appendChild(el);
 		}
 
-		// Only populate if empty (avoid flicker from repeated innerHTML wipes).
-		if (el.childNodes.length > 0) {
-			return;
+		// 3. Ensure fallback div has the CTA content (check for the <a> tag).
+		if (!el.querySelector('a')) {
+			el.innerHTML = '';
+
+			var h = document.createElement('h2');
+			h.textContent = titleText;
+			h.style.cssText = 'margin:0 0 12px 0;font-size:24px';
+			el.appendChild(h);
+
+			var p = document.createElement('p');
+			p.textContent = messageText;
+			p.style.cssText = 'max-width:420px;margin:0 0 16px 0;line-height:1.5';
+			el.appendChild(p);
+
+			var a = document.createElement('a');
+			a.href = chromeUrl;
+			a.textContent = 'Open in Chrome';
+			a.style.cssText =
+				'display:inline-block;padding:12px 18px;border-radius:10px;background:#2563eb;' +
+				'color:#fff;font-weight:600;text-decoration:none;margin-bottom:10px';
+			el.appendChild(a);
+
+			var hint = document.createElement('p');
+			hint.textContent =
+				'If this does not open Chrome automatically, use browser menu \u2192 Open in browser.';
+			hint.style.cssText = 'font-size:12px;opacity:0.85;margin:6px 0 0 0';
+			el.appendChild(hint);
 		}
-
-		el.style.cssText =
-			'position:fixed;inset:0;z-index:2147483646;background:#121212;color:#fff;' +
-			'display:flex;flex-direction:column;justify-content:center;align-items:center;' +
-			'padding:24px;text-align:center;' +
-			'font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif';
-
-		var h = document.createElement('h2');
-		h.textContent = titleText;
-		h.style.cssText = 'margin:0 0 12px 0;font-size:24px';
-		el.appendChild(h);
-
-		var p = document.createElement('p');
-		p.textContent = messageText;
-		p.style.cssText = 'max-width:420px;margin:0 0 16px 0;line-height:1.5';
-		el.appendChild(p);
-
-		var a = document.createElement('a');
-		a.href = chromeUrl;
-		a.textContent = 'Open in Chrome';
-		a.style.cssText =
-			'display:inline-block;padding:12px 18px;border-radius:10px;background:#2563eb;' +
-			'color:#fff;font-weight:600;text-decoration:none;margin-bottom:10px';
-		el.appendChild(a);
-
-		var hint = document.createElement('p');
-		hint.textContent =
-			'If this does not open Chrome automatically, use browser menu \u2192 Open in browser.';
-		hint.style.cssText = 'font-size:12px;opacity:0.85;margin:6px 0 0 0';
-		el.appendChild(hint);
 	}
 
-	// Apply block immediately.
-	ensureBlockStyles();
-	buildFallbackContent();
+	// Apply immediately.
+	enforce();
 
-	// Watchdog: re-verify every 500ms for 10 seconds that block styles and
-	// fallback content are still intact. This survives WebViews that mutate
-	// DOM after initial paint (Telegram, Via, etc).
-	var watchdogRuns = 0;
-	var watchdog = setInterval(function () {
-		watchdogRuns += 1;
-		ensureBlockStyles();
-		buildFallbackContent();
-		if (watchdogRuns >= 20) {
-			clearInterval(watchdog);
+	// Watchdog: re-verify every 500ms for 10s.
+	// Survives WebViews that strip injected nodes after initial paint.
+	var runs = 0;
+	var timer = setInterval(function () {
+		runs += 1;
+		enforce();
+		if (runs >= 20) {
+			clearInterval(timer);
 		}
 	}, 500);
 })();
