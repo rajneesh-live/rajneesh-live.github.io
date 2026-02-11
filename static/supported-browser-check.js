@@ -75,6 +75,22 @@
 		fallback.appendChild(helper);
 	}
 
+	function ensureBlockStyles() {
+		if (document.getElementById('snae-browser-block-style')) {
+			return;
+		}
+
+		var style = document.createElement('style');
+		style.id = 'snae-browser-block-style';
+		style.textContent =
+			'#app{display:none !important;}' +
+			'#startup-fallback{display:flex !important;position:fixed !important;inset:0 !important;z-index:2147483646 !important;}' +
+			'#unsupported-browser{display:none !important;}';
+		if (document.head) {
+			document.head.appendChild(style);
+		}
+	}
+
 	var userAgent = navigator.userAgent || navigator.vendor || window.opera || '';
 	var isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
 	var isAndroid = userAgent.indexOf('Android') > -1;
@@ -154,6 +170,7 @@
 			return;
 		}
 		window.__snaeBrowserGateRendered = true;
+		ensureBlockStyles();
 		var app = document.getElementById('app');
 		if (app) {
 			app.style.display = 'none';
@@ -166,6 +183,24 @@
 				: 'This browser is missing required web features. Open this page in Chrome.',
 			chromeUrl
 		);
+
+		// Some Android in-app browsers mutate DOM after initial paint.
+		// Re-apply the fallback briefly to prevent "flash then blank".
+		var safeguardRuns = 0;
+		var safeguard = setInterval(function () {
+			safeguardRuns += 1;
+			ensureBlockStyles();
+			showFallback(
+				isWebView ? 'Open In Chrome' : 'Browser Not Supported',
+				isWebView
+					? 'This in-app browser is blocked. Open this page in Chrome to continue.'
+					: 'This browser is missing required web features. Open this page in Chrome.',
+				chromeUrl
+			);
+			if (safeguardRuns >= 20) {
+				clearInterval(safeguard);
+			}
+		}, 250);
 	}
 
 	if (shouldBlock) {
