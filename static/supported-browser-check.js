@@ -9,13 +9,24 @@
 	var isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
 	var isAndroid = userAgent.indexOf('Android') > -1;
 
+	// --- Known in-app browsers (UA substring detection) ---
 	var isInstagram = userAgent.indexOf('Instagram') > -1;
 	var isFacebook = userAgent.indexOf('FBAN') > -1 || userAgent.indexOf('FBAV') > -1;
-	var isLine = userAgent.indexOf('Line') > -1;
+	var isLine = userAgent.indexOf('Line/') > -1;
 	var isLinkedin = userAgent.indexOf('LinkedIn') > -1;
 	var isTelegram = userAgent.indexOf('Telegram') > -1;
 
-	// Generic: iOS WebViews don't include "Safari" in their UA.
+	// --- Known lightweight / WebView-based Android browsers ---
+	// Via browser wraps Android WebView but mimics Chrome's UA. Its UA
+	// typically does NOT contain "Chrome/" the way real Chrome does, or
+	// contains the Android WebView marker "; wv)" or "Version/".
+	var isAndroidWebView =
+		isAndroid &&
+		(userAgent.indexOf('; wv)') > -1 || userAgent.indexOf('Version/') > -1);
+
+	// --- Generic iOS WebView heuristic ---
+	// Real Safari and Chrome-on-iOS include "Safari" in their UA.
+	// In-app WebViews on iOS typically omit it.
 	var isLikelyIOSWebView =
 		isIOS &&
 		!isInstagram &&
@@ -26,7 +37,13 @@
 		userAgent.indexOf('Safari') === -1;
 
 	var isWebView =
-		isInstagram || isFacebook || isLine || isLinkedin || isTelegram || isLikelyIOSWebView;
+		isInstagram ||
+		isFacebook ||
+		isLine ||
+		isLinkedin ||
+		isTelegram ||
+		isAndroidWebView ||
+		isLikelyIOSWebView;
 
 	var hasNoModule =
 		typeof HTMLScriptElement !== 'undefined' &&
