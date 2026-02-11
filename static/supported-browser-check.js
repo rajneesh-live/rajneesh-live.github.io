@@ -2,6 +2,60 @@
 // and it cannot use any modern JS syntax (ES5 only).
 
 (function () {
+	function getFallbackElement() {
+		return document.getElementById('startup-fallback');
+	}
+
+	function hideFallback() {
+		var fallback = getFallbackElement();
+		if (fallback) {
+			fallback.style.display = 'none';
+		}
+	}
+
+	function showFallback(titleText, messageText, chromeUrl) {
+		var fallback = getFallbackElement();
+		if (!fallback) {
+			return;
+		}
+
+		fallback.style.display = 'flex';
+		fallback.innerHTML = '';
+
+		var title = document.createElement('h2');
+		title.textContent = titleText;
+		title.style.margin = '0 0 12px 0';
+		title.style.fontSize = '24px';
+		fallback.appendChild(title);
+
+		var message = document.createElement('p');
+		message.textContent = messageText;
+		message.style.maxWidth = '420px';
+		message.style.margin = '0 0 16px 0';
+		message.style.lineHeight = '1.5';
+		fallback.appendChild(message);
+
+		var button = document.createElement('a');
+		button.href = chromeUrl;
+		button.textContent = 'Open in Chrome';
+		button.style.display = 'inline-block';
+		button.style.padding = '12px 18px';
+		button.style.borderRadius = '10px';
+		button.style.background = '#2563eb';
+		button.style.color = '#fff';
+		button.style.fontWeight = '600';
+		button.style.textDecoration = 'none';
+		button.style.marginBottom = '10px';
+		fallback.appendChild(button);
+
+		var helper = document.createElement('p');
+		helper.textContent = 'If this does not open Chrome automatically, use browser menu -> Open in browser.';
+		helper.style.fontSize = '12px';
+		helper.style.opacity = '0.85';
+		helper.style.margin = '6px 0 0 0';
+		fallback.appendChild(helper);
+	}
+
 	var userAgent = navigator.userAgent || navigator.vendor || window.opera || '';
 	var isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
 	var isAndroid = userAgent.indexOf('Android') > -1;
@@ -51,21 +105,6 @@
 		hasServiceWorker;
 
 	var shouldBlock = isWebView || !isSupportedBrowser;
-	if (!shouldBlock) {
-		return;
-	}
-
-	if (window.__snaeBrowserGateRendered) {
-		return;
-	}
-	window.__snaeBrowserGateRendered = true;
-
-	var style = document.createElement('style');
-	style.setAttribute('data-browser-gate', 'true');
-	style.textContent = '#app{display:none !important;}';
-	if (document.head) {
-		document.head.appendChild(style);
-	}
 
 	var currentUrl = window.location.href;
 	var chromeUrl = currentUrl;
@@ -88,64 +127,68 @@
 		}
 	}
 
-	function buildOverlay() {
-		var overlay = document.createElement('div');
-		overlay.setAttribute('id', 'unsupported-browser-overlay');
-		overlay.style.position = 'fixed';
-		overlay.style.inset = '0';
-		overlay.style.zIndex = '2147483647';
-		overlay.style.background = '#121212';
-		overlay.style.color = '#fff';
-		overlay.style.display = 'flex';
-		overlay.style.flexDirection = 'column';
-		overlay.style.justifyContent = 'center';
-		overlay.style.alignItems = 'center';
-		overlay.style.padding = '24px';
-		overlay.style.textAlign = 'center';
-		overlay.style.fontFamily =
-			'-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif';
+	function showUnsupportedOverlay() {
+		if (window.__snaeBrowserGateRendered) {
+			return;
+		}
+		window.__snaeBrowserGateRendered = true;
+		var app = document.getElementById('app');
+		if (app) {
+			app.style.display = 'none';
+		}
 
-		var title = document.createElement('h2');
-		title.textContent = isWebView ? 'Open In Chrome' : 'Browser Not Supported';
-		title.style.margin = '0 0 12px 0';
-		title.style.fontSize = '24px';
-		overlay.appendChild(title);
-
-		var message = document.createElement('p');
-		message.textContent = isWebView
-			? 'This in-app browser is blocked. Open this page in Chrome to continue.'
-			: 'This browser is missing required web features. Open this page in Chrome.';
-		message.style.maxWidth = '420px';
-		message.style.margin = '0 0 16px 0';
-		message.style.lineHeight = '1.5';
-		overlay.appendChild(message);
-
-		var button = document.createElement('a');
-		button.href = chromeUrl;
-		button.textContent = 'Open in Chrome';
-		button.style.display = 'inline-block';
-		button.style.padding = '12px 18px';
-		button.style.borderRadius = '10px';
-		button.style.background = '#2563eb';
-		button.style.color = '#fff';
-		button.style.fontWeight = '600';
-		button.style.textDecoration = 'none';
-		button.style.marginBottom = '10px';
-		overlay.appendChild(button);
-
-		var helper = document.createElement('p');
-		helper.textContent = 'If it does not open automatically, copy this URL and paste it in Chrome.';
-		helper.style.fontSize = '12px';
-		helper.style.opacity = '0.85';
-		helper.style.margin = '6px 0 0 0';
-		overlay.appendChild(helper);
-
-		document.body.appendChild(overlay);
+		showFallback(
+			isWebView ? 'Open In Chrome' : 'Browser Not Supported',
+			isWebView
+				? 'This in-app browser is blocked. Open this page in Chrome to continue.'
+				: 'This browser is missing required web features. Open this page in Chrome.',
+			chromeUrl
+		);
 	}
 
-	if (document.body) {
-		buildOverlay();
+	// If startup crashes after fallback is hidden, show the fallback again.
+	if (!window.__snaeStartupErrorHandlerInstalled) {
+		window.__snaeStartupErrorHandlerInstalled = true;
+		window.addEventListener(
+			'error',
+			function () {
+				var app = document.getElementById('app');
+				if (app) {
+					app.style.display = 'none';
+				}
+				showFallback(
+					'Failed to start app',
+					'This browser environment crashed during startup. Open this page in Chrome.',
+					chromeUrl
+				);
+			},
+			true
+		);
+		window.addEventListener(
+			'unhandledrejection',
+			function () {
+				var app = document.getElementById('app');
+				if (app) {
+					app.style.display = 'none';
+				}
+				showFallback(
+					'Failed to start app',
+					'This browser environment crashed during startup. Open this page in Chrome.',
+					chromeUrl
+				);
+			},
+			true
+		);
+	}
+
+	if (shouldBlock) {
+		showUnsupportedOverlay();
 	} else {
-		document.addEventListener('DOMContentLoaded', buildOverlay);
+		// Supported browser path: allow app UI and remove fallback.
+		var app = document.getElementById('app');
+		if (app) {
+			app.style.display = '';
+		}
+		hideFallback();
 	}
 })();
