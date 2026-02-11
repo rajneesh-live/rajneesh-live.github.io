@@ -16,7 +16,26 @@
 	function showFallback(titleText, messageText, chromeUrl) {
 		var fallback = getFallbackElement();
 		if (!fallback) {
-			return;
+			fallback = document.createElement('div');
+			fallback.id = 'startup-fallback';
+			fallback.style.position = 'fixed';
+			fallback.style.inset = '0';
+			fallback.style.zIndex = '2147483646';
+			fallback.style.background = '#121212';
+			fallback.style.color = '#ffffff';
+			fallback.style.display = 'flex';
+			fallback.style.flexDirection = 'column';
+			fallback.style.justifyContent = 'center';
+			fallback.style.alignItems = 'center';
+			fallback.style.padding = '24px';
+			fallback.style.textAlign = 'center';
+			fallback.style.fontFamily =
+				'-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+			if (document.body) {
+				document.body.appendChild(fallback);
+			} else {
+				return;
+			}
 		}
 
 		fallback.style.display = 'flex';
@@ -85,6 +104,8 @@
 		'noModule' in HTMLScriptElement.prototype;
 	var hasLocks = typeof navigator !== 'undefined' && !!navigator.locks;
 	var hasAbortTimeout = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal;
+	var hasPromiseWithResolvers =
+		typeof Promise !== 'undefined' && typeof Promise.withResolvers === 'function';
 	var hasCssSupport =
 		typeof CSS !== 'undefined' &&
 		!!CSS.supports &&
@@ -100,6 +121,7 @@
 		hasNoModule &&
 		hasLocks &&
 		hasAbortTimeout &&
+		hasPromiseWithResolvers &&
 		hasCssSupport &&
 		hasContainerQueries &&
 		hasServiceWorker;
@@ -143,41 +165,6 @@
 				? 'This in-app browser is blocked. Open this page in Chrome to continue.'
 				: 'This browser is missing required web features. Open this page in Chrome.',
 			chromeUrl
-		);
-	}
-
-	// If startup crashes after fallback is hidden, show the fallback again.
-	if (!window.__snaeStartupErrorHandlerInstalled) {
-		window.__snaeStartupErrorHandlerInstalled = true;
-		window.addEventListener(
-			'error',
-			function () {
-				var app = document.getElementById('app');
-				if (app) {
-					app.style.display = 'none';
-				}
-				showFallback(
-					'Failed to start app',
-					'This browser environment crashed during startup. Open this page in Chrome.',
-					chromeUrl
-				);
-			},
-			true
-		);
-		window.addEventListener(
-			'unhandledrejection',
-			function () {
-				var app = document.getElementById('app');
-				if (app) {
-					app.style.display = 'none';
-				}
-				showFallback(
-					'Failed to start app',
-					'This browser environment crashed during startup. Open this page in Chrome.',
-					chromeUrl
-				);
-			},
-			true
 		);
 	}
 

@@ -38,7 +38,7 @@ export default defineConfig({
 	// Tell Vitest to use the `browser` entry points in `package.json` files, even though it's running in Node
 	resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
 	build: {
-		target: ['chrome130', 'safari18'],
+		target: ['chrome114', 'safari16.4'],
 		rolldownOptions: {
 			output: {
 				legalComments: 'none',
