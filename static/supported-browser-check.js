@@ -1,95 +1,9 @@
 // IMPORTANT. This file must be imported as separate entry point
 // and it cannot use any modern JS syntax (ES5 only).
+// It runs synchronously before the app boots.
 
 (function () {
-	function getFallbackElement() {
-		return document.getElementById('startup-fallback');
-	}
-
-	function hideFallback() {
-		var fallback = getFallbackElement();
-		if (fallback) {
-			fallback.style.display = 'none';
-		}
-	}
-
-	function showFallback(titleText, messageText, chromeUrl) {
-		var fallback = getFallbackElement();
-		if (!fallback) {
-			fallback = document.createElement('div');
-			fallback.id = 'startup-fallback';
-			fallback.style.position = 'fixed';
-			fallback.style.inset = '0';
-			fallback.style.zIndex = '2147483646';
-			fallback.style.background = '#121212';
-			fallback.style.color = '#ffffff';
-			fallback.style.display = 'flex';
-			fallback.style.flexDirection = 'column';
-			fallback.style.justifyContent = 'center';
-			fallback.style.alignItems = 'center';
-			fallback.style.padding = '24px';
-			fallback.style.textAlign = 'center';
-			fallback.style.fontFamily =
-				'-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
-			if (document.body) {
-				document.body.appendChild(fallback);
-			} else {
-				return;
-			}
-		}
-
-		fallback.style.display = 'flex';
-		fallback.innerHTML = '';
-
-		var title = document.createElement('h2');
-		title.textContent = titleText;
-		title.style.margin = '0 0 12px 0';
-		title.style.fontSize = '24px';
-		fallback.appendChild(title);
-
-		var message = document.createElement('p');
-		message.textContent = messageText;
-		message.style.maxWidth = '420px';
-		message.style.margin = '0 0 16px 0';
-		message.style.lineHeight = '1.5';
-		fallback.appendChild(message);
-
-		var button = document.createElement('a');
-		button.href = chromeUrl;
-		button.textContent = 'Open in Chrome';
-		button.style.display = 'inline-block';
-		button.style.padding = '12px 18px';
-		button.style.borderRadius = '10px';
-		button.style.background = '#2563eb';
-		button.style.color = '#fff';
-		button.style.fontWeight = '600';
-		button.style.textDecoration = 'none';
-		button.style.marginBottom = '10px';
-		fallback.appendChild(button);
-
-		var helper = document.createElement('p');
-		helper.textContent = 'If this does not open Chrome automatically, use browser menu -> Open in browser.';
-		helper.style.fontSize = '12px';
-		helper.style.opacity = '0.85';
-		helper.style.margin = '6px 0 0 0';
-		fallback.appendChild(helper);
-	}
-
-	function ensureBlockStyles() {
-		if (document.getElementById('snae-browser-block-style')) {
-			return;
-		}
-
-		var style = document.createElement('style');
-		style.id = 'snae-browser-block-style';
-		style.textContent =
-			'#app{display:none !important;}' +
-			'#startup-fallback{display:flex !important;position:fixed !important;inset:0 !important;z-index:2147483646 !important;}' +
-			'#unsupported-browser{display:none !important;}';
-		if (document.head) {
-			document.head.appendChild(style);
-		}
-	}
+	// --- Detection ---
 
 	var userAgent = navigator.userAgent || navigator.vendor || window.opera || '';
 	var isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
@@ -101,7 +15,7 @@
 	var isLinkedin = userAgent.indexOf('LinkedIn') > -1;
 	var isTelegram = userAgent.indexOf('Telegram') > -1;
 
-	// Generic heuristic catches many in-app browsers on iOS.
+	// Generic: iOS WebViews don't include "Safari" in their UA.
 	var isLikelyIOSWebView =
 		isIOS &&
 		!isInstagram &&
@@ -144,6 +58,19 @@
 
 	var shouldBlock = isWebView || !isSupportedBrowser;
 
+	// --- Supported browser: clean up and let app boot ---
+
+	if (!shouldBlock) {
+		var fallback = document.getElementById('startup-fallback');
+		if (fallback) {
+			fallback.style.display = 'none';
+		}
+		return;
+	}
+
+	// --- Blocked browser path ---
+
+	// Build Chrome deep-link URL.
 	var currentUrl = window.location.href;
 	var chromeUrl = currentUrl;
 
@@ -165,52 +92,86 @@
 		}
 	}
 
-	function showUnsupportedOverlay() {
-		if (window.__snaeBrowserGateRendered) {
+	var titleText = isWebView ? 'Open In Chrome' : 'Browser Not Supported';
+	var messageText = isWebView
+		? 'This in-app browser is blocked. Open this page in Chrome to continue.'
+		: 'This browser is missing required web features. Open this page in Chrome.';
+
+	// Inject a <style> that force-hides #app and force-shows fallback.
+	// Re-check on every tick that it's still in the DOM (some WebViews strip injected nodes).
+	function ensureBlockStyles() {
+		var existing = document.getElementById('snae-block');
+		if (existing && existing.parentNode) {
 			return;
 		}
-		window.__snaeBrowserGateRendered = true;
+		var s = document.createElement('style');
+		s.id = 'snae-block';
+		s.textContent =
+			'#app{display:none!important}' +
+			'#startup-fallback{display:flex!important;position:fixed!important;inset:0!important;z-index:2147483646!important}';
+		var target = document.head || document.documentElement;
+		target.appendChild(s);
+	}
+
+	// Build the fallback overlay content once into #startup-fallback.
+	function buildFallbackContent() {
+		var el = document.getElementById('startup-fallback');
+		if (!el) {
+			el = document.createElement('div');
+			el.id = 'startup-fallback';
+			(document.body || document.documentElement).appendChild(el);
+		}
+
+		// Only populate if empty (avoid flicker from repeated innerHTML wipes).
+		if (el.childNodes.length > 0) {
+			return;
+		}
+
+		el.style.cssText =
+			'position:fixed;inset:0;z-index:2147483646;background:#121212;color:#fff;' +
+			'display:flex;flex-direction:column;justify-content:center;align-items:center;' +
+			'padding:24px;text-align:center;' +
+			'font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif';
+
+		var h = document.createElement('h2');
+		h.textContent = titleText;
+		h.style.cssText = 'margin:0 0 12px 0;font-size:24px';
+		el.appendChild(h);
+
+		var p = document.createElement('p');
+		p.textContent = messageText;
+		p.style.cssText = 'max-width:420px;margin:0 0 16px 0;line-height:1.5';
+		el.appendChild(p);
+
+		var a = document.createElement('a');
+		a.href = chromeUrl;
+		a.textContent = 'Open in Chrome';
+		a.style.cssText =
+			'display:inline-block;padding:12px 18px;border-radius:10px;background:#2563eb;' +
+			'color:#fff;font-weight:600;text-decoration:none;margin-bottom:10px';
+		el.appendChild(a);
+
+		var hint = document.createElement('p');
+		hint.textContent =
+			'If this does not open Chrome automatically, use browser menu \u2192 Open in browser.';
+		hint.style.cssText = 'font-size:12px;opacity:0.85;margin:6px 0 0 0';
+		el.appendChild(hint);
+	}
+
+	// Apply block immediately.
+	ensureBlockStyles();
+	buildFallbackContent();
+
+	// Watchdog: re-verify every 500ms for 10 seconds that block styles and
+	// fallback content are still intact. This survives WebViews that mutate
+	// DOM after initial paint (Telegram, Via, etc).
+	var watchdogRuns = 0;
+	var watchdog = setInterval(function () {
+		watchdogRuns += 1;
 		ensureBlockStyles();
-		var app = document.getElementById('app');
-		if (app) {
-			app.style.display = 'none';
+		buildFallbackContent();
+		if (watchdogRuns >= 20) {
+			clearInterval(watchdog);
 		}
-
-		showFallback(
-			isWebView ? 'Open In Chrome' : 'Browser Not Supported',
-			isWebView
-				? 'This in-app browser is blocked. Open this page in Chrome to continue.'
-				: 'This browser is missing required web features. Open this page in Chrome.',
-			chromeUrl
-		);
-
-		// Some Android in-app browsers mutate DOM after initial paint.
-		// Re-apply the fallback briefly to prevent "flash then blank".
-		var safeguardRuns = 0;
-		var safeguard = setInterval(function () {
-			safeguardRuns += 1;
-			ensureBlockStyles();
-			showFallback(
-				isWebView ? 'Open In Chrome' : 'Browser Not Supported',
-				isWebView
-					? 'This in-app browser is blocked. Open this page in Chrome to continue.'
-					: 'This browser is missing required web features. Open this page in Chrome.',
-				chromeUrl
-			);
-			if (safeguardRuns >= 20) {
-				clearInterval(safeguard);
-			}
-		}, 250);
-	}
-
-	if (shouldBlock) {
-		showUnsupportedOverlay();
-	} else {
-		// Supported browser path: allow app UI and remove fallback.
-		var app = document.getElementById('app');
-		if (app) {
-			app.style.display = '';
-		}
-		hideFallback();
-	}
+	}, 500);
 })();
