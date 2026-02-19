@@ -37,7 +37,21 @@ let lastUrlUpdatedForIndex = -1
 let initialQueryIndex: number | null = null
 let isCurrentAudioPlaying = $state(false)
 let singleTapTimeout: ReturnType<typeof setTimeout> | null = null
+let likeBurstTimeout: ReturnType<typeof setTimeout> | null = null
 let likedTrackIds = $state(new Set<string>())
+let likeBurstVisible = $state(false)
+let likeBurstSeed = $state(0)
+
+const HEART_BURST_OFFSETS = [
+	{ x: 0, y: -96, delay: 0, scale: 1.2 },
+	{ x: 84, y: -54, delay: 0.04, scale: 0.9 },
+	{ x: 96, y: 14, delay: 0.08, scale: 1 },
+	{ x: 58, y: 86, delay: 0.12, scale: 0.85 },
+	{ x: -58, y: 86, delay: 0.16, scale: 0.9 },
+	{ x: -96, y: 14, delay: 0.2, scale: 1.1 },
+	{ x: -84, y: -54, delay: 0.24, scale: 0.8 },
+	{ x: 0, y: 0, delay: 0.06, scale: 1.35 },
+]
 
 const activeTrackLiked = $derived(
 	activeIndex >= 0 && !!shorts[activeIndex] && likedTrackIds.has(shorts[activeIndex].trackId)
@@ -133,11 +147,22 @@ async function toggleLikeActiveShort() {
 	const next = new Set(likedTrackIds)
 	if (willLike) {
 		next.add(item.trackId)
+		triggerLikeBurst()
 		trackShortLiked({ trackId: item.trackId })
 	} else {
 		next.delete(item.trackId)
 	}
 	likedTrackIds = next
+}
+
+function triggerLikeBurst() {
+	likeBurstSeed += 1
+	likeBurstVisible = true
+	if (likeBurstTimeout) clearTimeout(likeBurstTimeout)
+	likeBurstTimeout = setTimeout(() => {
+		likeBurstVisible = false
+		likeBurstTimeout = null
+	}, 1300)
 }
 
 	function selectBgMusic(id: string) {
@@ -463,6 +488,12 @@ function handleUserTap(event: MouseEvent) {
 		clearTimeout(singleTapTimeout)
 		singleTapTimeout = null
 	})
+
+	$effect(() => () => {
+		if (!likeBurstTimeout) return
+		clearTimeout(likeBurstTimeout)
+		likeBurstTimeout = null
+	})
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -495,7 +526,22 @@ function handleUserTap(event: MouseEvent) {
 			>
 				<div class="relative z-10 flex min-h-[calc(100dvh-7rem)] w-full flex-col items-center justify-center">
 					<div class="mb-6 flex items-center justify-center">
-						<div class="flex size-56 items-center justify-center rounded-full border border-outlineVariant/45 bg-surfaceContainerHigh shadow-inner sm:size-72">
+						<div class="relative flex size-56 items-center justify-center rounded-full border border-outlineVariant/45 bg-surfaceContainerHigh shadow-inner sm:size-72">
+							{#if activeIndex === i && likeBurstVisible}
+								{#key likeBurstSeed}
+									<div class="like-burst-layer">
+										{#each HEART_BURST_OFFSETS as burst}
+											<div
+												class="like-burst-heart"
+												style={`--like-tx:${burst.x}px;--like-ty:${burst.y}px;--like-delay:${burst.delay}s;--like-scale:${burst.scale};`}
+											>
+												<Icon type="favorite" class="size-full" />
+											</div>
+										{/each}
+									</div>
+								{/key}
+							{/if}
+
 							<Icon
 								type="vinylDisc"
 								class={[
@@ -551,7 +597,7 @@ function handleUserTap(event: MouseEvent) {
 				</div>
 
 				{#if i === 0 && showScrollTip}
-					<div class="scroll-tip absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 rounded-full border border-outlineVariant/40 bg-surfaceContainerHigh px-4 py-2 opacity-85 shadow-md">
+					<div class="scroll-tip absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 px-4 py-2 opacity-75">
 						<Icon type="chevronUp" class="size-6 animate-bounce" />
 						<span class="text-body-sm">Swipe up for more</span>
 					</div>
@@ -676,6 +722,50 @@ function handleUserTap(event: MouseEvent) {
 	}
 	:global(.disc-spin-bg-playing) {
 		animation-play-state: running;
+	}
+	.like-burst-layer {
+		position: absolute;
+		inset: -10%;
+		pointer-events: none;
+	}
+	.like-burst-heart {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 26px;
+		height: 26px;
+		transform: translate(-50%, -50%) scale(0.2);
+		opacity: 0;
+		color: var(--color-onSecondaryContainer);
+		animation: like-burst 1s cubic-bezier(0.18, 0.85, 0.24, 1) forwards;
+		animation-delay: var(--like-delay, 0s);
+	}
+	@keyframes like-burst {
+		0% {
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(0.2);
+		}
+		14% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 1;
+			transform:
+				translate(
+					calc(-50% + var(--like-tx, 0px)),
+					calc(-50% + var(--like-ty, 0px))
+				)
+				scale(var(--like-scale, 1));
+		}
+		100% {
+			opacity: 0;
+			transform:
+				translate(
+					calc(-50% + calc(var(--like-tx, 0px) * 1.15)),
+					calc(-50% + calc(var(--like-ty, 0px) * 1.15))
+				)
+				scale(calc(var(--like-scale, 1) * 0.5));
+		}
 	}
 	@keyframes spin {
 		to {
