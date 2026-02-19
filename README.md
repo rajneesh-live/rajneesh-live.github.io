@@ -1,24 +1,34 @@
-# Snae player
-Lightweight on device music player right in your browser.
+# Rajneesh Live — Discourses
 
-Play your local audio files without a native app, using just your browser. Complete with Dark/Light theme support, artwork based UI coloring, animations and more.
+A web app for browsing and listening to Rajneesh audio discourses. Built with SvelteKit and deployed on GitHub Pages.
 
-## Limitations
-[File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API) is relatively new api which gives websites access to the files you choose. This app makes use of it when supported, for now that is only in Chromium based browsers. In other browsers legacy Files api is used which forces app to copy files inside IndexedDB, effectively duplicating used storage space, in oder to work correctly.
+**Live site:** [rajneesh-live.github.io](https://rajneesh-live.github.io/)
 
-## Works with
-With limitations in mind app works with every modern browser.
+## Features
 
-## Privacy
-Minimal, privacy preserving analytics, provided by [GoatCounter](https://goatcounter.com/), are used to count page views.
+- **Shorts** — TikTok-style vertical feed of short discourse clips with swipe navigation, background music, likes, and sharing
+- **Explore** — Browse the full catalog of discourse albums in a searchable grid
+- **Continue Listening** — Resume playback from where you left off, with recently played albums on the home screen
+- **Offline Support** — Download tracks to device storage for offline listening
+- **Stats** — Track listening hours and completed discourses
+- **Installable** — Add to home screen as a PWA for quick access
 
-## Building locally
-Clone the repo, and:
+## Development
+
+Requires Node >= 22 and pnpm.
+
 ```
 pnpm install
-pnpm run build
-```
-You can run the development server with:
-```
 pnpm run dev
 ```
+
+Build for production:
+
+```
+pnpm run build
+pnpm run preview
+```
+
+## Acknowledgements
+
+Forked from [Snae Player](https://github.com/minht11/local-music-pwa) by minht11.
