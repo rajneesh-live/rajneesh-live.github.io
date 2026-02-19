@@ -504,10 +504,6 @@ function handleUserTap(event: MouseEvent) {
 	class="shorts-viewport -mx-4 flex h-[100dvh] min-h-[100dvh] flex-col overflow-y-auto overscroll-y-none bg-surfaceContainerLow"
 	style="scroll-snap-type: y mandatory;"
 >
-	<div class="pointer-events-none sticky top-3 z-10 mb-1 px-6 text-label-md font-medium uppercase tracking-wide text-onSurface/75">
-		Shorts
-	</div>
-
 	{#if shorts.length === 0}
 		<div class="shorts-slide relative flex min-h-[100dvh] shrink-0 items-center justify-center p-6 text-onSurface">
 			<div class="w-full max-w-xl rounded-3xl border border-outlineVariant/40 bg-surfaceContainer p-8 text-center shadow-lg">
