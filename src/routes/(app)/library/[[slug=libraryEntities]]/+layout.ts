@@ -89,7 +89,7 @@ type LoadResult = LoadDataResult<LibraryStoreName> & {
 export const load: LayoutLoad = async (event): Promise<LoadResult> => {
 	const { slug } = event.params
 	if (!slug) {
-		redirect(301, '/library/home')
+		redirect(301, '/library/shorts')
 	}
 
 	if (isRajneeshEnabled() && slug !== 'home') {
