@@ -687,7 +687,7 @@ function handleUserTap(event: MouseEvent) {
 			onclick={handleShareShort}
 			class="flex size-10 items-center justify-center rounded-full bg-surfaceContainer/80 text-onSurface/70 shadow-lg backdrop-blur-md transition-colors hover:bg-surfaceContainerHigh"
 		>
-			<Icon type="openInNew" class="size-5" />
+			<Icon type="shareVariant" class="size-5" />
 		</button>
 	</div>
 </div>
