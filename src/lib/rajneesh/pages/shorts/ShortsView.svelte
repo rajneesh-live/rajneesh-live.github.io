@@ -15,6 +15,11 @@
 		setBgMusicVolume,
 	} from './bg-music-state.ts'
 
+	const player = usePlayer()
+	if (player.playing) {
+		player.playing = false
+	}
+
 	let shorts = $state(getShortsItems())
 
 	const LOAD_MORE_THRESHOLD = 5
