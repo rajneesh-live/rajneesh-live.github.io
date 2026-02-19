@@ -193,10 +193,24 @@
 	</div>
 {/snippet}
 
+{#snippet devNote()}
+	<button
+		onclick={() => void goto('/settings')}
+		class="mb-4 flex w-full items-center gap-3 rounded-xl border border-outlineVariant/50 px-4 py-3 text-left transition-colors hover:bg-surfaceContainerHigh"
+	>
+		<Icon type="information" class="size-5 shrink-0 opacity-70" />
+		<span class="flex-1 text-body-sm opacity-80">
+			App is in early development. Help us improve!
+		</span>
+		<Icon type="chevronRight" class="size-5 shrink-0 opacity-50" />
+	</button>
+{/snippet}
+
 {#if resumeCards.length > 0}
 	<div class="flex grow flex-col px-4 pb-4">
 		{@render searchBar()}
 		<InstallAppBanner class="mb-4" />
+		{@render devNote()}
 
 		<section class="relative grid w-full gap-4 overflow-clip py-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each resumeCards as card (card.trackId)}
@@ -208,6 +222,7 @@
 	<div class="flex grow flex-col px-4 pb-4">
 		{@render searchBar()}
 		<InstallAppBanner class="mb-4" />
+		{@render devNote()}
 
 		<div class="flex h-full flex-col items-center justify-center gap-4 text-center">
 			<Icon type="home" class="size-24 opacity-20" />
