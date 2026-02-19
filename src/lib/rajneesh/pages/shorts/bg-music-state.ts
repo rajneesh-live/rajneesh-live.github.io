@@ -7,6 +7,10 @@ export interface BgMusicItem {
 export const BG_MUSIC_OPTIONS: BgMusicItem[] = [
 	{ id: 'none', title: 'None', url: null },
 	{ id: 'interstellar', title: 'Interstellar', url: '/audio/interstellar.mp3' },
+	{ id: 'jacob-and-the-stone', title: 'Jacob and the Stone', url: '/audio/jacob-and-the-stone.mp3' },
+	{ id: 'no-surprises', title: 'No Surprises', url: '/audio/radiohead-no-surprises.mp3' },
+	{ id: 'experience-michel-simone', title: 'Experience', url: '/audio/experience-michel-simone.opus' },
+	{ id: 'sanson-ki-mala', title: 'Sanson Ki Mala', url: '/audio/sason-ki-mala-leo-twins.opus' },
 ]
 
 const STORAGE_KEY = 'shorts-bg-music'
