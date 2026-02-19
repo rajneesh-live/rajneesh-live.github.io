@@ -74,3 +74,25 @@ export const trackListenedMinute = (payload: ListenedMinutePayload) => {
 		...payload,
 	})
 }
+
+type ShortLikedPayload = {
+	trackId: string
+}
+
+export const trackShortLiked = (payload: ShortLikedPayload) => {
+	if (!browser) {
+		return
+	}
+
+	if (!initialized) {
+		initPosthog()
+	}
+
+	if (!initialized) {
+		return
+	}
+
+	posthog.capture('short_liked', {
+		...payload,
+	})
+}

@@ -3,8 +3,10 @@
 	import { tick } from 'svelte'
 	import Button from '$lib/components/Button.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
+	import { trackShortLiked } from '$lib/rajneesh/analytics/posthog.ts'
 	import { lastShortsIndex, setLastShortsIndex } from './shorts-state.ts'
-	import { getShortsItems, loadMoreShorts } from './shorts-data.ts'
+	import { ensureShortByTrackId, getShortsItems, loadMoreShorts } from './shorts-data.ts'
+	import { getLikedTrackIds, setTrackLiked } from './shorts-liked-state.ts'
 	import {
 		BG_MUSIC_OPTIONS,
 		getSelectedBgMusic,
@@ -30,6 +32,113 @@
 	let bgAudio: HTMLAudioElement | null = null
 	let bgMusicPlaying = $state(false)
 	let bgVolume = $state(getBgMusicVolume())
+let lastThemeAppliedForIndex = -1
+let lastUrlUpdatedForIndex = -1
+let initialQueryIndex: number | null = null
+let isCurrentAudioPlaying = $state(false)
+let singleTapTimeout: ReturnType<typeof setTimeout> | null = null
+let likedTrackIds = $state(new Set<string>())
+
+const activeTrackLiked = $derived(
+	activeIndex >= 0 && !!shorts[activeIndex] && likedTrackIds.has(shorts[activeIndex].trackId)
+)
+
+function formatTimestamp(seconds: number): string {
+	const mins = Math.floor(seconds / 60)
+	const secs = seconds % 60
+	return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+function hslToHex(h: number, s: number, l: number): string {
+	const saturation = s / 100
+	const lightness = l / 100
+	const k = (n: number) => (n + h / 30) % 12
+	const a = saturation * Math.min(lightness, 1 - lightness)
+	const f = (n: number) =>
+		Math.round(255 * (lightness - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))))
+	return `#${[f(0), f(8), f(4)].map((x) => x.toString(16).padStart(2, '0')).join('')}`
+}
+
+function getRandomThemeHex(): string {
+	const hue = Math.floor(Math.random() * 360)
+	return hslToHex(hue, 72, 52)
+}
+
+function applyRandomThemeColor() {
+	const mainStore = useMainStore()
+	const randomHex = getRandomThemeHex()
+	void import('$lib/theme.ts').then(({ updateThemeCssVariables }) => {
+		updateThemeCssVariables(randomHex, mainStore.isThemeDark)
+	})
+}
+
+function updateShortsQueryParams(index: number) {
+	const item = shorts[index]
+	if (!item) return
+	const url = new URL(window.location.href)
+	url.searchParams.set('trackId', item.trackId)
+	url.searchParams.set('startFrom', String(item.startSeconds))
+	history.replaceState(history.state, '', url)
+}
+
+function hydrateFromQuery() {
+	const url = new URL(window.location.href)
+	const trackId = url.searchParams.get('trackId')?.trim()
+	const startFromRaw = url.searchParams.get('startFrom')
+	const parsedStartFrom = startFromRaw ? Number(startFromRaw) : undefined
+	const startFrom = Number.isFinite(parsedStartFrom) ? parsedStartFrom : undefined
+	if (!trackId) return
+
+	const index = ensureShortByTrackId(trackId, startFrom)
+	if (index < 0) return
+
+	shorts = getShortsItems()
+	initialQueryIndex = index
+	setLastShortsIndex(index)
+	activeIndex = index
+}
+
+async function handleShareShort() {
+	const item = shorts[activeIndex]
+	if (!item) return
+	updateShortsQueryParams(activeIndex)
+	const shareUrl = window.location.href
+	const shareData = {
+		title: 'Shorts',
+		text: `${item.albumName} - ${item.trackIndex}`,
+		url: shareUrl,
+	}
+
+	if (navigator.share) {
+		try {
+			await navigator.share(shareData)
+			return
+		} catch (err) {
+			if ((err as Error).name === 'AbortError') return
+		}
+	}
+
+	if (navigator.clipboard?.writeText) {
+		void navigator.clipboard.writeText(shareUrl)
+	}
+}
+
+async function toggleLikeActiveShort() {
+	const item = shorts[activeIndex]
+	if (!item) return
+
+	const willLike = !likedTrackIds.has(item.trackId)
+	await setTrackLiked(item.trackId, willLike)
+
+	const next = new Set(likedTrackIds)
+	if (willLike) {
+		next.add(item.trackId)
+		trackShortLiked({ trackId: item.trackId })
+	} else {
+		next.delete(item.trackId)
+	}
+	likedTrackIds = next
+}
 
 	function selectBgMusic(id: string) {
 		selectedBgMusicId = id
@@ -157,24 +266,43 @@
 		}
 
 		isLoading = true
+		isCurrentAudioPlaying = false
 		const audio = getOrCreateAudio(index)
 		currentAudio = audio
 
 		audio.onplaying = () => {
 			if (currentAudio === audio) {
 				isLoading = false
+				isCurrentAudioPlaying = true
 				syncBgMusic()
 			}
 		}
 		audio.onwaiting = () => {
 			if (currentAudio === audio) {
 				isLoading = true
+				isCurrentAudioPlaying = false
 				pauseBgMusic()
+			}
+		}
+		audio.onpause = () => {
+			if (currentAudio === audio) {
+				isCurrentAudioPlaying = false
+			}
+		}
+		audio.onended = () => {
+			if (currentAudio === audio) {
+				isCurrentAudioPlaying = false
+			}
+		}
+		audio.onerror = () => {
+			if (currentAudio === audio) {
+				isCurrentAudioPlaying = false
 			}
 		}
 
 		audio.currentTime = shorts[index].startSeconds
 		audio.play().catch((err) => {
+			isCurrentAudioPlaying = false
 			if (err.name === 'NotAllowedError') {
 				isLoading = false
 				autoplayBlocked = true
@@ -184,14 +312,63 @@
 		preloadAdjacent(index)
 	}
 
-	function handleUserTap() {
-		if (!autoplayBlocked) return
-		autoplayBlocked = false
-		if (activeIndex >= 0) playSlide(activeIndex)
+function handleSingleTapToggle() {
+		if (autoplayBlocked) {
+			autoplayBlocked = false
+			if (activeIndex >= 0) playSlide(activeIndex)
+			return
+		}
+
+		if (!currentAudio && activeIndex >= 0) {
+			playSlide(activeIndex)
+			return
+		}
+
+		if (!currentAudio) return
+
+	if (currentAudio.paused) {
+			isLoading = true
+			void currentAudio.play().catch((err) => {
+				isCurrentAudioPlaying = false
+				isLoading = false
+				if (err?.name === 'NotAllowedError') autoplayBlocked = true
+			})
+			return
+		}
+
+	if (isLoading) {
+		return
 	}
+
+		currentAudio.pause()
+		isCurrentAudioPlaying = false
+		isLoading = false
+		pauseBgMusic()
+	}
+
+function handleUserTap(event: MouseEvent) {
+	// Double-tap: like/unlike current short.
+	if (event.detail === 2) {
+		if (singleTapTimeout) {
+			clearTimeout(singleTapTimeout)
+			singleTapTimeout = null
+		}
+		void toggleLikeActiveShort()
+		return
+	}
+
+	// Single-tap: play/pause toggle (deferred to avoid firing on double-tap).
+	if (event.detail === 1) {
+		singleTapTimeout = setTimeout(() => {
+			handleSingleTapToggle()
+			singleTapTimeout = null
+		}, 220)
+	}
+}
 
 	function destroyPool() {
 		destroyBgMusic()
+		isCurrentAudioPlaying = false
 		for (const [, audio] of audioPool) {
 			audio.pause()
 			audio.removeAttribute('src')
@@ -210,6 +387,33 @@
 			setLastShortsIndex(activeIndex)
 			maybeLoadMore(activeIndex)
 		}
+	})
+
+	$effect(() => {
+		if (activeIndex < 0 || activeIndex === lastThemeAppliedForIndex) return
+		lastThemeAppliedForIndex = activeIndex
+		applyRandomThemeColor()
+	})
+
+	$effect(() => {
+		if (activeIndex < 0 || activeIndex === lastUrlUpdatedForIndex) return
+		lastUrlUpdatedForIndex = activeIndex
+		updateShortsQueryParams(activeIndex)
+	})
+
+	$effect(() => {
+		let cancelled = false
+		void getLikedTrackIds().then((ids) => {
+			if (cancelled) return
+			likedTrackIds = new Set(ids)
+		})
+		return () => {
+			cancelled = true
+		}
+	})
+
+	$effect(() => {
+		hydrateFromQuery()
 	})
 
 	$effect(() => {
@@ -232,12 +436,13 @@
 			)
 			el.querySelectorAll('[data-slide-index]').forEach((s) => observer!.observe(s))
 
-			const saved = lastShortsIndex
-			if (saved > 0 && saved < shorts.length && el.clientHeight > 0) {
+			const targetIndex = initialQueryIndex ?? lastShortsIndex
+			if (targetIndex >= 0 && targetIndex < shorts.length && el.clientHeight > 0) {
 				requestAnimationFrame(() => {
 					if (cancelled) return
-					el.scrollTo({ top: saved * el.clientHeight, behavior: 'auto' })
-					activeIndex = saved
+					el.scrollTo({ top: targetIndex * el.clientHeight, behavior: 'auto' })
+					activeIndex = targetIndex
+					initialQueryIndex = null
 				})
 			}
 		})
@@ -252,6 +457,12 @@
 	})
 
 	$effect(() => () => destroyPool())
+
+	$effect(() => () => {
+		if (!singleTapTimeout) return
+		clearTimeout(singleTapTimeout)
+		singleTapTimeout = null
+	})
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -262,49 +473,92 @@
 	class="shorts-viewport -mx-4 flex h-[100dvh] min-h-[100dvh] flex-col overflow-y-auto overscroll-y-none bg-surfaceContainerLow"
 	style="scroll-snap-type: y mandatory;"
 >
-	{#each shorts as item, i (i)}
-		<div
-			data-slide-index={i}
-			class="shorts-slide relative flex min-h-[100dvh] shrink-0 flex-col items-center justify-center gap-6 px-6 text-onSurface"
-			use:observeSlide
-		>
-			<div class="flex flex-col items-center gap-3 text-center">
-				<div class="text-body-sm opacity-50">From</div>
-				<div class="text-title-md">
-					{item.albumName} - {item.trackIndex}
+	<div class="pointer-events-none sticky top-3 z-10 mb-1 px-6 text-label-md font-medium uppercase tracking-wide text-onSurface/75">
+		Shorts
+	</div>
+
+	{#if shorts.length === 0}
+		<div class="shorts-slide relative flex min-h-[100dvh] shrink-0 items-center justify-center p-6 text-onSurface">
+			<div class="w-full max-w-xl rounded-3xl border border-outlineVariant/40 bg-surfaceContainer p-8 text-center shadow-lg">
+				<div class="mb-2 text-title-lg">No shorts yet</div>
+				<div class="text-body-md opacity-70">
+					Add more tracks to your library to unlock random moments here.
+				</div>
+			</div>
+		</div>
+	{:else}
+		{#each shorts as item, i (i)}
+			<div
+				data-slide-index={i}
+				class="shorts-slide relative flex min-h-[100dvh] shrink-0 flex-col bg-surfaceContainerLow px-6 pb-8 pt-10 text-onSurface"
+				use:observeSlide
+			>
+				<div class="relative z-10 flex min-h-[calc(100dvh-7rem)] w-full flex-col items-center justify-center">
+					<div class="mb-6 flex items-center justify-center">
+						<div class="flex size-56 items-center justify-center rounded-full border border-outlineVariant/45 bg-surfaceContainerHigh shadow-inner sm:size-72">
+							<Icon
+								type="vinylDisc"
+								class={[
+									'size-24 opacity-70 sm:size-32',
+									activeIndex === i && 'disc-spin',
+									activeIndex === i && isCurrentAudioPlaying && 'disc-spin-playing',
+								]}
+							/>
+						</div>
+					</div>
+
+					<div class="pb-4 text-center">
+						<div class="mb-2 text-headline-lg">
+							{item.albumName} - {item.trackIndex}
+						</div>
+						<div class="mb-6 text-title-sm opacity-80 sm:text-title-md">
+							Starts at {formatTimestamp(item.startSeconds)}
+						</div>
+
+						<div class="flex flex-wrap items-center justify-center gap-3">
+							{#if item.albumUuid}
+								<Button
+									kind="outlined"
+									class="text-body-md"
+									onclick={(e) => {
+										e.stopPropagation()
+										void goto(`/library/albums/${item.albumUuid}`)
+									}}
+								>
+									<Icon type="album" class="size-4" />
+									Open Album
+								</Button>
+							{/if}
+
+							{#if activeIndex === i && !isCurrentAudioPlaying && !isLoading && !autoplayBlocked}
+								<span class="text-body-md opacity-70">Paused</span>
+							{/if}
+
+							{#if activeIndex === i && autoplayBlocked}
+								<span class="rounded-full border border-outlineVariant/45 bg-surfaceContainerHigh px-3 py-1.5 text-body-md">
+									Tap anywhere to play
+								</span>
+							{/if}
+
+							{#if activeIndex === i && isLoading}
+								<span class="inline-flex items-center gap-2 rounded-full border border-outlineVariant/45 bg-surfaceContainerHigh px-3 py-1.5 text-body-md">
+									<div class="loader-inline"></div>
+									Loading
+								</span>
+							{/if}
+						</div>
+					</div>
 				</div>
 
-				{#if item.albumUuid}
-					<Button
-						kind="outlined"
-						class="mt-1"
-						onclick={(e) => {
-							e.stopPropagation()
-							void goto(`/library/albums/${item.albumUuid}`)
-						}}
-					>
-						<Icon type="album" class="size-4" />
-						Open Album
-					</Button>
-				{/if}
-
-				{#if activeIndex === i && autoplayBlocked}
-					<span class="text-base opacity-60">Tap to play</span>
-				{/if}
-
-				{#if activeIndex === i && isLoading}
-					<div class="loader-inline mt-1"></div>
+				{#if i === 0 && showScrollTip}
+					<div class="scroll-tip absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 rounded-full border border-outlineVariant/40 bg-surfaceContainerHigh px-4 py-2 opacity-85 shadow-md">
+						<Icon type="chevronUp" class="size-6 animate-bounce" />
+						<span class="text-body-sm">Swipe up for more</span>
+					</div>
 				{/if}
 			</div>
-
-			{#if i === 0 && showScrollTip}
-				<div class="scroll-tip absolute bottom-24 flex flex-col items-center gap-1 opacity-60">
-					<Icon type="chevronUp" class="size-6 animate-bounce" />
-					<span class="text-body-sm">Swipe up for more</span>
-				</div>
-			{/if}
-		</div>
-	{/each}
+		{/each}
+	{/if}
 </div>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -355,7 +609,7 @@
 		</div>
 	{/if}
 
-	<div class="flex justify-end">
+	<div class="flex flex-col items-end gap-3">
 		<button
 			onclick={() => { showBgMusicPicker = !showBgMusicPicker }}
 			class={[
@@ -365,7 +619,29 @@
 					: 'bg-surfaceContainer/80 text-onSurface/70',
 			]}
 		>
-			<Icon type="vinylDisc" class={['size-5', bgMusicPlaying && 'animate-[spin_3s_linear_infinite]']} />
+			<Icon
+				type="vinylDisc"
+				class={['size-5 disc-spin-bg', bgMusicPlaying && 'disc-spin-bg-playing']}
+			/>
+		</button>
+
+		<button
+			onclick={toggleLikeActiveShort}
+			class={[
+				'flex size-10 items-center justify-center rounded-full shadow-lg backdrop-blur-md transition-colors hover:bg-surfaceContainerHigh',
+				activeTrackLiked
+					? 'bg-secondaryContainer/90 text-onSecondaryContainer'
+					: 'bg-surfaceContainer/80 text-onSurface/70',
+			]}
+		>
+			<Icon type={activeTrackLiked ? 'favorite' : 'favoriteOutline'} class="size-5" />
+		</button>
+
+		<button
+			onclick={handleShareShort}
+			class="flex size-10 items-center justify-center rounded-full bg-surfaceContainer/80 text-onSurface/70 shadow-lg backdrop-blur-md transition-colors hover:bg-surfaceContainerHigh"
+		>
+			<Icon type="openInNew" class="size-5" />
 		</button>
 	</div>
 </div>
@@ -386,6 +662,20 @@
 		border-bottom-color: transparent;
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
+	}
+	:global(.disc-spin) {
+		animation: spin 6s linear infinite;
+		animation-play-state: paused;
+	}
+	:global(.disc-spin-playing) {
+		animation-play-state: running;
+	}
+	:global(.disc-spin-bg) {
+		animation: spin 3s linear infinite;
+		animation-play-state: paused;
+	}
+	:global(.disc-spin-bg-playing) {
+		animation-play-state: running;
 	}
 	@keyframes spin {
 		to {

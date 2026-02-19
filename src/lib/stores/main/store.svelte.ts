@@ -25,7 +25,7 @@ export const getPersistedHindiOnly = (): boolean =>
 	getPersistedValue('main', 'hindiOnly', true)
 
 export class MainStore {
-	theme: AppThemeOption = $state('auto')
+	theme: AppThemeOption = $state('dark')
 
 	#deviceThemeDark = new MediaQuery('(prefers-color-scheme: dark)')
 

@@ -5,6 +5,7 @@ import type { Track } from '$lib/library/types.ts'
 
 export interface ShortItem {
 	url: string
+	trackId: string
 	startSeconds: number
 	albumName: string
 	albumUuid: string
@@ -17,6 +18,27 @@ const MAX_START = 40 * 60 // 40 min
 
 const isEnglishTrack = (url: string): boolean =>
 	url.toLowerCase().includes('/english/')
+
+function slugify(value: string): string {
+	return value
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+}
+
+function getTrackId(track: Track, url: string): string {
+	try {
+		const parsed = new URL(url, 'https://shorts.local')
+		const fileName = parsed.pathname.split('/').pop() ?? ''
+		const baseName = fileName.replace(/\.[^.]+$/, '')
+		if (baseName) return slugify(baseName)
+	} catch {
+		// Ignore malformed URL and fallback to track fields
+	}
+
+	return slugify(`${track.album ?? 'unknown'}-${track.trackNo}`)
+}
 
 function getFilteredTracks(): Track[] {
 	const catalog = getCatalog()
@@ -57,6 +79,7 @@ function generateBatch(count: number): ShortItem[] {
 
 		batch.push({
 			url: file.url,
+			trackId: getTrackId(track, file.url),
 			startSeconds,
 			albumName: track.album ?? 'Unknown',
 			albumUuid: album?.uuid ?? '',
@@ -86,6 +109,41 @@ export function getShortsItems(): ShortItem[] {
 export function loadMoreShorts(): number {
 	items.push(...generateBatch(PAGE_SIZE))
 	return items.length
+}
+
+export function ensureShortByTrackId(trackId: string, startFrom?: number): number {
+	const normalizedTrackId = slugify(trackId)
+	if (!normalizedTrackId) return -1
+
+	const requestedStart = Number.isFinite(startFrom) ? Math.max(0, Math.floor(startFrom!)) : undefined
+
+	const existingIndex = items.findIndex((item) =>
+		item.trackId === normalizedTrackId
+		&& (requestedStart === undefined || item.startSeconds === requestedStart)
+	)
+	if (existingIndex >= 0) return existingIndex
+
+	const tracks = getFilteredTracks()
+	for (const track of tracks) {
+		const file = track.file as RemoteFile | undefined
+		if (!file?.url || file.type !== 'remote') continue
+		if (getTrackId(track, file.url) !== normalizedTrackId) continue
+
+		const catalog = getCatalog()
+		const album = catalog?.albums.find((a) => a.name === track.album)
+		const short: ShortItem = {
+			url: file.url,
+			trackId: normalizedTrackId,
+			startSeconds: requestedStart ?? (Math.floor(Math.random() * (MAX_START - MIN_START + 1)) + MIN_START),
+			albumName: track.album ?? 'Unknown',
+			albumUuid: album?.uuid ?? '',
+			trackIndex: track.trackNo,
+		}
+		items.unshift(short)
+		return 0
+	}
+
+	return -1
 }
 
 /** Reset everything (full page reload or setting change) */
