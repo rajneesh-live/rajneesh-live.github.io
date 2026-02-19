@@ -5,10 +5,17 @@
 	import Icon from '$lib/components/icon/Icon.svelte'
 	import { lastShortsIndex, setLastShortsIndex } from './shorts-state.ts'
 	import { getShortsItems, loadMoreShorts } from './shorts-data.ts'
+	import {
+		BG_MUSIC_OPTIONS,
+		getSelectedBgMusic,
+		setSelectedBgMusic,
+		getBgMusicVolume,
+		setBgMusicVolume,
+	} from './bg-music-state.ts'
 
 	let shorts = $state(getShortsItems())
 
-	const LOAD_MORE_THRESHOLD = 5 // load more when within 5 slides of the end
+	const LOAD_MORE_THRESHOLD = 5
 	const SCROLL_TIP_KEY = 'shorts-scroll-tip-shown'
 
 	let viewportEl: HTMLDivElement
@@ -18,7 +25,84 @@
 	let showScrollTip = $state(!localStorage.getItem(SCROLL_TIP_KEY))
 	let observer: IntersectionObserver | null = null
 
-	// Dismiss the tip once user scrolls away from first slide
+	let selectedBgMusicId = $state(getSelectedBgMusic())
+	let showBgMusicPicker = $state(false)
+	let bgAudio: HTMLAudioElement | null = null
+	let bgMusicPlaying = $state(false)
+	let bgVolume = $state(getBgMusicVolume())
+
+	function selectBgMusic(id: string) {
+		selectedBgMusicId = id
+		setSelectedBgMusic(id)
+		showBgMusicPicker = false
+
+		if (bgAudio) {
+			bgAudio.pause()
+			bgAudio.removeAttribute('src')
+			bgAudio.load()
+			bgAudio = null
+			bgMusicPlaying = false
+		}
+
+		const option = BG_MUSIC_OPTIONS.find((o) => o.id === id)
+		if (option?.url && currentAudio && !currentAudio.paused) {
+			bgAudio = new Audio(option.url)
+			bgAudio.loop = true
+			bgAudio.volume = bgVolume
+			bgAudio.play().then(() => {
+				bgMusicPlaying = true
+			}).catch(() => {
+				bgMusicPlaying = false
+			})
+		}
+	}
+
+	function syncBgMusic() {
+		const option = BG_MUSIC_OPTIONS.find((o) => o.id === selectedBgMusicId)
+		if (!option?.url) {
+			if (bgAudio) {
+				bgAudio.pause()
+				bgAudio = null
+			}
+			bgMusicPlaying = false
+			return
+		}
+
+		if (!bgAudio) {
+			bgAudio = new Audio(option.url)
+			bgAudio.loop = true
+			bgAudio.volume = bgVolume
+			bgAudio.addEventListener('loadedmetadata', () => {
+				if (bgAudio) bgAudio.currentTime = Math.random() * bgAudio.duration
+			}, { once: true })
+		}
+		bgAudio.play().then(() => {
+			bgMusicPlaying = true
+		}).catch(() => {
+			bgMusicPlaying = false
+		})
+	}
+
+	function pauseBgMusic() {
+		bgAudio?.pause()
+		bgMusicPlaying = false
+	}
+
+	function onBgVolumeChange() {
+		setBgMusicVolume(bgVolume)
+		if (bgAudio) bgAudio.volume = bgVolume
+	}
+
+	function destroyBgMusic() {
+		if (bgAudio) {
+			bgAudio.pause()
+			bgAudio.removeAttribute('src')
+			bgAudio.load()
+			bgAudio = null
+		}
+		bgMusicPlaying = false
+	}
+
 	$effect(() => {
 		if (showScrollTip && activeIndex > 0) {
 			showScrollTip = false
@@ -26,14 +110,12 @@
 		}
 	})
 
-	// Audio pool: preloaded Audio elements keyed by slide index
 	const audioPool = new Map<number, HTMLAudioElement>()
 	let currentAudio: HTMLAudioElement | null = null
 
 	function maybeLoadMore(index: number) {
 		if (index >= shorts.length - LOAD_MORE_THRESHOLD) {
 			loadMoreShorts()
-			// Re-read the array reference to trigger Svelte reactivity
 			shorts = getShortsItems()
 		}
 	}
@@ -43,6 +125,7 @@
 		if (audio) return audio
 		audio = new Audio()
 		audio.preload = 'auto'
+		audio.crossOrigin = 'anonymous'
 		const { url, startSeconds } = shorts[index]
 		audio.src = url
 		audio.currentTime = startSeconds
@@ -78,10 +161,16 @@
 		currentAudio = audio
 
 		audio.onplaying = () => {
-			if (currentAudio === audio) isLoading = false
+			if (currentAudio === audio) {
+				isLoading = false
+				syncBgMusic()
+			}
 		}
 		audio.onwaiting = () => {
-			if (currentAudio === audio) isLoading = true
+			if (currentAudio === audio) {
+				isLoading = true
+				pauseBgMusic()
+			}
 		}
 
 		audio.currentTime = shorts[index].startSeconds
@@ -102,6 +191,7 @@
 	}
 
 	function destroyPool() {
+		destroyBgMusic()
 		for (const [, audio] of audioPool) {
 			audio.pause()
 			audio.removeAttribute('src')
@@ -140,7 +230,6 @@
 				},
 				{ root: el, threshold: [0.5] },
 			)
-			// Observe all existing slides
 			el.querySelectorAll('[data-slide-index]').forEach((s) => observer!.observe(s))
 
 			const saved = lastShortsIndex
@@ -218,6 +307,69 @@
 	{/each}
 </div>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- Background music picker — pinned bottom-right -->
+<div
+	class="pointer-events-auto fixed right-4 z-10"
+	style="bottom: calc(var(--bottom-overlay-height, 64px) + 12px);"
+	onclick={(e) => e.stopPropagation()}
+>
+	{#if showBgMusicPicker}
+		<div class="mb-2 min-w-44 rounded-2xl bg-surfaceContainer/95 px-3 py-3 shadow-xl backdrop-blur-lg">
+			<div class="px-3 pb-2 pt-1 text-body-sm font-medium opacity-50">Background Music</div>
+			{#each BG_MUSIC_OPTIONS as option (option.id)}
+				<button
+					onclick={() => selectBgMusic(option.id)}
+					class={[
+						'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-body-sm transition-colors',
+						selectedBgMusicId === option.id
+							? 'bg-secondaryContainer/80 text-onSecondaryContainer'
+							: 'text-onSurface/80 hover:bg-onSurface/5',
+					]}
+				>
+					<Icon
+						type={option.url ? 'musicNote' : 'close'}
+						class="size-4 shrink-0"
+					/>
+					<span>{option.title}</span>
+				</button>
+			{/each}
+
+			{#if selectedBgMusicId !== 'none'}
+				<div class="mt-1 border-t border-onSurface/10 px-1 pt-3 pb-1">
+					<div class="flex items-center gap-2">
+						<Icon type="volumeMid" class="size-3.5 shrink-0 opacity-50" />
+						<input
+							type="range"
+							min="0"
+							max="1"
+							step="0.01"
+							bind:value={bgVolume}
+							oninput={onBgVolumeChange}
+							class="bg-music-slider flex-1"
+						/>
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	<div class="flex justify-end">
+		<button
+			onclick={() => { showBgMusicPicker = !showBgMusicPicker }}
+			class={[
+				'flex size-10 items-center justify-center rounded-full shadow-lg backdrop-blur-md transition-colors',
+				bgMusicPlaying
+					? 'bg-secondaryContainer/90 text-onSecondaryContainer'
+					: 'bg-surfaceContainer/80 text-onSurface/70',
+			]}
+		>
+			<Icon type="vinylDisc" class={['size-5', bgMusicPlaying && 'animate-[spin_3s_linear_infinite]']} />
+		</button>
+	</div>
+</div>
+
 <style>
 	.shorts-viewport {
 		-webkit-overflow-scrolling: touch;
@@ -239,5 +391,33 @@
 		to {
 			transform: rotate(360deg);
 		}
+	}
+
+	.bg-music-slider {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 100%;
+		height: 3px;
+		border-radius: 2px;
+		background: currentColor;
+		opacity: 0.25;
+		outline: none;
+	}
+	.bg-music-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: currentColor;
+		cursor: pointer;
+	}
+	.bg-music-slider::-moz-range-thumb {
+		width: 14px;
+		height: 14px;
+		border: none;
+		border-radius: 50%;
+		background: currentColor;
+		cursor: pointer;
 	}
 </style>
