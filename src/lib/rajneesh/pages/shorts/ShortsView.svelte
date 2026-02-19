@@ -408,6 +408,11 @@ function handleUserTap(event: MouseEvent) {
 		currentAudio = null
 	}
 
+	function scrollToSlide(index: number) {
+		if (index < 0 || index >= shorts.length || !viewportEl) return
+		viewportEl.scrollTo({ top: index * viewportEl.clientHeight, behavior: 'smooth' })
+	}
+
 	function observeSlide(el: HTMLElement) {
 		observer?.observe(el)
 	}
@@ -498,6 +503,79 @@ function handleUserTap(event: MouseEvent) {
 		if (!likeBurstTimeout) return
 		clearTimeout(likeBurstTimeout)
 		likeBurstTimeout = null
+	})
+
+	$effect(() => {
+		const ms = navigator.mediaSession
+		if (activeIndex < 0 || !shorts[activeIndex]) {
+			ms.metadata = null
+			return
+		}
+		const item = shorts[activeIndex]
+		ms.metadata = new MediaMetadata({
+			title: `${item.albumName} - ${item.trackIndex}`,
+			artist: 'Osho',
+			album: item.albumName,
+			artwork: [{
+				src: new URL('/artwork.svg', location.origin).toString(),
+				sizes: '512x512',
+			}],
+		})
+	})
+
+	$effect(() => {
+		navigator.mediaSession.playbackState = isCurrentAudioPlaying ? 'playing' : 'paused'
+	})
+
+	$effect(() => {
+		const ms = navigator.mediaSession
+		const setHandler = ms.setActionHandler.bind(ms)
+
+		setHandler('play', () => {
+			if (autoplayBlocked) {
+				autoplayBlocked = false
+				if (activeIndex >= 0) playSlide(activeIndex)
+				return
+			}
+			if (currentAudio?.paused) {
+				void currentAudio.play()
+			}
+		})
+		setHandler('pause', () => {
+			if (currentAudio && !currentAudio.paused) {
+				currentAudio.pause()
+				isCurrentAudioPlaying = false
+				pauseBgMusic()
+			}
+		})
+		setHandler('nexttrack', () => {
+			if (activeIndex < shorts.length - 1) scrollToSlide(activeIndex + 1)
+		})
+		setHandler('previoustrack', () => {
+			if (activeIndex > 0) scrollToSlide(activeIndex - 1)
+		})
+		setHandler('seekbackward', () => {
+			if (currentAudio) currentAudio.currentTime = Math.max(currentAudio.currentTime - 10, 0)
+		})
+		setHandler('seekforward', () => {
+			if (currentAudio) {
+				currentAudio.currentTime = Math.min(
+					currentAudio.currentTime + 10,
+					currentAudio.duration || Infinity,
+				)
+			}
+		})
+
+		return () => {
+			setHandler('play', player.togglePlay.bind(null, true))
+			setHandler('pause', player.togglePlay.bind(null, false))
+			setHandler('previoustrack', player.playPrev)
+			setHandler('nexttrack', player.playNext)
+			setHandler('seekbackward', () => player.seek(Math.max(player.currentTime - 10, 0)))
+			setHandler('seekforward', () => player.seek(player.currentTime + 10))
+			ms.metadata = null
+			ms.playbackState = 'none'
+		}
 	})
 </script>
 
