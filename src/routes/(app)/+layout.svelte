@@ -134,7 +134,7 @@
 	{@render children()}
 </div>
 
-<div class="pointer-events-none fixed inset-x-0 bottom-0 flex flex-col gap-2 overflow-hidden">
+<div class="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex flex-col gap-2 overflow-hidden">
 	<SnackbarRenderer />
 
 	<div bind:clientHeight={overlayContentHeight} class="flex flex-col">
