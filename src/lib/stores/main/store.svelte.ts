@@ -21,8 +21,33 @@ export interface RemoveLibraryItemOptions {
 export const getPersistedLibrarySplitLayoutEnabled = (): boolean =>
 	getPersistedValue('main', 'librarySplitLayoutEnabled', true)
 
+const isIndiaBasedUser = (): boolean => {
+	if (typeof window === 'undefined') {
+		return false
+	}
+
+	if (typeof navigator !== 'undefined') {
+		const locales = [navigator.language, ...(navigator.languages ?? [])].filter(
+			(value): value is string => !!value,
+		)
+
+		if (locales.some((locale) => locale.toUpperCase().endsWith('-IN'))) {
+			return true
+		}
+	}
+
+	try {
+		const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+		return timezone === 'Asia/Kolkata' || timezone === 'Asia/Calcutta'
+	} catch {
+		return false
+	}
+}
+
+export const getDefaultHindiOnly = (): boolean => isIndiaBasedUser()
+
 export const getPersistedHindiOnly = (): boolean =>
-	getPersistedValue('main', 'hindiOnly', true)
+	getPersistedValue('main', 'hindiOnly', getDefaultHindiOnly())
 
 export class MainStore {
 	theme: AppThemeOption = $state('dark')
@@ -71,8 +96,8 @@ export class MainStore {
 
 	librarySplitLayoutEnabled: boolean = $state(true)
 
-	/** When true, only Hindi discourses are shown (English filtered out). Default: true */
-	hindiOnly: boolean = $state(true)
+	/** When true, only Hindi discourses are shown (English filtered out). */
+	hindiOnly: boolean = $state(getDefaultHindiOnly())
 
 	constructor() {
 		persist('main', this, [
