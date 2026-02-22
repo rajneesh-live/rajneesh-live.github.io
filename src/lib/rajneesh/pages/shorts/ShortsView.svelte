@@ -6,7 +6,7 @@
 	import { trackShortLiked } from '$lib/rajneesh/analytics/posthog.ts'
 	import { snackbar } from '$lib/components/snackbar/snackbar.ts'
 	import { getCachedBlob } from '$lib/rajneesh/index.ts'
-	import { lastShortsIndex, setLastShortsIndex } from './shorts-state.ts'
+	import { lastShortsIndex, setLastShortsIndex, savedPlaybackTime, setSavedPlaybackTime } from './shorts-state.ts'
 	import { ensureShortByTrackId, getShortsItems, loadMoreShorts } from './shorts-data.ts'
 	import { getLikedTrackIds, setTrackLiked } from './shorts-liked-state.ts'
 	import {
@@ -352,7 +352,12 @@ function triggerLikeBurst() {
 			}
 		}
 
-		audio.currentTime = shorts[index].startSeconds
+		if (savedPlaybackTime !== null && index === lastShortsIndex) {
+			audio.currentTime = savedPlaybackTime
+			setSavedPlaybackTime(null)
+		} else {
+			audio.currentTime = shorts[index].startSeconds
+		}
 		audio.play().catch((err) => {
 			isCurrentAudioPlaying = false
 			if (err.name === 'NotAllowedError') {
@@ -419,6 +424,9 @@ function handleUserTap(event: MouseEvent) {
 }
 
 	function destroyPool() {
+		if (currentAudio && activeIndex >= 0) {
+			setSavedPlaybackTime(currentAudio.currentTime)
+		}
 		destroyBgMusic()
 		isCurrentAudioPlaying = false
 		for (const [, audio] of audioPool) {
