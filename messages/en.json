@@ -23,6 +23,7 @@
 	"duration": "Duration",
 
 	"errorPageDoesNotExist": "Looks like this page doesn't exist.",
+	"errorPlaybackFailed": "Unable to play this track. Check your connection.",
 	"errorUnexpected": "An unexpected error occurred.",
 	"favorites": "Favorites",
 	"foundAnIssue": "Found an issue?",

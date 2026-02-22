@@ -19,6 +19,7 @@ import {
 } from '$lib/db/active-minutes.ts'
 import type { ActiveMinute } from '$lib/db/database.ts'
 import { rajneeshLog } from '$lib/rajneesh/index.ts'
+import { snackbar } from '$lib/components/snackbar/snackbar.ts'
 import { trackListenedMinute } from '$lib/rajneesh/analytics/posthog'
 import {
 	ensureCompletedTracksLoaded,
@@ -44,6 +45,8 @@ export class PlayerStore {
 	repeat: PlayerRepeat = $state('none')
 
 	playing: boolean = $state(false)
+
+	loading: boolean = $state(false)
 
 	currentTime: number = $state(0)
 
@@ -160,6 +163,22 @@ export class PlayerStore {
 			}
 		}
 
+		audio.onwaiting = () => {
+			this.loading = true
+		}
+		audio.oncanplay = () => {
+			this.loading = false
+		}
+		audio.onerror = () => {
+			this.loading = false
+			this.playing = false
+			snackbar({
+				id: 'playback-error',
+				message: m.errorPlaybackFailed(),
+				duration: 4000,
+			})
+		}
+
 		audio.ondurationchange = () => {
 			this.duration = audio.duration
 		}
@@ -205,14 +224,15 @@ export class PlayerStore {
 				this.currentTime = savedTimestamp
 				const shouldAutoplay = this.#autoplayOnLoad
 				this.#autoplayOnLoad = true
-				void loadTrackAudio(this.#audio, track.file, track.uuid).then(async (loaded) => {
+				this.loading = true
+			void loadTrackAudio(this.#audio, track.file, track.uuid).then(async (loaded) => {
 					if (prevTrack?.id !== track.id) {
-						// Track was changed while loading
 						return
 					}
 
 					if (!loaded) {
 						this.playing = false
+						this.loading = false
 					}
 
 					prevTrack.loaded = loaded
@@ -637,5 +657,6 @@ export class PlayerStore {
 		this.#audio.src = ''
 		this.currentTime = 0
 		this.duration = 0
+		this.loading = false
 	}
 }

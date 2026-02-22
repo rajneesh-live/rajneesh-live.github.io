@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PlayPauseIcon from '../../animated-icons/PlayPauseIcon.svelte'
+	import Spinner from '$lib/components/Spinner.svelte'
 	import Button from '../../Button.svelte'
 
 	const player = usePlayer()
@@ -11,5 +12,9 @@
 	disabled={!player.activeTrack}
 	onclick={() => player.togglePlay()}
 >
-	<PlayPauseIcon playing={player.playing} />
+	{#if player.loading}
+		<Spinner class="size-6" />
+	{:else}
+		<PlayPauseIcon playing={player.playing} />
+	{/if}
 </Button>

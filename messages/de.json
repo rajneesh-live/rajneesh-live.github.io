@@ -23,6 +23,7 @@
 	"duration": "Dauer",
 
 	"errorPageDoesNotExist": "Diese Seite scheint nicht zu existieren.",
+	"errorPlaybackFailed": "Dieser Titel konnte nicht abgespielt werden. Überprüfen Sie Ihre Verbindung.",
 	"errorUnexpected": "Es ist ein unerwarteter Fehler aufgetreten.",
 	"favorites": "Favoriten",
 	"foundAnIssue": "Haben Sie einen Fehler entdeckt?",

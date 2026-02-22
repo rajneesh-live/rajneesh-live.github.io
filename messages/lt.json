@@ -23,6 +23,7 @@
 	"duration": "Trukmė",
 
 	"errorPageDoesNotExist": "Panašu, kad šio puslapio nėra.",
+	"errorPlaybackFailed": "Nepavyko atkurti šio takelio. Patikrinkite ryšį.",
 	"errorUnexpected": "Įvyko netikėta klaida.",
 	"favorites": "Mėgstamiausi",
 	"foundAnIssue": "Radote klaidą?",

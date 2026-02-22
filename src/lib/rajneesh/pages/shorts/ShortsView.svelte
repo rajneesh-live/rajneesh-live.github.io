@@ -4,6 +4,8 @@
 	import Button from '$lib/components/Button.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
 	import { trackShortLiked } from '$lib/rajneesh/analytics/posthog.ts'
+	import { snackbar } from '$lib/components/snackbar/snackbar.ts'
+	import { getCachedBlob } from '$lib/rajneesh/index.ts'
 	import { lastShortsIndex, setLastShortsIndex } from './shorts-state.ts'
 	import { ensureShortByTrackId, getShortsItems, loadMoreShorts } from './shorts-data.ts'
 	import { getLikedTrackIds, setTrackLiked } from './shorts-liked-state.ts'
@@ -259,36 +261,48 @@ function triggerLikeBurst() {
 		}
 	}
 
-	function getOrCreateAudio(index: number): HTMLAudioElement {
+	async function getOrCreateAudio(index: number): Promise<HTMLAudioElement> {
 		let audio = audioPool.get(index)
 		if (audio) return audio
 		audio = new Audio()
 		audio.preload = 'auto'
 		audio.crossOrigin = 'anonymous'
 		const { url, startSeconds } = shorts[index]
-		audio.src = url
+		const cachedBlob = await getCachedBlob(url)
+		if (cachedBlob) {
+			audio.src = URL.createObjectURL(cachedBlob)
+		} else {
+			audio.src = url
+		}
 		audio.currentTime = startSeconds
 		audioPool.set(index, audio)
 		return audio
 	}
 
+	function cleanupPoolAudio(audio: HTMLAudioElement) {
+		audio.pause()
+		if (audio.src.startsWith('blob:')) {
+			URL.revokeObjectURL(audio.src)
+		}
+		audio.removeAttribute('src')
+		audio.load()
+	}
+
 	function preloadAdjacent(index: number) {
 		for (const i of [index - 1, index + 1]) {
 			if (i >= 0 && i < shorts.length && !audioPool.has(i)) {
-				getOrCreateAudio(i)
+				void getOrCreateAudio(i)
 			}
 		}
 		for (const [key, audio] of audioPool) {
 			if (Math.abs(key - index) > 1) {
-				audio.pause()
-				audio.removeAttribute('src')
-				audio.load()
+				cleanupPoolAudio(audio)
 				audioPool.delete(key)
 			}
 		}
 	}
 
-	function playSlide(index: number) {
+	async function playSlide(index: number) {
 		if (index < 0 || index >= shorts.length) return
 
 		if (currentAudio) {
@@ -297,7 +311,8 @@ function triggerLikeBurst() {
 
 		isLoading = true
 		isCurrentAudioPlaying = false
-		const audio = getOrCreateAudio(index)
+		const audio = await getOrCreateAudio(index)
+		if (activeIndex !== index) return
 		currentAudio = audio
 
 		audio.onplaying = () => {
@@ -326,7 +341,14 @@ function triggerLikeBurst() {
 		}
 		audio.onerror = () => {
 			if (currentAudio === audio) {
+				isLoading = false
 				isCurrentAudioPlaying = false
+				pauseBgMusic()
+				snackbar({
+					id: 'shorts-playback-error',
+					message: m.errorPlaybackFailed(),
+					duration: 4000,
+				})
 			}
 		}
 
@@ -400,9 +422,7 @@ function handleUserTap(event: MouseEvent) {
 		destroyBgMusic()
 		isCurrentAudioPlaying = false
 		for (const [, audio] of audioPool) {
-			audio.pause()
-			audio.removeAttribute('src')
-			audio.load()
+			cleanupPoolAudio(audio)
 		}
 		audioPool.clear()
 		currentAudio = null
