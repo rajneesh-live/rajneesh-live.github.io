@@ -6,12 +6,17 @@
 	import ShuffleButton from './buttons/ShuffleButton.svelte'
 	import { isRajneeshEnabled } from '$lib/rajneesh/index.ts'
 	import SpeedControlButton from '$lib/rajneesh/components/player/SpeedControlButton.svelte'
+	import BgMusicButton from '$lib/rajneesh/components/player/BgMusicButton.svelte'
 
 	const { class: className }: { class?: ClassValue } = $props()
 </script>
 
 <div class={['flex items-center gap-2', className]}>
-	<ShuffleButton />
+	{#if isRajneeshEnabled()}
+		<SpeedControlButton />
+	{:else}
+		<ShuffleButton />
+	{/if}
 
 	<PlayPrevButton />
 
@@ -20,7 +25,7 @@
 	<PlayNextButton />
 
 	{#if isRajneeshEnabled()}
-		<SpeedControlButton />
+		<BgMusicButton />
 	{:else}
 		<RepeatButton />
 	{/if}

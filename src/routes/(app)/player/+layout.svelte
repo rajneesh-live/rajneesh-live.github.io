@@ -12,6 +12,7 @@
 	import PlayTogglePillButton from '$lib/components/player/buttons/PlayTogglePillButton.svelte'
 	import RepeatButton from '$lib/components/player/buttons/RepeatButton.svelte'
 	import ShuffleButton from '$lib/components/player/buttons/ShuffleButton.svelte'
+	import BgMusicButton from '$lib/rajneesh/components/player/BgMusicButton.svelte'
 	import PlayerArtwork from '$lib/components/player/PlayerArtwork.svelte'
 	import Timeline from '$lib/components/player/Timeline.svelte'
 	import Slider from '$lib/components/Slider.svelte'
@@ -69,7 +70,11 @@
 				]}
 			>
 				<div class="my-auto flex items-center justify-between gap-2">
-					<ShuffleButton />
+					{#if isRajneeshEnabled()}
+						<SpeedControlButton />
+					{:else}
+						<ShuffleButton />
+					{/if}
 
 					<PlayPrevButton />
 
@@ -78,7 +83,7 @@
 					<PlayNextButton />
 
 					{#if isRajneeshEnabled()}
-						<SpeedControlButton />
+						<BgMusicButton />
 					{:else}
 						<RepeatButton />
 					{/if}

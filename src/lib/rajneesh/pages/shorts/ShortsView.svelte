@@ -311,6 +311,7 @@ function triggerLikeBurst() {
 
 		isLoading = true
 		isCurrentAudioPlaying = false
+		pauseBgMusic()
 		const audio = await getOrCreateAudio(index)
 		if (activeIndex !== index) return
 		currentAudio = audio
@@ -332,6 +333,7 @@ function triggerLikeBurst() {
 		audio.onpause = () => {
 			if (currentAudio === audio) {
 				isCurrentAudioPlaying = false
+				pauseBgMusic()
 			}
 		}
 		audio.onended = () => {
