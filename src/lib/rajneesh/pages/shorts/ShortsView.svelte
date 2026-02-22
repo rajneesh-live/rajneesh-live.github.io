@@ -406,6 +406,11 @@ function handleSingleTapToggle() {
 	}
 
 function handleUserTap(event: MouseEvent) {
+	if (showBgMusicPicker) {
+		showBgMusicPicker = false
+		return
+	}
+
 	// Double-tap: like/unlike current short.
 	if (event.detail === 2) {
 		if (singleTapTimeout) {

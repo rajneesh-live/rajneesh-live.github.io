@@ -12,6 +12,7 @@
 	let selectedBgMusicId = $state('none')
 	let bgVolume = $state(0.15)
 	let _initialized = false
+	let _mountCount = 0
 
 	function ensureInitialized() {
 		if (_initialized) return
@@ -110,6 +111,14 @@
 	let pickerRight = $state(0)
 
 	ensureInitialized()
+	_mountCount++
+
+	$effect(() => () => {
+		_mountCount--
+		if (_mountCount === 0) {
+			destroyBgMusic()
+		}
+	})
 
 	function portal(node: HTMLElement) {
 		document.body.appendChild(node)
