@@ -51,6 +51,11 @@
 
 	"libraryNoResults": "No results found",
 	"libraryNoResultsExplanation": "Try searching for something else",
+	"libraryTranscriptSearchResultsCount": "{count} Results",
+	"libraryTranscriptSearchNoResults": "No transcript matches",
+	"libraryTranscriptSearching": "Searching transcripts...",
+	"libraryTranscriptSearchLoadingMore": "Loading more...",
+	"libraryTranscriptSearchTypeHindiHint": "Please type in Hindi for best results.",
 	"libraryOpenApplicationMenu": "Open application menu",
 	"libraryOpenSortMenu": "Open sort menu",
 	"libraryPlaylistCreated": "Playlist \"{playlistName}\" created",

@@ -21,6 +21,7 @@
 	import Home from '$lib/rajneesh/pages/home/Home.svelte'
 	import ShortsView from '$lib/rajneesh/pages/shorts/ShortsView.svelte'
 	import ExploreListContainer from '$lib/rajneesh/pages/explore/ExploreListContainer.svelte'
+	import TranscriptSearchResults from '$lib/rajneesh/transcript/search/TranscriptSearchResults.svelte'
 	import { getNavItems } from '$lib/rajneesh/ui/nav-items.ts'
 	import Search from './Search.svelte'
 
@@ -153,6 +154,13 @@
 							<Home />
 						{:else if slug === 'shorts'}
 							<ShortsView />
+						{:else if slug === 'explore' && data.store.searchTerm.trim()}
+							<div class="flex flex-col gap-6">
+								{#if itemsIds.length > 0}
+									<ExploreListContainer items={itemsIds} />
+								{/if}
+								<TranscriptSearchResults searchTerm={data.store.searchTerm} />
+							</div>
 						{:else if itemsIds.length === 0}
 							<div class="relative m-auto flex flex-col items-center text-center">
 								<Icon type="magnify" class="my-auto size-35 opacity-54" />

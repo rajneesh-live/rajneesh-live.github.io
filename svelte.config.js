@@ -28,10 +28,11 @@ const config = {
 				'default-src': ['none'],
 				'script-src': [
 					'self',
+					'wasm-unsafe-eval', // Required for Pagefind WebAssembly search
 					'https://gc.zgo.at/',
 					'https://us-assets.i.posthog.com/',
 				],
-				'style-src': ['self', 'unsafe-inline'],
+				'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
 				// Allow remote images/audio (e.g. archive.org) to be displayed/played
 				'img-src': ['self', 'blob:', 'data:', 'https:', 'http:'],
 				'media-src': ['self', 'blob:', 'data:', 'https:', 'http:'],
