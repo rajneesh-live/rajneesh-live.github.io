@@ -102,6 +102,8 @@
 	"playerPlay": "Play",
 	"playerPlayNextTrack": "Play next track",
 	"playerPlayPreviousTrack": "Play previous track",
+	"playerSeekBack": "Seek back 15 seconds",
+	"playerSeekForward": "Seek forward 15 seconds",
 	"playerQueueEmpty": "Your queue is empty",
 	"playerQueuePlaySomething": "Play something here",
 	"playerRemoveFromQueue": "Remove from queue",

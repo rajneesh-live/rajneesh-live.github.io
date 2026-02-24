@@ -100,6 +100,8 @@
 	"playerPlay": "Abspielen",
 	"playerPlayNextTrack": "Nächsten Titel abspielen",
 	"playerPlayPreviousTrack": "Vorherigen Titel abspielen",
+	"playerSeekBack": "15 Sekunden zurückspulen",
+	"playerSeekForward": "15 Sekunden vorspulen",
 	"playerQueueEmpty": "Ihre Warteschlange ist leer",
 	"playerQueuePlaySomething": "Musik entdecken",
 	"playerRemoveFromQueue": "Aus der Warteschlange entfernen",

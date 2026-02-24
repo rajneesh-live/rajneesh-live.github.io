@@ -324,16 +324,16 @@ export class PlayerStore {
 
 		// Done for minification purposes.
 		const setActionHandler = ms.setActionHandler.bind(ms)
+		const seekBack = () => this.seek(Math.max(this.currentTime - 15, 0))
+		const seekForward = () =>
+			this.seek(Math.min(this.currentTime + 15, this.duration || Infinity))
+
 		setActionHandler('play', this.togglePlay.bind(null, true))
 		setActionHandler('pause', this.togglePlay.bind(null, false))
-		setActionHandler('previoustrack', this.playPrev)
-		setActionHandler('nexttrack', this.playNext)
-		setActionHandler('seekbackward', () => {
-			audio.currentTime = Math.min(audio.currentTime - 10, 0)
-		})
-		setActionHandler('seekforward', () => {
-			audio.currentTime = Math.max(audio.currentTime + 10, audio.duration)
-		})
+		setActionHandler('previoustrack', seekBack)
+		setActionHandler('nexttrack', seekForward)
+		setActionHandler('seekbackward', seekBack)
+		setActionHandler('seekforward', seekForward)
 	}
 
 	togglePlay = (force?: boolean): void => {
