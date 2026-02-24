@@ -48,6 +48,7 @@ let likeBurstTimeout: ReturnType<typeof setTimeout> | null = null
 let likedTrackIds = $state(new Set<string>())
 let likeBurstVisible = $state(false)
 let likeBurstSeed = $state(0)
+let currentPlaybackTime = $state(0)
 
 const HEART_BURST_OFFSETS = [
 	{ x: 0, y: -96, delay: 0, scale: 1.2 },
@@ -316,10 +317,16 @@ function triggerLikeBurst() {
 		if (activeIndex !== index) return
 		currentAudio = audio
 
+		audio.ontimeupdate = () => {
+			if (currentAudio === audio) {
+				currentPlaybackTime = audio.currentTime
+			}
+		}
 		audio.onplaying = () => {
 			if (currentAudio === audio) {
 				isLoading = false
 				isCurrentAudioPlaying = true
+				currentPlaybackTime = audio.currentTime
 				syncBgMusic()
 			}
 		}
@@ -360,6 +367,7 @@ function triggerLikeBurst() {
 		} else {
 			audio.currentTime = shorts[index].startSeconds
 		}
+		currentPlaybackTime = audio.currentTime
 		audio.play().catch((err) => {
 			isCurrentAudioPlaying = false
 			if (err.name === 'NotAllowedError') {
@@ -672,7 +680,7 @@ function handleUserTap(event: MouseEvent) {
 							{item.albumName} - {item.trackIndex}
 						</div>
 						<div class="mb-6 text-title-sm opacity-80 sm:text-title-md">
-							Starts at {formatTimestamp(item.startSeconds)}
+							{activeIndex === i ? formatTimestamp(currentPlaybackTime) : formatTimestamp(item.startSeconds)}
 						</div>
 
 						<div class="flex flex-wrap items-center justify-center gap-3">
