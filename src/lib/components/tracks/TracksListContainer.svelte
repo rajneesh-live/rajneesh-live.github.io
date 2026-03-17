@@ -1,10 +1,7 @@
 <script lang="ts" module>
-	import { goto } from '$app/navigation'
-	import { resolve } from '$app/paths'
 	import type { TrackData } from '$lib/library/get/value.ts'
-	import { toggleFavoriteTrack } from '$lib/library/playlists-actions'
+	import { toggleWatchLaterTrack } from '$lib/library/playlists-actions'
 	import { canPlayTrackFile } from '$lib/rajneesh/hooks/can-play-track.ts'
-	import { getRelatedUuid } from '$lib/rajneesh/hooks/get-related-uuid.ts'
 	import {
 		ensureCompletedTracksLoaded,
 		isTrackCompleted,
@@ -12,7 +9,6 @@
 		unmarkTrackCompleted,
 	} from '$lib/stores/completed-tracks.svelte.ts'
 	import type { MenuItem } from '../ListItem.svelte'
-	import { snackbar } from '../snackbar/snackbar.ts'
 	import VirtualContainer from '../VirtualContainer.svelte'
 	import TrackListItem from './TrackListItem.svelte'
 
@@ -20,7 +16,7 @@
 		| 'addToQueue'
 		| 'addToPlaylist'
 		| 'removeFromLibrary'
-		| 'addToFavorites'
+		| 'addToWatchLater'
 		| 'toggleCompleted'
 		| 'viewAlbum'
 		| 'viewArtist'
@@ -34,7 +30,6 @@
 
 <script lang="ts">
 	const player = usePlayer()
-	const main = useMainStore()
 
 	const defaultOnItemClick = (data: TrackItemClick) => {
 		player.playTrack(data.index, data.items)
@@ -62,29 +57,6 @@
 		predefinedKey: PredefinedTrackMenuItems
 	}
 
-	const viewRelated = async (store: 'albums' | 'artists', name: string) => {
-		try {
-			const uuid = await getRelatedUuid(store, name)
-			if (!uuid) {
-				snackbar({
-					id: 'related-not-found',
-					message: m.libraryNoResults(),
-					duration: 5000,
-				})
-				return
-			}
-
-			const path = resolve('/(app)/library/[[slug=libraryEntities]]/[uuid]', {
-				slug: store,
-				uuid,
-			})
-
-			await goto(path)
-		} catch (error) {
-			snackbar.unexpectedError(error)
-		}
-	}
-
 	const getMenuItems = (track: TrackData, index: number) => {
 		type FalsyValue = false | undefined | null | ''
 		const predefinedMenuItemsList: (PredefinedMenuItem | FalsyValue)[] = [
@@ -93,6 +65,13 @@
 				label: m.playerAddToQueue(),
 				action: () => {
 					player.addToQueue(track.id)
+				},
+			},
+			{
+				predefinedKey: 'addToWatchLater',
+				label: track.watchLater ? m.trackRemoveFromWatchLater() : m.trackAddToWatchLater(),
+				action: async () => {
+					await toggleWatchLaterTrack(track.watchLater, track.id)
 				},
 			},
 			{
@@ -121,7 +100,7 @@
 			return !isExplicitlyDisabled
 		}) as MenuItem[]
 
-		return predefinedItems
+		return [...predefinedItems, ...(menuItems?.(track, index) ?? [])]
 	}
 </script>
 

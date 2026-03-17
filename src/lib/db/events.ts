@@ -3,36 +3,36 @@ import type { AppDB, AppStoreNames } from './database.ts'
 type DatabaseOperationsConfig<StoreName extends AppStoreNames> =
 	| (
 			| {
-					storeName: Exclude<StoreName, 'playlistEntries'>
+					storeName: Exclude<StoreName, 'playlistEntries' | 'bookmarks'>
 					operation: 'add'
 					key: AppDB[StoreName]['key']
 			  }
 			| {
-					storeName: Exclude<StoreName, 'playlistEntries'>
+					storeName: Exclude<StoreName, 'playlistEntries' | 'bookmarks'>
 					operation: 'update'
 					key: AppDB[StoreName]['key']
 			  }
 			| {
-					storeName: Exclude<StoreName, 'playlistEntries'>
+					storeName: Exclude<StoreName, 'playlistEntries' | 'bookmarks'>
 					operation: 'delete'
 					key: AppDB[StoreName]['key']
 			  }
 	  )
 	| (
 			| {
-					storeName: Extract<StoreName, 'playlistEntries'>
+					storeName: Extract<StoreName, 'playlistEntries' | 'bookmarks'>
 					operation: 'add'
 					key: AppDB[StoreName]['key']
 					value: AppDB[StoreName]['value']
 			  }
 			| {
-					storeName: Extract<StoreName, 'playlistEntries'>
+					storeName: Extract<StoreName, 'playlistEntries' | 'bookmarks'>
 					operation: 'update'
 					key: AppDB[StoreName]['key']
 					value: AppDB[StoreName]['value']
 			  }
 			| {
-					storeName: Extract<StoreName, 'playlistEntries'>
+					storeName: Extract<StoreName, 'playlistEntries' | 'bookmarks'>
 					operation: 'delete'
 					key: AppDB[StoreName]['key']
 					value: AppDB[StoreName]['value']

@@ -3,7 +3,6 @@ import { MediaQuery } from 'svelte/reactivity'
 import { supportsChangingAudioVolume } from '$lib/helpers/audio.ts'
 import { getPersistedValue, persist } from '$lib/helpers/persist.svelte.ts'
 import { isMobile } from '$lib/helpers/utils/ua.ts'
-import type { UpdatePlaylistOptions } from '$lib/library/playlists-actions'
 import type { LibraryStoreName } from '$lib/library/types'
 
 export type AppTheme = 'light' | 'dark'
@@ -16,6 +15,10 @@ export interface RemoveLibraryItemOptions {
 	id: number
 	name: string
 	storeName: LibraryStoreName
+}
+
+export interface BookmarkDialogState {
+	bookmarkId: number
 }
 
 export const getPersistedLibrarySplitLayoutEnabled = (): boolean =>
@@ -81,13 +84,9 @@ export class MainStore {
 	 */
 	volumeSliderEnabled: boolean = $state(supportsChangingAudioVolume() ? !isMobile() : false)
 
-	createNewPlaylistDialogOpen: boolean = $state(false)
-
-	editPlaylistDialogOpen: UpdatePlaylistOptions | null = $state(null)
-
 	removeLibraryItemOpen: RemoveLibraryItemOptions | null = $state(null)
 
-	addTrackToPlaylistDialogOpen: number[] | null = $state(null)
+	bookmarkDialogOpen: BookmarkDialogState | null = $state(null)
 
 	appInstallPromptEvent: BeforeInstallPromptEvent | null = $state(null)
 

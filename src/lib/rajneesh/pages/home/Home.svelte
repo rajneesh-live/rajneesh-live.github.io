@@ -3,16 +3,19 @@
 	import IconButton from '$lib/components/IconButton.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
 	import Separator from '$lib/components/Separator.svelte'
+	import { getBookmarkItems } from '$lib/bookmarks/bookmark-items.ts'
+	import { playBookmark } from '$lib/bookmarks/play-bookmark.ts'
+	import { shareBookmark } from '$lib/bookmarks/share.ts'
 	import { getDatabase } from '$lib/db/database.ts'
 	import { createQuery } from '$lib/db/query/query.ts'
 	import { dbGetAlbumTracksIdsByName, getLibraryItemIdFromUuid } from '$lib/library/get/ids.ts'
 	import { getLibraryValue, type TrackData } from '$lib/library/get/value.ts'
 	import type { Album } from '$lib/library/types.ts'
+	import BookmarkCard from '$lib/rajneesh/components/BookmarkCard.svelte'
 	import ContinueListeningCard from '$lib/rajneesh/components/ContinueListeningCard.svelte'
 	import InstallAppBanner from '$lib/rajneesh/components/InstallAppBanner.svelte'
 
 	const player = usePlayer()
-	const menu = useMenu()
 	type ResumeCardData = {
 		track: TrackData
 		album: Album | undefined
@@ -115,6 +118,20 @@
 	})
 
 	const resumeCards = $derived(latestResumeQuery.value ?? [])
+	const bookmarkCardsQuery = createQuery({
+		key: [],
+		fetcher: () => getBookmarkItems(),
+		onDatabaseChange: (changes, { refetch }) => {
+			for (const change of changes) {
+				if (change.storeName === 'bookmarks' || change.storeName === 'tracks') {
+					void refetch()
+					break
+				}
+			}
+		},
+	})
+	const bookmarkCards = $derived((bookmarkCardsQuery.value ?? []).slice(0, 6))
+	const hasHomeContent = $derived(resumeCards.length > 0 || bookmarkCards.length > 0)
 
 	const resume = (card: ResumeCardData) => {
 		const { albumTrackIds, trackId } = card
@@ -152,13 +169,13 @@
 
 {#snippet searchBar()}
 	<div
-		class="@container sticky top-2 z-1 mt-2 mb-4 ml-auto flex w-full max-w-125 items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
+		class="@container sticky top-2 z-1 mt-2 mb-4 flex w-full items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
 	>
 		<input
 			type="text"
 			name="search"
 			placeholder={m.librarySearch()}
-			class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
+			class="h-12 min-w-0 flex-1 bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
 			onfocus={openExploreSearch}
 			onclick={openExploreSearch}
 		/>
@@ -166,29 +183,10 @@
 		<Separator vertical class="my-auto hidden h-6 @sm:flex" />
 
 		<IconButton
-			ariaLabel={m.libraryOpenApplicationMenu()}
-			tooltip={m.libraryOpenApplicationMenu()}
-			icon="moreVertical"
-			onclick={(e) => {
-				const menuItems = [
-					{
-						label: m.settings(),
-						action: () => {
-							goto('/settings')
-						},
-					},
-				]
-					.filter(Boolean) as { label: string; action: () => void }[]
-
-				menu.showFromEvent(e, menuItems, {
-					width: 200,
-					anchor: true,
-					preferredAlignment: {
-						vertical: 'top',
-						horizontal: 'right',
-					},
-				})
-			}}
+			ariaLabel={m.settings()}
+			tooltip={m.settings()}
+			icon="settings"
+			onclick={() => void goto('/settings')}
 		/>
 	</div>
 {/snippet}
@@ -206,27 +204,49 @@
 	</button>
 {/snippet}
 
-{#if resumeCards.length > 0}
-	<div class="flex grow flex-col px-4 pb-4">
-		{@render searchBar()}
-		<InstallAppBanner class="mb-4" />
-		{@render devNote()}
+<div class="flex grow flex-col pb-4">
+	{@render searchBar()}
+	<InstallAppBanner class="mb-4" />
+	{@render devNote()}
 
-		<section class="relative grid w-full gap-4 overflow-clip py-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each resumeCards as card (card.trackId)}
-				<ContinueListeningCard card={card} onResume={() => resume(card)} />
-			{/each}
+	{#if bookmarkCards.length > 0}
+		<section class="py-3">
+			<div class="mb-3 flex items-center gap-2">
+				<Icon type="bookmark" class="size-5 text-onSurfaceVariant" />
+				<h2 class="text-title-lg">{m.bookmarks()}</h2>
+			</div>
+
+			<div class="relative grid w-full gap-3 overflow-clip sm:grid-cols-2 lg:grid-cols-3">
+				{#each bookmarkCards as item (item.bookmark.id)}
+					<BookmarkCard
+						{item}
+						onPlay={() => playBookmark(player, item)}
+						onShare={() => void shareBookmark(item)}
+					/>
+				{/each}
+			</div>
 		</section>
-	</div>
-{:else}
-	<div class="flex grow flex-col px-4 pb-4">
-		{@render searchBar()}
-		<InstallAppBanner class="mb-4" />
-		{@render devNote()}
+	{/if}
 
+	{#if resumeCards.length > 0}
+		<section class="py-4">
+			<div class="mb-4 flex items-center gap-2">
+				<Icon type="headphones" class="size-5 text-onSurfaceVariant" />
+				<h2 class="text-title-lg">Continue listening</h2>
+			</div>
+
+			<div class="relative grid w-full gap-4 overflow-clip sm:grid-cols-2 lg:grid-cols-3">
+				{#each resumeCards as card (card.trackId)}
+					<ContinueListeningCard card={card} onResume={() => resume(card)} />
+				{/each}
+			</div>
+		</section>
+	{/if}
+
+	{#if !hasHomeContent}
 		<div class="flex h-full flex-col items-center justify-center gap-4 text-center">
 			<Icon type="home" class="size-24 opacity-20" />
 			<h1 class="text-headline-lg font-bold">Welcome</h1>
 		</div>
-	</div>
-{/if}
+	{/if}
+</div>

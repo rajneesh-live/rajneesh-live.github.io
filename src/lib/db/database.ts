@@ -22,6 +22,15 @@ export interface CompletedTrack {
 	completedAt: number
 }
 
+export interface Bookmark {
+	id?: number
+	trackUuid: string
+	timestampSeconds: number
+	note: string
+	createdAt: number
+	updatedAt: number
+}
+
 export interface AppDB extends DBSchema {
 	tracks: {
 		key: number
@@ -91,16 +100,25 @@ export interface AppDB extends DBSchema {
 		key: number
 		value: { id: number; name: string }
 		indexes: { name: string }
+		meta: {
+			notAllowedOperations: undefined
+		}
 	}
 	shorts: {
 		key: number
 		value: { id: number; name: string }
 		indexes: { name: string }
+		meta: {
+			notAllowedOperations: undefined
+		}
 	}
 	explore: {
 		key: number
 		value: Album
 		indexes: Pick<Album, 'uuid' | 'name' | 'artists' | 'year'>
+		meta: {
+			notAllowedOperations: undefined
+		}
 	}
 	activeMinutes: {
 		key: number
@@ -110,6 +128,9 @@ export interface AppDB extends DBSchema {
 			activeMinuteTimestampMs: number
 			trackIdActiveMinuteTimestampMs: [trackId: string, activeMinuteTimestampMs: number]
 		}
+		meta: {
+			notAllowedOperations: undefined
+		}
 	}
 	completedTracks: {
 		key: number
@@ -117,6 +138,21 @@ export interface AppDB extends DBSchema {
 		indexes: {
 			trackId: string
 			completedAt: number
+		}
+		meta: {
+			notAllowedOperations: undefined
+		}
+	}
+	bookmarks: {
+		key: number
+		value: Bookmark
+		indexes: {
+			trackUuid: string
+			createdAt: number
+			updatedAt: number
+		}
+		meta: {
+			notAllowedOperations: undefined
 		}
 	}
 }
@@ -144,7 +180,7 @@ const createStore = <DBTypes extends DBSchema | unknown, Name extends StoreNames
 	})
 
 const openAppDatabase = () =>
-	openDB<AppDB>('snae-app-data', 6, {
+	openDB<AppDB>('snae-app-data', 7, {
 		async upgrade(db, oldVersion, _newVersion, tx) {
 			const { objectStoreNames } = db
 
@@ -263,6 +299,11 @@ const openAppDatabase = () =>
 				const store = createStore(db, 'completedTracks')
 				createIndexes(store, ['trackId'], { unique: true })
 				createIndexes(store, ['completedAt'])
+			}
+
+			if (!objectStoreNames.contains('bookmarks')) {
+				const store = createStore(db, 'bookmarks')
+				createIndexes(store, ['trackUuid', 'createdAt', 'updatedAt'])
 			}
 		},
 	})

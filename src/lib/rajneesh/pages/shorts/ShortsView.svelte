@@ -5,6 +5,11 @@
 	import Icon from '$lib/components/icon/Icon.svelte'
 	import { trackShortLiked } from '$lib/rajneesh/analytics/posthog.ts'
 	import { snackbar } from '$lib/components/snackbar/snackbar.ts'
+	import {
+		getPlaylistTrackIds,
+		toggleWatchLaterTrack,
+		WATCH_LATER_PLAYLIST_ID,
+	} from '$lib/library/playlists-actions.ts'
 	import { getCachedBlob } from '$lib/rajneesh/index.ts'
 	import {
 		lastShortsIndex,
@@ -52,6 +57,7 @@ let isCurrentAudioPlaying = $state(false)
 let singleTapTimeout: ReturnType<typeof setTimeout> | null = null
 let likeBurstTimeout: ReturnType<typeof setTimeout> | null = null
 let likedTrackIds = $state(new Set<string>())
+let watchLaterTrackIds = $state(new Set<number>())
 let likeBurstVisible = $state(false)
 let likeBurstSeed = $state(0)
 let currentPlaybackTime = $state(0)
@@ -69,6 +75,11 @@ const HEART_BURST_OFFSETS = [
 
 const activeTrackLiked = $derived(
 	activeIndex >= 0 && !!shorts[activeIndex] && likedTrackIds.has(shorts[activeIndex].trackId)
+)
+const activeTrackWatchLater = $derived(
+	activeIndex >= 0
+	&& !!shorts[activeIndex]
+	&& watchLaterTrackIds.has(shorts[activeIndex].libraryTrackId)
 )
 
 function formatTimestamp(seconds: number): string {
@@ -167,6 +178,23 @@ async function toggleLikeActiveShort() {
 		next.delete(item.trackId)
 	}
 	likedTrackIds = next
+}
+
+async function toggleWatchLaterActiveShort() {
+	const item = shorts[activeIndex]
+	if (!item) return
+
+	const shouldBeRemoved = watchLaterTrackIds.has(item.libraryTrackId)
+	const success = await toggleWatchLaterTrack(shouldBeRemoved, item.libraryTrackId)
+	if (!success) return
+
+	const next = new Set(watchLaterTrackIds)
+	if (shouldBeRemoved) {
+		next.delete(item.libraryTrackId)
+	} else {
+		next.add(item.libraryTrackId)
+	}
+	watchLaterTrackIds = next
 }
 
 function triggerLikeBurst() {
@@ -496,6 +524,17 @@ function handleUserTap(event: MouseEvent) {
 		}
 	})
 
+	$effect(() => {
+		let cancelled = false
+		void getPlaylistTrackIds(WATCH_LATER_PLAYLIST_ID).then((ids) => {
+			if (cancelled) return
+			watchLaterTrackIds = new Set(ids)
+		})
+		return () => {
+			cancelled = true
+		}
+	})
+
 	// Ensure we regenerate enough shorts to reach the last seen index.
 	$effect(() => {
 		if (lastShortsTotalCount <= 0) return
@@ -808,6 +847,18 @@ function handleUserTap(event: MouseEvent) {
 				type="vinylDisc"
 				class={['size-5 disc-spin-bg', bgMusicPlaying && 'disc-spin-bg-playing']}
 			/>
+		</button>
+
+		<button
+			onclick={toggleWatchLaterActiveShort}
+			class={[
+				'flex size-10 items-center justify-center rounded-full shadow-lg backdrop-blur-md transition-colors hover:bg-surfaceContainerHigh',
+				activeTrackWatchLater
+					? 'bg-secondaryContainer/90 text-onSecondaryContainer'
+					: 'bg-surfaceContainer/80 text-onSurface/70',
+			]}
+		>
+			<Icon type="playlist" class="size-5" />
 		</button>
 
 		<button

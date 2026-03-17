@@ -2,7 +2,11 @@ import { WeakLRUCache } from 'weak-lru-cache'
 import { type DbKey, getDatabase } from '$lib/db/database.ts'
 import { type DatabaseChangeDetails, onDatabaseChange } from '$lib/db/events.ts'
 import type { Album, Artist, Playlist, Track } from '$lib/library/types.ts'
-import { FAVORITE_PLAYLIST_ID, FAVORITE_PLAYLIST_UUID, type LibraryStoreName } from '../types.ts'
+import {
+	type LibraryStoreName,
+	WATCH_LATER_PLAYLIST_ID,
+	WATCH_LATER_PLAYLIST_UUID,
+} from '../types.ts'
 import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
 import { rajneeshGetLibraryValue } from '$lib/rajneesh/hooks/get-value.ts'
 
@@ -43,7 +47,7 @@ const defaultRefreshOnDatabaseChanges = (
 
 export interface TrackData extends Track {
 	type: 'track'
-	favorite: boolean
+	watchLater: boolean
 }
 
 const trackConfig: QueryConfig<TrackData> = {
@@ -55,13 +59,11 @@ const trackConfig: QueryConfig<TrackData> = {
 
 		const db = await getDatabase()
 		const tx = db.transaction(['tracks', 'playlistEntries'], 'readonly')
+		const playlistTrackIndex = tx.objectStore('playlistEntries').index('playlistTrack')
 
-		const [item, favorite] = await Promise.all([
+		const [item, watchLater] = await Promise.all([
 			tx.objectStore('tracks').get(id),
-			tx
-				.objectStore('playlistEntries')
-				.index('playlistTrack')
-				.get([FAVORITE_PLAYLIST_ID, id]),
+			playlistTrackIndex.get([WATCH_LATER_PLAYLIST_ID, id]),
 			tx.done,
 		])
 
@@ -72,7 +74,7 @@ const trackConfig: QueryConfig<TrackData> = {
 		return {
 			...item,
 			type: 'track',
-			favorite: !!favorite,
+			watchLater: !!watchLater,
 		} as TrackData
 	},
 	shouldRefetch: (itemId, changes) => {
@@ -80,10 +82,7 @@ const trackConfig: QueryConfig<TrackData> = {
 			if (change.storeName === 'playlistEntries') {
 				const playlistEntry = change.value
 
-				if (
-					playlistEntry.playlistId === FAVORITE_PLAYLIST_ID &&
-					itemId === playlistEntry.trackId
-				) {
+				if (playlistEntry.playlistId === WATCH_LATER_PLAYLIST_ID && itemId === playlistEntry.trackId) {
 					return true
 				}
 			}
@@ -101,7 +100,7 @@ const tracksDataDatabaseChangeHandler = (change: DatabaseChangeDetails) => {
 	if (change.storeName === 'playlistEntries') {
 		const playlistEntry = change.value
 
-		if (playlistEntry.playlistId === FAVORITE_PLAYLIST_ID) {
+		if (playlistEntry.playlistId === WATCH_LATER_PLAYLIST_ID) {
 			const cacheKey = getCacheKey('tracks', playlistEntry.trackId)
 			valueCache.delete(cacheKey)
 		}
@@ -163,17 +162,17 @@ export interface PlaylistData extends Playlist {
 
 const playlistsConfig: QueryConfig<PlaylistData> = {
 	fetch: (id) => {
-		if (id === FAVORITE_PLAYLIST_ID) {
-			const favoritePlaylist: PlaylistData = {
+		if (id === WATCH_LATER_PLAYLIST_ID) {
+			const watchLaterPlaylist: PlaylistData = {
 				type: 'playlist',
-				id: FAVORITE_PLAYLIST_ID,
-				uuid: FAVORITE_PLAYLIST_UUID,
-				name: m.favorites(),
+				id: WATCH_LATER_PLAYLIST_ID,
+				uuid: WATCH_LATER_PLAYLIST_UUID,
+				name: m.watchLater(),
 				description: '',
 				createdAt: 0,
 			}
 
-			return Promise.resolve(favoritePlaylist)
+			return Promise.resolve(watchLaterPlaylist)
 		}
 
 		return dbGetValue('playlists', 'playlist', id)
@@ -188,10 +187,11 @@ interface LibraryValueMap {
 	playlists: PlaylistData
 }
 
-type LibraryValue<Store extends LibraryStoreName = LibraryStoreName> = LibraryValueMap[Store]
+export type LibraryValueStoreName = keyof LibraryValueMap
+type LibraryValue<Store extends LibraryValueStoreName = LibraryValueStoreName> = LibraryValueMap[Store]
 
 type LibraryConfigMap = {
-	[Store in LibraryStoreName]: QueryConfig<LibraryValue<Store>>
+	[Store in LibraryValueStoreName]: QueryConfig<LibraryValue<Store>>
 }
 
 const libraryConfigMap = {
@@ -201,20 +201,20 @@ const libraryConfigMap = {
 	playlists: playlistsConfig,
 } satisfies LibraryConfigMap
 
-type LibraryCachedValue<Store extends LibraryStoreName = LibraryStoreName> =
+type LibraryCachedValue<Store extends LibraryValueStoreName = LibraryValueStoreName> =
 	| LibraryValue<Store>
 	| Promise<LibraryValue<Store> | undefined>
 
 class LibraryValueCache {
-	#cache = new WeakLRUCache<CacheKey<LibraryStoreName>, LibraryCachedValue<LibraryStoreName>>({
+	#cache = new WeakLRUCache<CacheKey<LibraryValueStoreName>, LibraryCachedValue<LibraryValueStoreName>>({
 		cacheSize: 10_000,
 	})
 
-	get<Store extends LibraryStoreName>(key: CacheKey<Store>) {
+	get<Store extends LibraryValueStoreName>(key: CacheKey<Store>) {
 		return this.#cache.getValue(key) as LibraryCachedValue<Store> | undefined
 	}
 
-	set<Store extends LibraryStoreName>(
+	set<Store extends LibraryValueStoreName>(
 		key: CacheKey<Store>,
 		value: LibraryCachedValue<Store> | undefined,
 	) {
@@ -225,7 +225,7 @@ class LibraryValueCache {
 		}
 	}
 
-	delete<Store extends LibraryStoreName>(key: CacheKey<Store>) {
+	delete<Store extends LibraryValueStoreName>(key: CacheKey<Store>) {
 		this.#cache.delete(key)
 	}
 
@@ -262,7 +262,7 @@ if (!import.meta.env.SSR) {
 }
 
 export class LibraryValueNotFoundError extends Error {
-	constructor(cacheKey: CacheKey<LibraryStoreName>) {
+	constructor(cacheKey: CacheKey<LibraryValueStoreName>) {
 		super(`Value not found. Cache key: ${cacheKey}`)
 		this.name = 'LibraryValueNotFoundError'
 	}
@@ -271,7 +271,7 @@ export class LibraryValueNotFoundError extends Error {
 const emptyValue = <T, AllowEmpty extends boolean = false>(
 	value: T,
 	allowEmpty: AllowEmpty | undefined,
-	cacheKey: CacheKey<LibraryStoreName>,
+	cacheKey: CacheKey<LibraryValueStoreName>,
 ) => {
 	if (!(value || allowEmpty)) {
 		throw new LibraryValueNotFoundError(cacheKey)
@@ -281,7 +281,7 @@ const emptyValue = <T, AllowEmpty extends boolean = false>(
 }
 
 /** @private */
-export const getCachedOrFetchValue = <Store extends LibraryStoreName>(
+export const getCachedOrFetchValue = <Store extends LibraryValueStoreName>(
 	key: CacheKey<Store>,
 	fetchValue: () => Promise<GetLibraryValueResult<Store> | undefined>,
 ): LibraryValue<Store> | Promise<LibraryValue<Store> | undefined> => {
@@ -307,12 +307,12 @@ export const getCachedOrFetchValue = <Store extends LibraryStoreName>(
 }
 
 export type GetLibraryValueResult<
-	Store extends LibraryStoreName,
+	Store extends LibraryValueStoreName,
 	AllowEmpty extends boolean = false,
 > = AllowEmpty extends true ? LibraryValue<Store> | undefined : LibraryValue<Store>
 
 /** @public */
-export const getLibraryValue = <Store extends LibraryStoreName, AllowEmpty extends boolean = false>(
+export const getLibraryValue = <Store extends LibraryValueStoreName, AllowEmpty extends boolean = false>(
 	storeName: Store,
 	id: number,
 	allowEmpty?: AllowEmpty,
@@ -340,9 +340,13 @@ export const preloadLibraryValue = async (
 	storeName: LibraryStoreName,
 	id: number,
 ): Promise<void> => {
+	if (!(storeName in libraryConfigMap)) {
+		return
+	}
+
 	try {
 		// this will fetch data and store it inside cache
-		await getLibraryValue(storeName, id)
+		await getLibraryValue(storeName as LibraryValueStoreName, id)
 	} catch {
 		// Ignore
 	}
@@ -353,7 +357,11 @@ export const shouldRefetchLibraryValue = (
 	id: number | undefined,
 	changes: readonly DatabaseChangeDetails[],
 ): boolean => {
-	const config = libraryConfigMap[storeName]
+	if (!(storeName in libraryConfigMap)) {
+		return false
+	}
+
+	const config = libraryConfigMap[storeName as LibraryValueStoreName]
 
 	return config.shouldRefetch(id, changes)
 }

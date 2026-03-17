@@ -112,18 +112,6 @@
 				},
 			},
 			{
-				label: m.libraryAddToPlaylist(),
-				action: async () => {
-					try {
-						const tracksIds = await dbGetAlbumOrArtistTrackIdsByName(item.name)
-
-						main.addTrackToPlaylistDialogOpen = tracksIds
-					} catch (error) {
-						snackbar.unexpectedError(error)
-					}
-				},
-			},
-			{
 				label: m.libraryRemoveFromLibrary(),
 				action: () => {
 					main.removeLibraryItemOpen = {

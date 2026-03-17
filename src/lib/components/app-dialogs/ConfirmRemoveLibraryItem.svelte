@@ -20,6 +20,8 @@
 					return dbRemoveAlbum(id)
 				case 'artists':
 					return dbRemoveArtist(id)
+			default:
+				return Promise.resolve()
 			}
 		},
 	)

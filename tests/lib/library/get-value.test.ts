@@ -9,7 +9,7 @@ import {
 	preloadLibraryValue,
 	shouldRefetchLibraryValue,
 } from '$lib/library/get/value.ts'
-import { FAVORITE_PLAYLIST_ID, FAVORITE_PLAYLIST_UUID } from '$lib/library/types.ts'
+import { WATCH_LATER_PLAYLIST_ID, WATCH_LATER_PLAYLIST_UUID } from '$lib/library/types.ts'
 import { clearDatabaseStores } from '../../shared.ts'
 
 // Mock crypto.randomUUID for consistent UUIDs
@@ -30,7 +30,7 @@ describe('getLibraryValue', () => {
 	})
 
 	describe('tracks', () => {
-		it('should return track data with favorite status false', async () => {
+		it('should return track data with watch later status false', async () => {
 			const db = await getDatabase()
 
 			// Insert a track
@@ -60,11 +60,11 @@ describe('getLibraryValue', () => {
 			expect(result).toEqual({
 				...trackData,
 				type: 'track',
-				favorite: false,
+				watchLater: false,
 			})
 		})
 
-		it('should return track data with favorite status true when track is in favorites', async () => {
+		it('should return track data with watch later status true when track is saved', async () => {
 			const db = await getDatabase()
 
 			// Insert a track
@@ -89,10 +89,10 @@ describe('getLibraryValue', () => {
 
 			await db.add('tracks', trackData)
 
-			// Add track to favorites
+			// Add track to watch later
 			await db.add('playlistEntries', {
 				id: 1,
-				playlistId: FAVORITE_PLAYLIST_ID,
+				playlistId: WATCH_LATER_PLAYLIST_ID,
 				trackId: 1,
 				addedAt: 1234567890,
 			})
@@ -102,7 +102,7 @@ describe('getLibraryValue', () => {
 			expect(result).toEqual({
 				...trackData,
 				type: 'track',
-				favorite: true,
+				watchLater: true,
 			})
 		})
 
@@ -234,15 +234,15 @@ describe('getLibraryValue', () => {
 			})
 		})
 
-		it('should return favorite playlist for FAVORITE_PLAYLIST_ID', async () => {
-			const result = await getLibraryValue('playlists', FAVORITE_PLAYLIST_ID)
+		it('should return watch later playlist for WATCH_LATER_PLAYLIST_ID', async () => {
+			const result = await getLibraryValue('playlists', WATCH_LATER_PLAYLIST_ID)
 
 			expect(result).toEqual({
 				type: 'playlist',
-				id: FAVORITE_PLAYLIST_ID,
-				uuid: FAVORITE_PLAYLIST_UUID,
+				id: WATCH_LATER_PLAYLIST_ID,
+				uuid: WATCH_LATER_PLAYLIST_UUID,
 				description: '',
-				name: 'Favorites',
+				name: 'Watch later',
 				createdAt: 0,
 			})
 		})
@@ -295,7 +295,7 @@ describe('getLibraryValue', () => {
 			expect(result).toEqual({
 				...trackData,
 				type: 'track',
-				favorite: false,
+				watchLater: false,
 			})
 		})
 
@@ -319,7 +319,7 @@ describe('getLibraryValue', () => {
 			expect(result).toBe(true)
 		})
 
-		it('should return true when track favorite status changes', () => {
+		it('should return true when track watch later status changes', () => {
 			const changes: readonly DatabaseChangeDetails[] = [
 				{
 					storeName: 'playlistEntries',
@@ -327,7 +327,7 @@ describe('getLibraryValue', () => {
 					key: 1,
 					value: {
 						id: 1,
-						playlistId: FAVORITE_PLAYLIST_ID,
+						playlistId: WATCH_LATER_PLAYLIST_ID,
 						trackId: 1,
 						addedAt: 1234567890,
 					},
@@ -454,7 +454,7 @@ describe('getLibraryValue', () => {
 			expect(results[0]).toEqual({
 				...trackData,
 				type: 'track',
-				favorite: false,
+				watchLater: false,
 			})
 		})
 	})

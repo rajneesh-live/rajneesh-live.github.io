@@ -11,8 +11,8 @@ export type LibraryStoreName = 'tracks' | 'albums' | 'artists' | 'playlists' | '
 export const LEGACY_NO_NATIVE_DIRECTORY = -1
 
 /** Special type of playlist which user cannot modify */
-export const FAVORITE_PLAYLIST_ID = -1
-export const FAVORITE_PLAYLIST_UUID = 'favorites'
+export const WATCH_LATER_PLAYLIST_ID = -2
+export const WATCH_LATER_PLAYLIST_UUID = 'watch-later'
 
 /**
  * Used to represent unknown Artist/Album and other values inside database

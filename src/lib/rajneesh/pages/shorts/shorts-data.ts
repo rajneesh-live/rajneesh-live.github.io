@@ -6,6 +6,7 @@ import type { Track } from '$lib/library/types.ts'
 export interface ShortItem {
 	url: string
 	trackId: string
+	libraryTrackId: number
 	startSeconds: number
 	albumName: string
 	albumUuid: string
@@ -124,6 +125,7 @@ function generateBatch(count: number): ShortItem[] {
 		batch.push({
 			url: file.url,
 			trackId: getTrackId(track, file.url),
+			libraryTrackId: track.id,
 			startSeconds,
 			albumName: track.album ?? 'Unknown',
 			albumUuid: album?.uuid ?? '',
@@ -178,6 +180,7 @@ export function ensureShortByTrackId(trackId: string, startFrom?: number): numbe
 		const short: ShortItem = {
 			url: file.url,
 			trackId: normalizedTrackId,
+			libraryTrackId: track.id,
 			startSeconds: requestedStart ?? (Math.floor(getRandom() * (MAX_START - MIN_START + 1)) + MIN_START),
 			albumName: track.album ?? 'Unknown',
 			albumUuid: album?.uuid ?? '',

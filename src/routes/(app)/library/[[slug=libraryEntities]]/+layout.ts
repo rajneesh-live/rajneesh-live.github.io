@@ -9,7 +9,9 @@ import {
 	type PageQueryResult,
 } from '$lib/library/get/ids-queries.ts'
 import { createTracksCountPageQuery } from '$lib/library/tracks-queries.ts'
-import { FAVORITE_PLAYLIST_ID, type LibraryStoreName } from '$lib/library/types.ts'
+import {
+	type LibraryStoreName,
+} from '$lib/library/types.ts'
 import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
 import { whenCatalogReady } from '$lib/rajneesh/stores/catalog.svelte.ts'
 import { getPersistedLibrarySplitLayoutEnabled } from '$lib/stores/main/store.svelte.ts'
@@ -18,35 +20,40 @@ import type { LayoutLoad } from './$types.ts'
 import { configsMap, type LibraryRouteConfig, type LibrarySearchFn } from './config.ts'
 import { LibraryStore } from './store.svelte.ts'
 
+type LibraryRouteSlug = LibraryStoreName | 'bookmarks'
+
 const defaultSearchFn: LibrarySearchFn<{ name: string }> = (value, searchTerm) =>
 	value.name.toLowerCase().includes(searchTerm)
 
-type LoadDataResult<Slug extends LibraryStoreName> = {
-	[ExactSlug in Slug]: LibraryRouteConfig<ExactSlug> & {
+type LoadDataResult<Slug extends LibraryRouteSlug> = {
+	[ExactSlug in Slug]: LibraryRouteConfig<LibraryStoreName> & {
+		slug: ExactSlug
 		store: LibraryStore<ExactSlug>
 		itemsIdsQuery: PageQueryResult<number[]>
 		tracksCountQuery: PageQueryResult<number>
 	}
 }[Slug]
 
-const loadData = async <Slug extends LibraryStoreName>(
+const loadData = async <Slug extends LibraryRouteSlug>(
 	slug: Slug,
 ): Promise<LoadDataResult<Slug>> => {
-	const config = configsMap[slug]
+	const storeName = slug === 'bookmarks' ? 'playlists' : slug
+	const config = configsMap[storeName]
 	const searchFn = config.search ?? defaultSearchFn
-	const store = new LibraryStore(slug)
+	const store = new LibraryStore(slug as any)
 
-	if (slug === 'home' || slug === 'shorts') {
+	if (slug === 'home' || slug === 'shorts' || slug === 'bookmarks') {
 		return {
 			...config,
+			slug,
 			store,
 			itemsIdsQuery: { value: [] },
 			tracksCountQuery: { value: 0 },
 		} as any
 	}
 
-	const itemsIdsQueryPromise = createLibraryItemKeysPageQuery(slug, {
-		key: () => [slug, store.sortByKey, store.order, store.searchTerm],
+	const itemsIdsQueryPromise = createLibraryItemKeysPageQuery(storeName, {
+		key: () => [storeName, store.sortByKey, store.order, store.searchTerm],
 		fetcher: async ([name, sortKey, order, searchTerm]) => {
 			const normalizedSearchTerm = searchTerm.toLowerCase()
 			const result = await getLibraryItemIds(name, {
@@ -55,10 +62,6 @@ const loadData = async <Slug extends LibraryStoreName>(
 				searchTerm: normalizedSearchTerm,
 				searchFn: (value) => searchFn(value, normalizedSearchTerm),
 			})
-
-			if (slug === 'playlists') {
-				return [FAVORITE_PLAYLIST_ID, ...result]
-			}
 
 			return result
 		},
@@ -71,13 +74,14 @@ const loadData = async <Slug extends LibraryStoreName>(
 
 	return {
 		...config,
+		slug,
 		store,
 		itemsIdsQuery,
 		tracksCountQuery,
 	}
 }
 
-type LoadResult = LoadDataResult<LibraryStoreName> & {
+type LoadResult = LoadDataResult<LibraryRouteSlug> & {
 	isWideLayout: () => boolean
 	layoutMode: (
 		splitViewAllowed: boolean,
@@ -92,13 +96,17 @@ export const load: LayoutLoad = async (event): Promise<LoadResult> => {
 		redirect(301, '/library/shorts')
 	}
 
+	if (slug === 'playlists') {
+		redirect(301, event.params.uuid ? `/library/bookmarks/${event.params.uuid}` : '/library/bookmarks')
+	}
+
 	if (isRajneeshEnabled() && slug !== 'home') {
 		await whenCatalogReady()
 	}
 
 	const data = await loadData(slug)
 
-	if (data.tracksCountQuery.value === 0 && slug !== 'home' && slug !== 'shorts') {
+	if (data.tracksCountQuery.value === 0 && slug !== 'home' && slug !== 'shorts' && slug !== 'bookmarks') {
 		const hasV1Data = await checkForV1LegacyDatabaseData()
 
 		if (hasV1Data) {

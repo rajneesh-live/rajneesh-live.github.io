@@ -2,9 +2,12 @@ import { THEME_PALLETTE_DARK } from '../../../server/theme-colors.ts'
 
 export const prerender = true
 
+const resolveMessage = (message: string | (() => string)): string =>
+	typeof message === 'function' ? message() : message
+
 const manifest = {
-	short_name: m.appNameShort(),
-	name: m.appName(),
+	short_name: resolveMessage(m.appNameShort),
+	name: resolveMessage(m.appName),
 	// Start PWA on the shorts page instead of the full tracks list
 	start_url: './library/shorts/',
 	scope: '../',

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import SeekBackButton from './buttons/SeekBackButton.svelte'
-	import SeekForwardButton from './buttons/SeekForwardButton.svelte'
+	import PlayerBookmarkButton from './buttons/PlayerBookmarkButton.svelte'
 	import PlayTogglePillButton from './buttons/PlayTogglePillButton.svelte'
 	import RepeatButton from './buttons/RepeatButton.svelte'
 	import ShuffleButton from './buttons/ShuffleButton.svelte'
@@ -22,7 +22,7 @@
 
 	<PlayTogglePillButton />
 
-	<SeekForwardButton />
+	<PlayerBookmarkButton />
 
 	{#if isRajneeshEnabled()}
 		<BgMusicButton />

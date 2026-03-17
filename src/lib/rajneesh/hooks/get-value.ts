@@ -1,5 +1,9 @@
+import { getDatabase } from '$lib/db/database.ts'
+import {
+	type LibraryStoreName,
+	WATCH_LATER_PLAYLIST_ID,
+} from '$lib/library/types.ts'
 import { getCatalog } from '../stores/catalog.svelte.ts'
-import type { LibraryStoreName } from '$lib/library/types.ts'
 
 /**
  * Hook for getLibraryValue
@@ -15,6 +19,13 @@ export const rajneeshGetLibraryValue = async <Store extends LibraryStoreName>(
 	if (storeName === 'tracks') {
 		const track = catalog.tracks.find((t) => t.id === id)
 		if (track) {
+			const db = await getDatabase()
+			const tx = db.transaction('playlistEntries', 'readonly')
+			const playlistTrackIndex = tx.objectStore('playlistEntries').index('playlistTrack')
+			const [watchLaterEntry] = await Promise.all([
+				playlistTrackIndex.get([WATCH_LATER_PLAYLIST_ID, id]),
+				tx.done,
+			])
 			const album = catalog.albums.find((a) => a.name === track.album)
 			const fallbackImage = track.image ?? (album?.image
 				? {
@@ -28,7 +39,7 @@ export const rajneeshGetLibraryValue = async <Store extends LibraryStoreName>(
 				...track,
 				image: fallbackImage,
 				type: 'track',
-				favorite: false, // Favorites not implemented in memory yet
+				watchLater: !!watchLaterEntry,
 			}
 		}
 	} else if (storeName === 'albums') {

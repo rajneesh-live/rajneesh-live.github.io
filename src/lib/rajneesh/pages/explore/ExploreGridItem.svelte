@@ -1,8 +1,6 @@
 <script lang="ts" module>
 	import { goto } from '$app/navigation'
 	import { resolve } from '$app/paths'
-	import { page } from '$app/state'
-	import type { RouteId } from '$app/types'
 	import { ripple } from '$lib/attachments/ripple.ts'
 	import type { QueryResult } from '$lib/db/query/query.ts'
 	import { createManagedArtwork } from '$lib/helpers/create-managed-artwork.svelte.ts'
@@ -76,18 +74,6 @@
 						const tracksIds = await dbGetAlbumTracksIdsByName(item.name)
 
 						player.addToQueue(tracksIds)
-					} catch (error) {
-						snackbar.unexpectedError(error)
-					}
-				},
-			},
-			{
-				label: m.libraryAddToPlaylist(),
-				action: async () => {
-					try {
-						const tracksIds = await dbGetAlbumTracksIdsByName(item.name)
-
-						main.addTrackToPlaylistDialogOpen = tracksIds
 					} catch (error) {
 						snackbar.unexpectedError(error)
 					}

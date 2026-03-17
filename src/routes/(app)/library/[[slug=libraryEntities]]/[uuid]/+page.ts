@@ -9,15 +9,16 @@ import {
 } from '$lib/library/get/ids.ts'
 import { getLibraryValue } from '$lib/library/get/value.ts'
 import {
-	FAVORITE_PLAYLIST_ID,
-	FAVORITE_PLAYLIST_UUID,
 	type LibraryStoreName,
+	WATCH_LATER_PLAYLIST_ID,
+	WATCH_LATER_PLAYLIST_UUID,
 } from '$lib/library/types.ts'
 import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
 import { whenCatalogReady } from '$lib/rajneesh/stores/catalog.svelte.ts'
 import type { PageLoad } from './$types.d.ts'
 
-type DetailsSlug = Exclude<LibraryStoreName, 'tracks'>
+type DetailsSlug = Extract<LibraryStoreName, 'albums' | 'artists' | 'playlists'>
+type DetailsRouteSlug = DetailsSlug | 'bookmarks'
 
 const createDetailsPageQuery = <T extends DetailsSlug>(
 	storeName: T,
@@ -141,6 +142,10 @@ export const load: PageLoad = async (event): Promise<LoadResult> => {
 		redirect(301, '/library/tracks')
 	}
 
+	if (slug === 'playlists') {
+		redirect(301, `/library/bookmarks/${event.params.uuid}`)
+	}
+
 	const uuid = event.params.uuid
 	if (!uuid) {
 		error(404)
@@ -150,21 +155,23 @@ export const load: PageLoad = async (event): Promise<LoadResult> => {
 		await whenCatalogReady()
 	}
 
+	const storeName: DetailsSlug = slug === 'bookmarks' ? 'playlists' : (slug as DetailsSlug)
+
 	let id: number | undefined
-	if (uuid === FAVORITE_PLAYLIST_UUID) {
-		id = FAVORITE_PLAYLIST_ID
+	if (uuid === WATCH_LATER_PLAYLIST_UUID) {
+		id = WATCH_LATER_PLAYLIST_ID
 	} else {
-		id = await getLibraryItemIdFromUuid(slug, uuid)
+		id = await getLibraryItemIdFromUuid(storeName, uuid)
 	}
 
 	if (!id) {
 		error(404)
 	}
 
-	const itemQuery = await createDetailsPageQuery(slug, id)
-	const tracksQuery = await (slug === 'playlists'
+	const itemQuery = await createDetailsPageQuery(storeName, id)
+	const tracksQuery = await (storeName === 'playlists'
 		? createPlaylistTracksPageQuery(id)
-		: createTracksPageQuery(slug, () => itemQuery.value.name))
+		: createTracksPageQuery(storeName, () => itemQuery.value.name))
 
 	return {
 		slug,

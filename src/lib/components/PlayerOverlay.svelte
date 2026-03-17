@@ -2,9 +2,8 @@
 	import { formatArtists } from '$lib/helpers/utils/text.ts'
 	import Button from './Button.svelte'
 	import Icon from './icon/Icon.svelte'
-	import PlayerFavoriteButton from './player/buttons/PlayerFavoriteButton.svelte'
+	import PlayerBookmarkButton from './player/buttons/PlayerBookmarkButton.svelte'
 	import SeekBackButton from './player/buttons/SeekBackButton.svelte'
-	import SeekForwardButton from './player/buttons/SeekForwardButton.svelte'
 	import PlayToggleButton from './player/buttons/PlayToggleButton.svelte'
 	import MainControls from './player/MainControls.svelte'
 	import PlayerArtwork from './player/PlayerArtwork.svelte'
@@ -65,14 +64,12 @@
 						</div>
 					{/if}
 				</Button>
-
-				<PlayerFavoriteButton />
 			</div>
 
 			<div class="ml-auto flex gap-2 pr-2 sm:hidden">
 				<SeekBackButton class="max-xss:hidden" />
 				<PlayToggleButton />
-				<SeekForwardButton class="max-xss:hidden" />
+				<PlayerBookmarkButton />
 			</div>
 
 			<MainControls class="max-sm:hidden" />

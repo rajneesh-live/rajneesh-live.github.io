@@ -82,6 +82,7 @@ export class PlayerStore {
 	#itemsIdsOriginalOrder = $state<number[]>([])
 	#itemsIdsShuffled = $state<number[] | null>(null)
 	#autoplayOnLoad = true
+	#pendingTrackStartTime = $state<number | null>(null)
 
 	itemsIds: readonly number[] = $derived(
 		this.#itemsIdsShuffled ? this.#itemsIdsShuffled : this.#itemsIdsOriginalOrder,
@@ -220,8 +221,10 @@ export class PlayerStore {
 
 				reset.cancel()
 				this.resetAudio()
+				const pendingStartTime = this.#pendingTrackStartTime
+				this.#pendingTrackStartTime = null
 				const savedTimestamp = this.getSavedTrackTimestamp(track.uuid)
-				this.currentTime = savedTimestamp
+				this.currentTime = pendingStartTime ?? savedTimestamp
 				const shouldAutoplay = this.#autoplayOnLoad
 				this.#autoplayOnLoad = true
 				this.loading = true
@@ -367,6 +370,7 @@ export class PlayerStore {
 		queue?: readonly number[],
 		options: PlayTrackOptions = {},
 	): void => {
+		this.#pendingTrackStartTime = null
 		this.#autoplayOnLoad = true
 		if (queue) {
 			this.#itemsIdsOriginalOrder = [...queue]
@@ -390,11 +394,22 @@ export class PlayerStore {
 		this.togglePlay(true)
 	}
 
+	playTrackAtTime = (
+		trackIndex: number,
+		timestampSeconds: number,
+		queue?: readonly number[],
+		options: PlayTrackOptions = {},
+	): void => {
+		this.#pendingTrackStartTime = Math.max(0, timestampSeconds)
+		this.playTrack(trackIndex, queue, options)
+	}
+
 	prepareTrack = (
 		trackIndex: number,
 		queue?: readonly number[],
 		options: PlayTrackOptions = {},
 	): void => {
+		this.#pendingTrackStartTime = null
 		this.#autoplayOnLoad = false
 		if (queue) {
 			this.#itemsIdsOriginalOrder = [...queue]
@@ -522,7 +537,7 @@ export class PlayerStore {
 			})
 		} else {
 			this.currentActiveMinute = {
-				...this.currentActiveMinute,
+				...this.currentActiveMinute!,
 				trackId,
 				trackTimestampMs,
 				playbackRate,
@@ -625,7 +640,7 @@ export class PlayerStore {
 	togglePlaybackRate = (): void => {
 		const currentIndex = PlayerStore.PLAYBACK_RATES.indexOf(this.playbackRate)
 		const nextIndex = (currentIndex + 1) % PlayerStore.PLAYBACK_RATES.length
-		this.playbackRate = PlayerStore.PLAYBACK_RATES[nextIndex]
+		this.playbackRate = PlayerStore.PLAYBACK_RATES[nextIndex]!
 	}
 
 	addToQueue = (trackId: number | number[]): void => {

@@ -1,23 +1,18 @@
 <script lang="ts">
 	import type { Snapshot } from '@sveltejs/kit'
-	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import type { RouteId } from '$app/types'
 	import AlbumsListContainer from '$lib/components/AlbumsListContainer.svelte'
 	import ArtistListContainer from '$lib/components/ArtistListContainer.svelte'
 	import Button from '$lib/components/Button.svelte'
 	import IconButton from '$lib/components/IconButton.svelte'
-	import type { IconType } from '$lib/components/icon/Icon.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
 	import ListDetailsLayout from '$lib/components/ListDetailsLayout.svelte'
-	import PlaylistListContainer from '$lib/components/playlists/PlaylistListContainer.svelte'
 	import TracksListContainer from '$lib/components/tracks/TracksListContainer.svelte'
 	import { initPageQueriesDynamic } from '$lib/db/query/page-query.svelte.ts'
 	import { isMobile } from '$lib/helpers/utils/ua.ts'
 	import { useSetOverlaySnippet } from '$lib/layout-bottom-bar.svelte.ts'
-	import { FAVORITE_PLAYLIST_ID } from '$lib/library/playlists-actions.ts'
-	import { getPlaylistMenuItems } from '$lib/menu-actions/playlists.ts'
 	import { isRajneeshEnabled } from '$lib/rajneesh/feature-flags.ts'
+	import BookmarksPage from '$lib/rajneesh/pages/bookmarks/BookmarksPage.svelte'
 	import Home from '$lib/rajneesh/pages/home/Home.svelte'
 	import ShortsView from '$lib/rajneesh/pages/shorts/ShortsView.svelte'
 	import ExploreListContainer from '$lib/rajneesh/pages/explore/ExploreListContainer.svelte'
@@ -37,12 +32,6 @@
 	const itemsIds = $derived(data.itemsIdsQuery.value)
 	const slug = $derived(data.slug)
 	const isHandHeldDevice = isMobile()
-
-	interface NavItem {
-		slug: typeof slug
-		title: string
-		icon: IconType
-	}
 
 	const navItems = getNavItems()
 
@@ -120,26 +109,11 @@
 	{#snippet list(mode)}
 		<div class={[isHandHeldDevice ? 'sm:pl-20' : 'pl-20', 'flex grow flex-col']}>
 			<div class={[mode === 'both' && 'w-100', 'flex grow flex-col px-4']}>
-				{#if slug !== 'home' && slug !== 'shorts'}
+				{#if slug !== 'home' && slug !== 'shorts' && !(slug === 'bookmarks' && page.params.uuid)}
 					<Search name={data.pluralTitle()} sortOptions={data.sortOptions} store={data.store} />
 				{/if}
 
-				{#if slug === 'playlists'}
-					<div class="mb-4 flex items-center justify-end">
-						<Button
-							kind="outlined"
-							onclick={() => {
-								main.createNewPlaylistDialogOpen = true
-							}}
-						>
-							<Icon type="plus" />
-
-							{m.libraryNewPlaylist()}
-						</Button>
-					</div>
-				{/if}
-
-				{#if data.tracksCountQuery.value === 0 && slug !== 'playlists' && slug !== 'home' && slug !== 'shorts' && !isRajneeshEnabled()}
+				{#if data.tracksCountQuery.value === 0 && slug !== 'bookmarks' && slug !== 'home' && slug !== 'shorts' && !isRajneeshEnabled()}
 					<div class="my-auto flex flex-col items-center text-center">
 						<div class="mb-1 text-title-lg">{m.libraryEmpty()}</div>
 						{m.libraryStartByAdding()}
@@ -161,6 +135,8 @@
 								{/if}
 								<TranscriptSearchResults searchTerm={data.store.searchTerm} />
 							</div>
+						{:else if slug === 'bookmarks'}
+							<BookmarksPage searchTerm={data.store.searchTerm} />
 						{:else if itemsIds.length === 0}
 							<div class="relative m-auto flex flex-col items-center text-center">
 								<Icon type="magnify" class="my-auto size-35 opacity-54" />
@@ -180,20 +156,6 @@
 							<ExploreListContainer items={itemsIds} />
 						{:else if slug === 'artists'}
 							<ArtistListContainer items={itemsIds} />
-						{:else if slug === 'playlists'}
-							<PlaylistListContainer
-								items={itemsIds}
-								menuItems={{
-									disabled: (playlist) => playlist.id === FAVORITE_PLAYLIST_ID,
-									items: (playlist) => getPlaylistMenuItems(main, playlist),
-								}}
-								onItemClick={({ playlist }) => {
-									const detailsViewId: RouteId = '/(app)/library/[[slug=libraryEntities]]/[uuid]'
-									const shouldReplace = page.route.id === detailsViewId
-
-									void goto(`/library/playlists/${playlist.uuid}`, { replaceState: shouldReplace })
-								}}
-							/>
 						{/if}
 					</div>
 				{/if}

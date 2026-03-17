@@ -1,7 +1,7 @@
 import type { IDBPTransaction } from 'idb'
 import { type AppDB, type AppIndexNames, getDatabase } from '$lib/db/database.ts'
+import { deleteBookmarksForTrack } from '$lib/db/bookmarks.ts'
 import { type DatabaseChangeDetails, dispatchDatabaseChangedEvent } from '$lib/db/events.ts'
-import type { LibraryStoreName } from './types.ts'
 
 type TrackOperationsTransaction = IDBPTransaction<
 	AppDB,
@@ -10,7 +10,7 @@ type TrackOperationsTransaction = IDBPTransaction<
 >
 
 const dbRemoveTrackRelatedData = async <
-	Store extends Exclude<LibraryStoreName, 'playlists'>,
+	Store extends 'albums' | 'artists',
 	ItemIndexName extends AppIndexNames<Store>,
 	IndexName extends AppIndexNames<'tracks'>,
 	ItemValue extends AppDB[Store]['indexes'][ItemIndexName],
@@ -109,6 +109,8 @@ export const dbRemoveTrack = async (trackId: number): Promise<void> => {
 		...artistsChanges,
 		...playlistChanges,
 	])
+
+	await deleteBookmarksForTrack(track.uuid)
 }
 
 export const dbRemoveMultipleTracks = async (trackIds: number[]): Promise<void> => {

@@ -12,11 +12,10 @@
 	import { formatArtists, formatNameOrUnknown } from '$lib/helpers/utils/text.ts'
 	import type { AlbumData, TrackData } from '$lib/library/get/value.ts'
 	import {
-		FAVORITE_PLAYLIST_ID,
 		removeTrackEntryFromPlaylist,
+		WATCH_LATER_PLAYLIST_ID,
 	} from '$lib/library/playlists-actions.ts'
 	import { type Album, type Playlist, UNKNOWN_ITEM } from '$lib/library/types.ts'
-	import { getPlaylistMenuItems } from '$lib/menu-actions/playlists.ts'
 
 	const { data } = $props()
 
@@ -56,23 +55,17 @@
 
 	const isWideLayout = new MediaQuery('(min-width: 1154px)')
 
-	const playlistTrackMenuItems = (track: TrackData) => {
-		if (item.id === FAVORITE_PLAYLIST_ID) {
-			return []
-		}
+	const playlistTrackMenuItems = (track: TrackData) => [
+		{
+			label: m.libraryTrackRemoveFromPlaylist(),
+			action: () => {
+				const entryId = tracks.playlistIdMap?.[track.id]
+				invariant(entryId)
 
-		return [
-			{
-				label: m.libraryTrackRemoveFromPlaylist(),
-				action: () => {
-					const entryId = tracks.playlistIdMap?.[track.id]
-					invariant(entryId)
-
-					void removeTrackEntryFromPlaylist(entryId)
-				},
+				void removeTrackEntryFromPlaylist(entryId)
 			},
-		]
-	}
+		},
+	]
 
 	const getMenuItems = () => {
 		const addToQueueMenuItem =
@@ -86,21 +79,15 @@
 					}
 
 		if (slug === 'playlists') {
-			if (item.id === FAVORITE_PLAYLIST_ID) {
+			if (item.id === WATCH_LATER_PLAYLIST_ID) {
 				return [addToQueueMenuItem]
 			}
 
-			return [addToQueueMenuItem, ...getPlaylistMenuItems(main, item as Playlist)]
+			return [addToQueueMenuItem]
 		}
 
 		return [
 			addToQueueMenuItem,
-			{
-				label: m.libraryAddToPlaylist(),
-				action: () => {
-					main.addTrackToPlaylistDialogOpen = tracks.tracksIds
-				},
-			},
 			{
 				label: m.libraryRemoveFromLibrary(),
 				action: () => {

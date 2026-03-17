@@ -60,7 +60,11 @@ export const clearActiveMinutesForTrack = async (trackId: string): Promise<void>
 	const db = await getDatabase()
 	const tx = db.transaction('activeMinutes', 'readwrite')
 	const index = tx.store.index('trackId')
-	const changes = []
+	const changes: {
+		operation: 'delete'
+		storeName: 'activeMinutes'
+		key: number
+	}[] = []
 
 	for await (const cursor of index.iterate(trackId)) {
 		const key = cursor.primaryKey as number

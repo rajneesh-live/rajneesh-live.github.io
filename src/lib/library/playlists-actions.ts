@@ -5,9 +5,9 @@ import { type DatabaseChangeDetails, dispatchDatabaseChangedEvent } from '$lib/d
 import { createUIAction } from '$lib/helpers/ui-action.ts'
 import { truncate } from '$lib/helpers/utils/text.ts'
 import type { Playlist, PlaylistEntry } from '$lib/library/types.ts'
-import { FAVORITE_PLAYLIST_ID } from './types.ts'
+import { WATCH_LATER_PLAYLIST_ID } from './types.ts'
 
-export { FAVORITE_PLAYLIST_ID } from './types.ts'
+export { WATCH_LATER_PLAYLIST_ID } from './types.ts'
 
 export const dbCreatePlaylist = async (
 	name: string,
@@ -257,11 +257,11 @@ export const removeTrackEntryFromPlaylist = createUIAction(
 	(playlistEntryId: number) => dbRemoveTrackEntryFromPlaylist(playlistEntryId),
 )
 
-const dbAddTrackToFavorites = async (trackId: number): Promise<void> => {
+const dbAddTrackToSpecialPlaylist = async (playlistId: number, trackId: number): Promise<void> => {
 	const db = await getDatabase()
 
 	const playlistEntry: Omit<PlaylistEntry, 'id'> = {
-		playlistId: FAVORITE_PLAYLIST_ID,
+		playlistId,
 		trackId,
 		addedAt: Date.now(),
 	}
@@ -279,11 +279,11 @@ const dbAddTrackToFavorites = async (trackId: number): Promise<void> => {
 	})
 }
 
-const dbRemoveTrackFromFavorites = async (trackId: number): Promise<void> => {
+const dbRemoveTrackFromSpecialPlaylist = async (playlistId: number, trackId: number): Promise<void> => {
 	const db = await getDatabase()
 
 	const entry = await db.getFromIndex('playlistEntries', 'playlistTrack', [
-		FAVORITE_PLAYLIST_ID,
+		playlistId,
 		trackId,
 	])
 	invariant(entry)
@@ -298,15 +298,15 @@ const dbRemoveTrackFromFavorites = async (trackId: number): Promise<void> => {
 	})
 }
 
-export const toggleFavoriteTrack = async (
+export const toggleWatchLaterTrack = async (
 	shouldBeRemoved: boolean,
 	trackId: number,
 ): Promise<boolean> => {
 	try {
 		if (shouldBeRemoved) {
-			await dbRemoveTrackFromFavorites(trackId)
+			await dbRemoveTrackFromSpecialPlaylist(WATCH_LATER_PLAYLIST_ID, trackId)
 		} else {
-			await dbAddTrackToFavorites(trackId)
+			await dbAddTrackToSpecialPlaylist(WATCH_LATER_PLAYLIST_ID, trackId)
 		}
 
 		return true
@@ -315,4 +315,11 @@ export const toggleFavoriteTrack = async (
 
 		return false
 	}
+}
+
+export const getPlaylistTrackIds = async (playlistId: number): Promise<number[]> => {
+	const db = await getDatabase()
+	const entries = await db.getAllFromIndex('playlistEntries', 'playlistId', playlistId)
+
+	return entries.map((entry) => entry.trackId)
 }
