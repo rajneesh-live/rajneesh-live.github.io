@@ -2,6 +2,7 @@
 	import { formatArtists } from '$lib/helpers/utils/text.ts'
 	import Button from './Button.svelte'
 	import Icon from './icon/Icon.svelte'
+	import PlayerFavoriteButton from './player/buttons/PlayerFavoriteButton.svelte'
 	import SeekBackButton from './player/buttons/SeekBackButton.svelte'
 	import PlayToggleButton from './player/buttons/PlayToggleButton.svelte'
 	import MainControls from './player/MainControls.svelte'
@@ -64,6 +65,8 @@
 						</div>
 					{/if}
 				</Button>
+
+				<PlayerFavoriteButton />
 			</div>
 
 			<div class="ml-auto flex gap-2 pr-2 sm:hidden">

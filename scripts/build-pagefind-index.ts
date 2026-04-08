@@ -16,7 +16,6 @@ const ROOT = path.resolve(__dirname, '..')
 const TRANSCRIPTS_DIR = path.join(ROOT, 'static', 'rajneesh', 'transcripts')
 const CATALOG_PATH = path.join(ROOT, 'static', 'rajneesh', 'catalog.json')
 const OUTPUT_PATH = path.join(ROOT, 'static', 'pagefind')
-const TRANSCRIPT_MANIFEST_PATH = path.join(ROOT, 'static', 'rajneesh', 'transcript-manifest.json')
 
 // Match parser-json hash for consistent track IDs
 const hashStringToId = (str: string): number => {
@@ -90,7 +89,6 @@ function detectLanguage(content: string): string {
 async function main() {
 	const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf-8'))
 	const trackLookup = buildTrackLookup(catalog)
-	const transcriptManifest: Record<string, string> = {}
 
 	const { index } = await pagefind.createIndex()
 	let indexed = 0
@@ -110,7 +108,6 @@ async function main() {
 		const content = fs.readFileSync(filePath, 'utf-8')
 		const language = detectLanguage(content)
 		const transcriptPath = `/rajneesh/transcripts/${seriesSlug}/${discourseSlug}.txt`
-		transcriptManifest[trackUuid] = transcriptPath
 		const { errors } = await index.addCustomRecord({
 			url: `/transcript/${trackUuid}`,
 			content,
@@ -132,7 +129,6 @@ async function main() {
 
 	fs.mkdirSync(OUTPUT_PATH, { recursive: true })
 	await index.writeFiles({ outputPath: OUTPUT_PATH })
-	fs.writeFileSync(TRANSCRIPT_MANIFEST_PATH, JSON.stringify(transcriptManifest))
 	await pagefind.close()
 
 	console.log(`Pagefind index: ${indexed} transcripts indexed, ${skipped} skipped`)

@@ -2,7 +2,6 @@
 	import { tick } from 'svelte'
 	import CommonDialog from '$lib/components/dialog/CommonDialog.svelte'
 	import IconButton from '$lib/components/IconButton.svelte'
-	import { findTranscriptPath } from '$lib/rajneesh/transcript/candidates.ts'
 	import { highlightExcerpt } from '$lib/rajneesh/transcript/excerpt.ts'
 
 	const player = usePlayer()
@@ -14,11 +13,46 @@
 	let error = $state<string | null>(null)
 	let transcriptHtml = $state('')
 	let transcriptContentEl: HTMLDivElement | null = $state(null)
-	let transcriptPath = $state<string | null>(null)
-	let transcriptLookupId = 0
+
+	const buildTranscriptCandidates = (trackUuid: string, trackNo: number, trackOf: number): string[] => {
+		const lastDash = trackUuid.lastIndexOf('-')
+		if (lastDash === -1) {
+			return []
+		}
+
+		const prefix = trackUuid.slice(0, lastDash)
+		const num = String(trackNo)
+		const count = String(trackOf)
+
+		const discourseWidths = Array.from(
+			new Set([num.length, count.length, 2, 3].filter((width) => width >= num.length)),
+		).sort((a, b) => a - b)
+		const rangeWidths = Array.from(new Set([count.length, 2, 3])).sort((a, b) => a - b)
+
+		const discourseSlugs = Array.from(
+			new Set([
+				`${prefix}-${num}`,
+				...discourseWidths.map((width) => `${prefix}-${num.padStart(width, '0')}`),
+			]),
+		)
+
+		const seriesSlugs = Array.from(
+			new Set(
+				rangeWidths.flatMap((width) => [
+					`${prefix}-by-osho-1-${count.padStart(width, '0')}`,
+					`${prefix}-by-osho-${String(1).padStart(width, '0')}-${count.padStart(width, '0')}`,
+					`${prefix}-by-osho-${String(1).padStart(width, '0')}-${count}`,
+				]),
+			),
+		)
+
+		return seriesSlugs.flatMap((seriesSlug) =>
+			discourseSlugs.map((discourseSlug) => `/rajneesh/transcripts/${seriesSlug}/${discourseSlug}.txt`),
+		)
+	}
 
 	const openTranscript = async () => {
-		if (!track || !transcriptPath) {
+		if (!track) {
 			return
 		}
 
@@ -28,13 +62,24 @@
 		transcriptHtml = ''
 
 		try {
-			const response = await fetch(transcriptPath)
-			if (!response.ok) {
+			const candidates = buildTranscriptCandidates(track.uuid, track.trackNo, track.trackOf)
+			let transcriptText: string | null = null
+
+			for (const candidate of candidates) {
+				const response = await fetch(candidate)
+				if (!response.ok) {
+					continue
+				}
+
+				const buffer = await response.arrayBuffer()
+				transcriptText = new TextDecoder('utf-8').decode(buffer)
+				break
+			}
+
+			if (!transcriptText) {
 				throw new Error('Transcript unavailable for this discourse.')
 			}
 
-			const buffer = await response.arrayBuffer()
-			const transcriptText = new TextDecoder('utf-8').decode(buffer)
 			transcriptHtml = highlightExcerpt(transcriptText, '')
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Could not load transcript.'
@@ -52,27 +97,6 @@
 	}
 
 	$effect(() => {
-		const activeTrack = track
-		transcriptPath = null
-
-		if (!activeTrack) {
-			return
-		}
-
-		const lookupId = ++transcriptLookupId
-
-		void (async () => {
-			const resolvedPath = await findTranscriptPath(activeTrack.uuid)
-
-			if (lookupId !== transcriptLookupId || track?.uuid !== activeTrack.uuid) {
-				return
-			}
-
-			transcriptPath = resolvedPath
-		})()
-	})
-
-	$effect(() => {
 		const contentEl = transcriptContentEl
 		if (!dialogOpen || loading || error || !transcriptHtml || !contentEl) {
 			return
@@ -84,22 +108,18 @@
 	})
 </script>
 
-{#if transcriptPath}
-	<IconButton
-		tooltip="Read transcript"
-		onclick={() => void openTranscript()}
-		icon="fileDocumentOutline"
-	/>
-{/if}
+<IconButton
+	tooltip="Read transcript"
+	disabled={!track}
+	onclick={() => void openTranscript()}
+	icon="fileDocumentOutline"
+/>
 
 <CommonDialog
-	open={{
-		get: () => dialogOpen,
-		close: closeTranscript,
-	}}
+	bind:open={dialogOpen}
 	title={track?.name || 'Transcript'}
 	showCloseButton
-	class="max-w-4xl [--dialog-height:calc(100dvh-1rem)] [--dialog-width:calc(100dvw-1rem)] sm:[--dialog-height:calc(100dvh-3rem)] sm:[--dialog-width:--spacing(180)]"
+	class="max-w-4xl [--dialog-width:calc(100dvw-1rem)] [--dialog-height:calc(100dvh-1rem)] sm:[--dialog-width:--spacing(180)] sm:[--dialog-height:calc(100dvh-3rem)]"
 	buttons={[{ title: 'Close' }]}
 >
 	{#snippet topRight()}
@@ -120,9 +140,7 @@
 
 			{#if loading}
 				<div class="flex items-center gap-2 py-4 text-onSurfaceVariant">
-					<div
-						class="size-5 animate-pulse rounded-full border-2 border-primary border-t-transparent"
-					></div>
+					<div class="size-5 animate-pulse rounded-full border-2 border-primary border-t-transparent"></div>
 					<span class="text-body-sm">Loading transcript...</span>
 				</div>
 			{:else if error}
@@ -130,7 +148,7 @@
 			{:else}
 				<div
 					bind:this={transcriptContentEl}
-					class="max-h-[64dvh] overflow-y-auto pr-1 text-body-md whitespace-pre-wrap text-onSurface select-text sm:max-h-[70dvh] sm:pr-2 [&_mark]:rounded [&_mark]:bg-primary/20 [&_mark]:px-0.5"
+					class="max-h-[64dvh] overflow-y-auto whitespace-pre-wrap pr-1 select-text text-body-md text-onSurface sm:max-h-[70dvh] sm:pr-2 [&_mark]:rounded [&_mark]:bg-primary/20 [&_mark]:px-0.5"
 					style="font-family: 'Noto Sans Devanagari', var(--font-sans)"
 				>
 					{@html transcriptHtml}
