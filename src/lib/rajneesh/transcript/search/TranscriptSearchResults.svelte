@@ -4,10 +4,7 @@
 	import CommonDialog from '$lib/components/dialog/CommonDialog.svelte'
 	import IconButton from '$lib/components/IconButton.svelte'
 	import Icon from '$lib/components/icon/Icon.svelte'
-	import {
-		extractExcerptAroundMatch,
-		highlightExcerpt,
-	} from '$lib/rajneesh/transcript/excerpt.ts'
+	import { extractExcerptAroundMatch, highlightExcerpt } from '$lib/rajneesh/transcript/excerpt.ts'
 	import { romanToDevanagariForSearch } from '$lib/rajneesh/transcript/roman-to-devanagari.ts'
 
 	interface Props {
@@ -44,10 +41,7 @@
 		exactMatch: boolean
 	}
 
-	async function processResult(
-		result: PagefindResult,
-		term: string,
-	): Promise<DisplayItem | null> {
+	async function processResult(result: PagefindResult, term: string): Promise<DisplayItem | null> {
 		const data = await result.data()
 		const trackId = data.meta?.trackId ? parseInt(data.meta.trackId, 10) : undefined
 		if (trackId == null || Number.isNaN(trackId)) return null
@@ -61,11 +55,10 @@
 				if (res.ok) {
 					const buffer = await res.arrayBuffer()
 					const text = new TextDecoder('utf-8').decode(buffer)
-					const { excerpt: customExcerpt, found } = extractExcerptAroundMatch(
-						text,
-						term,
-						{ wordsBefore: 3, linesAfter: 3 },
-					)
+					const { excerpt: customExcerpt, found } = extractExcerptAroundMatch(text, term, {
+						wordsBefore: 3,
+						linesAfter: 3,
+					})
 					if (found) {
 						excerpt = highlightExcerpt(customExcerpt, term)
 						exactMatch = true
@@ -107,7 +100,9 @@
 		readDialogItem ? processedResults.findIndex((item) => item?.id === readDialogItem?.id) : -1,
 	)
 	const canOpenPreviousResult = $derived(currentReadDialogRawIndex > 0)
-	const canOpenNextResult = $derived(currentReadDialogRawIndex >= 0 && currentReadDialogRawIndex < totalCount - 1)
+	const canOpenNextResult = $derived(
+		currentReadDialogRawIndex >= 0 && currentReadDialogRawIndex < totalCount - 1,
+	)
 
 	async function processRawRange(start: number, end: number, term: string): Promise<DisplayItem[]> {
 		const loaded: DisplayItem[] = []
@@ -209,7 +204,12 @@
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0]
-				if (entry?.isIntersecting && !loading && !loadingMore && loadedRawCount < rawResults.length) {
+				if (
+					entry?.isIntersecting &&
+					!loading &&
+					!loadingMore &&
+					loadedRawCount < rawResults.length
+				) {
 					void loadMore()
 				}
 			},
@@ -332,10 +332,12 @@
 	})
 </script>
 
-<div class="flex w-full flex-col gap-4 px-2 pb-8">
+<div class="flex w-full flex-col gap-4 pb-8">
 	{#if loading}
 		<div class="flex flex-col items-center gap-2 py-8 text-onSurfaceVariant">
-			<div class="size-8 animate-pulse rounded-full border-2 border-primary border-t-transparent"></div>
+			<div
+				class="size-8 animate-pulse rounded-full border-2 border-primary border-t-transparent"
+			></div>
 			<div class="text-body-md">{m.libraryTranscriptSearching()}</div>
 		</div>
 	{:else if error}
@@ -362,9 +364,11 @@
 					class="flex flex-col gap-2 rounded-lg border border-primary/10 bg-surfaceContainerHigh p-4"
 				>
 					<div
-						class="line-clamp-5 min-h-[4.5rem] whitespace-pre-wrap text-body-md text-onSurface [&_mark]:bg-primary/20 [&_mark]:rounded [&_mark]:px-0.5"
+						class="line-clamp-5 min-h-[4.5rem] text-body-md whitespace-pre-wrap text-onSurface [&_mark]:rounded [&_mark]:bg-primary/20 [&_mark]:px-0.5"
 						style="font-family: 'Noto Sans Devanagari', var(--font-sans)"
-					>{@html item.excerpt}</div>
+					>
+						{@html item.excerpt}
+					</div>
 					<div class="flex items-center justify-between gap-2">
 						<div class="min-w-0 flex-1 truncate">
 							<div class="truncate font-medium text-onSurface">{item.trackName || m.unknown()}</div>
@@ -389,7 +393,9 @@
 			>
 				{#if loadingMore}
 					<div class="flex items-center gap-2">
-						<div class="size-5 animate-pulse rounded-full border-2 border-primary border-t-transparent"></div>
+						<div
+							class="size-5 animate-pulse rounded-full border-2 border-primary border-t-transparent"
+						></div>
 						<span class="text-body-sm">{m.libraryTranscriptSearchLoadingMore()}</span>
 					</div>
 				{/if}
@@ -405,7 +411,7 @@
 	}}
 	title={readDialogItem?.trackName || 'Transcript'}
 	showCloseButton
-	class="max-w-4xl [--dialog-width:calc(100dvw-1rem)] [--dialog-height:calc(100dvh-1rem)] sm:[--dialog-width:--spacing(180)] sm:[--dialog-height:calc(100dvh-3rem)]"
+	class="max-w-4xl [--dialog-height:calc(100dvh-1rem)] [--dialog-width:calc(100dvw-1rem)] sm:[--dialog-height:calc(100dvh-3rem)] sm:[--dialog-width:--spacing(180)]"
 	buttons={[{ title: 'Close' }]}
 >
 	{#snippet topRight()}
@@ -467,7 +473,9 @@
 
 			{#if readDialogLoading}
 				<div class="flex items-center gap-2 py-4 text-onSurfaceVariant">
-					<div class="size-5 animate-pulse rounded-full border-2 border-primary border-t-transparent"></div>
+					<div
+						class="size-5 animate-pulse rounded-full border-2 border-primary border-t-transparent"
+					></div>
 					<span class="text-body-sm">{m.libraryTranscriptSearching()}</span>
 				</div>
 			{:else if readDialogError}
@@ -475,7 +483,7 @@
 			{:else}
 				<div
 					bind:this={readDialogContentEl}
-					class="max-h-[64dvh] overflow-y-auto whitespace-pre-wrap pr-1 select-text text-body-md text-onSurface sm:max-h-[70dvh] sm:pr-2 [&_mark]:rounded [&_mark]:bg-primary/20 [&_mark]:px-0.5"
+					class="max-h-[64dvh] overflow-y-auto pr-1 text-body-md whitespace-pre-wrap text-onSurface select-text sm:max-h-[70dvh] sm:pr-2 [&_mark]:rounded [&_mark]:bg-primary/20 [&_mark]:px-0.5"
 					style="font-family: 'Noto Sans Devanagari', var(--font-sans)"
 				>
 					{@html readDialogHtml}
