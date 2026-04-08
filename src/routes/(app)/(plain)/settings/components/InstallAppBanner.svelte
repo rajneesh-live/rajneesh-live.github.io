@@ -26,7 +26,7 @@
 
 	// Determine the current state
 	type InstallState = 'installable' | 'installed' | 'unavailable'
-	const installState = $derived<InstallState>(() => {
+	const installState = $derived.by<InstallState>(() => {
 		if (isInstalled) return 'installed'
 		if (installEvent) return 'installable'
 		return 'unavailable'
@@ -38,8 +38,8 @@
 		}
 	}
 
-	const subtitle = $derived(() => {
-		const state = installState()
+	const subtitle = $derived.by(() => {
+		const state = installState
 		switch (state) {
 			case 'installed':
 				return m.settingsInstallAppAlreadyInstalled()
@@ -48,32 +48,25 @@
 			case 'installable':
 			default:
 				return m.settingsInstallAppExplanation({
-					device: isHandHeldDevice ? m.settingsInstallAppHomeScreen() : m.settingsInstallAppDesktop(),
+					device: isHandHeldDevice
+						? m.settingsInstallAppHomeScreen()
+						: m.settingsInstallAppDesktop(),
 				})
 		}
 	})
 
-	const isButtonDisabled = $derived(installState() !== 'installable')
+	const isButtonDisabled = $derived(installState !== 'installable')
 </script>
 
-<section
-	class={[
-		'card mx-auto w-full gap-2 bg-primary/12 p-4',
-		className,
-	]}
->
+<section class={['card mx-auto w-full gap-2 bg-primary/12 p-4', className]}>
 	<div class="text-title-md font-medium">{m.settingsInstallAppTitle()}</div>
 	<div class="flex w-full flex-col items-center justify-between gap-3 sm:flex-row">
-		<div class="text-body-md text-on-surface-variant">
-			{subtitle()}
+		<div class="text-on-surface-variant text-body-md">
+			{subtitle}
 		</div>
 
-		{#if installState() !== 'installed'}
-			<Button 
-				class="w-full shrink-0 sm:w-35" 
-				onclick={onInstallClick}
-				disabled={isButtonDisabled}
-			>
+		{#if installState !== 'installed'}
+			<Button class="w-full shrink-0 sm:w-35" onclick={onInstallClick} disabled={isButtonDisabled}>
 				{m.settingsInstallAppHomeAction()}
 			</Button>
 		{/if}
