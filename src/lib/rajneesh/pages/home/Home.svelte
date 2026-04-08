@@ -13,7 +13,6 @@
 	import InstallAppBanner from '$lib/rajneesh/components/InstallAppBanner.svelte'
 
 	const player = usePlayer()
-	const menu = useMenu()
 	const DISCOVER_TOPICS_STORAGE_KEY = 'rajneesh-home-discover-topics'
 	const DISCOVER_TOPICS = [
 		'मुल्ला',
@@ -565,11 +564,7 @@
 		onDatabaseChange: (changes, { refetch }) => {
 			for (const change of changes) {
 				const storeName = change.storeName as string
-				if (
-					storeName === 'activeMinutes' ||
-					storeName === 'tracks' ||
-					storeName === 'albums'
-				) {
+				if (storeName === 'activeMinutes' || storeName === 'tracks' || storeName === 'albums') {
 					void refetch()
 					break
 				}
@@ -592,9 +587,7 @@
 			.map((tag) => discoverTopicCatalogByTag.get(tag))
 			.filter((topic): topic is DiscoverTopic => !!topic),
 	)
-	const visibleResumeCards = $derived(
-		resumeExpanded ? resumeCards : resumeCards.slice(0, 2),
-	)
+	const visibleResumeCards = $derived(resumeExpanded ? resumeCards : resumeCards.slice(0, 2))
 	const hasHiddenResumeCards = $derived(resumeCards.length > 2)
 
 	const getDiscoverTopicCountLabel = (documents: number) =>
@@ -633,11 +626,7 @@
 				}
 
 				const [tag, documents, hits] = entry
-				if (
-					typeof tag !== 'string' ||
-					typeof documents !== 'number' ||
-					typeof hits !== 'number'
-				) {
+				if (typeof tag !== 'string' || typeof documents !== 'number' || typeof hits !== 'number') {
 					return null
 				}
 
@@ -855,13 +844,13 @@
 
 {#snippet searchBar()}
 	<div
-		class="@container sticky top-2 z-1 mt-2 mb-4 ml-auto flex w-full max-w-125 items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
+		class="@container sticky top-2 z-1 mt-2 mb-4 flex w-full items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
 	>
 		<input
 			type="text"
 			name="search"
 			placeholder={m.librarySearch()}
-			class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
+			class="min-w-0 flex-1 bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
 			onfocus={openExploreSearch}
 			onclick={openExploreSearch}
 		/>
@@ -869,29 +858,10 @@
 		<Separator vertical class="my-auto hidden h-6 @sm:flex" />
 
 		<IconButton
-			ariaLabel={m.libraryOpenApplicationMenu()}
-			tooltip={m.libraryOpenApplicationMenu()}
-			icon="moreVertical"
-			onclick={(e) => {
-				const menuItems = [
-					{
-						label: m.settings(),
-						action: () => {
-							goto('/settings')
-						},
-					},
-				]
-					.filter(Boolean) as { label: string; action: () => void }[]
-
-				menu.showFromEvent(e, menuItems, {
-					width: 200,
-					anchor: true,
-					preferredAlignment: {
-						vertical: 'top',
-						horizontal: 'right',
-					},
-				})
-			}}
+			ariaLabel={m.settings()}
+			tooltip={m.settings()}
+			icon="settings"
+			onclick={() => goto('/settings')}
 		/>
 	</div>
 {/snippet}
@@ -910,7 +880,7 @@
 {/snippet}
 
 {#if resumeCards.length > 0}
-	<div class="flex grow flex-col px-4 pb-4">
+	<div class="flex grow flex-col pb-4">
 		{@render searchBar()}
 		<InstallAppBanner class="mb-4" />
 		{@render devNote()}
@@ -921,21 +891,25 @@
 			<div class="mb-4 flex items-center justify-between gap-3">
 				<h2 class="text-title-lg">Continue listening</h2>
 				{#if hasHiddenResumeCards}
-					<Button kind="outlined" class="shrink-0" onclick={() => (resumeExpanded = !resumeExpanded)}>
+					<Button
+						kind="outlined"
+						class="shrink-0"
+						onclick={() => (resumeExpanded = !resumeExpanded)}
+					>
 						{resumeExpanded ? 'Show less' : 'Show all'}
 					</Button>
 				{/if}
 			</div>
 
 			<div class="grid w-full gap-4 overflow-clip sm:grid-cols-2 lg:grid-cols-3">
-			{#each visibleResumeCards as card (card.trackId)}
-				<ContinueListeningCard card={card} onResume={() => resume(card)} />
-			{/each}
+				{#each visibleResumeCards as card (card.trackId)}
+					<ContinueListeningCard {card} onResume={() => resume(card)} />
+				{/each}
 			</div>
 		</section>
 	</div>
 {:else}
-	<div class="flex grow flex-col px-4 pb-4">
+	<div class="flex grow flex-col pb-4">
 		{@render searchBar()}
 		<InstallAppBanner class="mb-4" />
 		{@render devNote()}
