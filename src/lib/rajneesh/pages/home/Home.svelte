@@ -11,10 +11,9 @@
 	import type { Album } from '$lib/library/types.ts'
 	import ContinueListeningCard from '$lib/rajneesh/components/ContinueListeningCard.svelte'
 	import InstallAppBanner from '$lib/rajneesh/components/InstallAppBanner.svelte'
-import HomeBookmarksSection from '$lib/rajneesh/pages/home/HomeBookmarksSection.svelte'
+	import HomeBookmarksSection from '$lib/rajneesh/pages/home/HomeBookmarksSection.svelte'
 
 	const player = usePlayer()
-	const menu = useMenu()
 	const DISCOVER_TOPICS_STORAGE_KEY = 'rajneesh-home-discover-topics'
 	const DISCOVER_TOPICS = [
 		'मुल्ला',
@@ -856,13 +855,13 @@ import HomeBookmarksSection from '$lib/rajneesh/pages/home/HomeBookmarksSection.
 
 {#snippet searchBar()}
 	<div
-		class="@container sticky top-2 z-1 mt-2 mb-4 ml-auto flex w-full max-w-125 items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
+		class="@container sticky top-2 z-1 mt-2 mb-4 flex w-full items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
 	>
 		<input
 			type="text"
 			name="search"
 			placeholder={m.librarySearch()}
-			class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
+			class="h-12 min-w-0 flex-1 bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
 			onfocus={openExploreSearch}
 			onclick={openExploreSearch}
 		/>
@@ -870,28 +869,11 @@ import HomeBookmarksSection from '$lib/rajneesh/pages/home/HomeBookmarksSection.
 		<Separator vertical class="my-auto hidden h-6 @sm:flex" />
 
 		<IconButton
-			ariaLabel={m.libraryOpenApplicationMenu()}
-			tooltip={m.libraryOpenApplicationMenu()}
-			icon="moreVertical"
-			onclick={(e) => {
-				const menuItems = [
-					{
-						label: m.settings(),
-						action: () => {
-							goto('/settings')
-						},
-					},
-				]
-					.filter(Boolean) as { label: string; action: () => void }[]
-
-				menu.showFromEvent(e, menuItems, {
-					width: 200,
-					anchor: true,
-					preferredAlignment: {
-						vertical: 'top',
-						horizontal: 'right',
-					},
-				})
+			ariaLabel={m.settings()}
+			tooltip={m.settings()}
+			icon="settings"
+			onclick={() => {
+				void goto('/settings')
 			}}
 		/>
 	</div>
@@ -911,7 +893,7 @@ import HomeBookmarksSection from '$lib/rajneesh/pages/home/HomeBookmarksSection.
 {/snippet}
 
 {#if resumeCards.length > 0}
-	<div class="flex grow flex-col px-4 pb-4">
+	<div class="flex grow flex-col pb-4">
 		{@render searchBar()}
 		<InstallAppBanner class="mb-4" />
 		{@render devNote()}
@@ -937,7 +919,7 @@ import HomeBookmarksSection from '$lib/rajneesh/pages/home/HomeBookmarksSection.
 		</section>
 	</div>
 {:else}
-	<div class="flex grow flex-col px-4 pb-4">
+	<div class="flex grow flex-col pb-4">
 		{@render searchBar()}
 		<InstallAppBanner class="mb-4" />
 		{@render devNote()}

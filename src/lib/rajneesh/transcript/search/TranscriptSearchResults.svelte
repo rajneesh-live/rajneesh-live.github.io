@@ -332,7 +332,7 @@
 	})
 </script>
 
-<div class="flex w-full flex-col gap-4 px-2 pb-8">
+<div class="flex w-full flex-col gap-4 pb-8">
 	{#if loading}
 		<div class="flex flex-col items-center gap-2 py-8 text-onSurfaceVariant">
 			<div class="size-8 animate-pulse rounded-full border-2 border-primary border-t-transparent"></div>
