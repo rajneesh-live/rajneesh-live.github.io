@@ -1,68 +1,37 @@
-const transcriptPathCache = new Map<string, string | null>()
+const TRANSCRIPT_MANIFEST_URL = '/rajneesh/transcript-manifest.json'
 
-export function buildTranscriptCandidates(
-	trackUuid: string,
-	trackNo: number,
-	trackOf: number,
-): string[] {
-	const lastDash = trackUuid.lastIndexOf('-')
-	if (lastDash === -1) {
-		return []
+let transcriptManifestPromise: Promise<Map<string, string> | null> | null = null
+
+const loadTranscriptManifest = async (): Promise<Map<string, string> | null> => {
+	if (typeof fetch === 'undefined') {
+		return null
 	}
 
-	const prefix = trackUuid.slice(0, lastDash)
-	const num = String(trackNo)
-	const count = String(trackOf)
+	if (!transcriptManifestPromise) {
+		transcriptManifestPromise = (async () => {
+			try {
+				const response = await fetch(TRANSCRIPT_MANIFEST_URL)
+				if (!response.ok) {
+					return null
+				}
 
-	const discourseWidths = Array.from(
-		new Set([num.length, count.length, 2, 3].filter((width) => width >= num.length)),
-	).sort((a, b) => a - b)
-	const rangeWidths = Array.from(new Set([count.length, 2, 3])).sort((a, b) => a - b)
+				const manifest = (await response.json()) as Record<string, string>
+				return new Map(
+					Object.entries(manifest).filter(
+						(entry): entry is [string, string] =>
+							typeof entry[0] === 'string' && typeof entry[1] === 'string',
+					),
+				)
+			} catch {
+				return null
+			}
+		})()
+	}
 
-	const discourseSlugs = Array.from(
-		new Set([
-			`${prefix}-${num}`,
-			...discourseWidths.map((width) => `${prefix}-${num.padStart(width, '0')}`),
-		]),
-	)
-
-	const seriesSlugs = Array.from(
-		new Set(
-			rangeWidths.flatMap((width) => [
-				`${prefix}-by-osho-1-${count.padStart(width, '0')}`,
-				`${prefix}-by-osho-${String(1).padStart(width, '0')}-${count.padStart(width, '0')}`,
-				`${prefix}-by-osho-${String(1).padStart(width, '0')}-${count}`,
-			]),
-		),
-	)
-
-	return seriesSlugs.flatMap((seriesSlug) =>
-		discourseSlugs.map((discourseSlug) => `/rajneesh/transcripts/${seriesSlug}/${discourseSlug}.txt`),
-	)
+	return transcriptManifestPromise
 }
 
-export async function findTranscriptPath(
-	trackUuid: string,
-	trackNo: number,
-	trackOf: number,
-): Promise<string | null> {
-	const cacheKey = `${trackUuid}:${trackNo}:${trackOf}`
-	if (transcriptPathCache.has(cacheKey)) {
-		return transcriptPathCache.get(cacheKey) ?? null
-	}
-
-	for (const candidate of buildTranscriptCandidates(trackUuid, trackNo, trackOf)) {
-		try {
-			const response = await fetch(candidate)
-			if (response.ok) {
-				transcriptPathCache.set(cacheKey, candidate)
-				return candidate
-			}
-		} catch {
-			// Ignore missing transcript candidates and keep trying.
-		}
-	}
-
-	transcriptPathCache.set(cacheKey, null)
-	return null
+export async function findTranscriptPath(trackUuid: string): Promise<string | null> {
+	const manifest = await loadTranscriptManifest()
+	return manifest?.get(trackUuid) ?? null
 }

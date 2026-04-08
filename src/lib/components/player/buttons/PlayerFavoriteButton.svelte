@@ -62,11 +62,7 @@
 		const lookupId = ++transcriptLookupId
 
 		void (async () => {
-			const resolvedPath = await findTranscriptPath(
-				activeTrack.uuid,
-				activeTrack.trackNo,
-				activeTrack.trackOf,
-			)
+			const resolvedPath = await findTranscriptPath(activeTrack.uuid)
 
 			if (lookupId !== transcriptLookupId || track?.uuid !== activeTrack.uuid) {
 				return
