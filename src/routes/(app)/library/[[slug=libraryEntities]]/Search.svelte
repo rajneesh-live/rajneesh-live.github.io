@@ -29,8 +29,6 @@
 
 		searchInput?.focus()
 	})
-
-	const menu = useMenu()
 	const searchPlaceholder = $derived.by(() => {
 		const slug = page.params.slug
 		if (slug === 'albums' || slug === 'explore') {
@@ -40,25 +38,7 @@
 		return `${m.librarySearch()} ${name.toLowerCase()}`
 	})
 
-	const generalMenuHandler = (e: MouseEvent) => {
-		const menuItems = [
-			{
-				label: m.settings(),
-				action: () => {
-					goto('/settings')
-				},
-			},
-		].filter(Boolean) as { label: string; action: () => void }[]
-
-		menu.showFromEvent(e, menuItems, {
-			width: 200,
-			anchor: true,
-			preferredAlignment: {
-				vertical: 'top',
-				horizontal: 'right',
-			},
-		})
-	}
+	const menu = useMenu()
 
 	const sortMenuItems = $derived.by(() =>
 		sortOptions().map((option) => ({
@@ -82,7 +62,7 @@
 </script>
 
 <div
-	class="@container sticky top-2 z-1 mt-2 mb-4 ml-auto flex w-full max-w-125 items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
+	class="@container sticky top-2 z-1 mt-2 mb-4 flex w-full items-center gap-1 rounded-lg border border-primary/10 bg-surfaceContainerHighest px-2 @sm:gap-2"
 >
 	<input
 		bind:this={searchInput}
@@ -90,7 +70,7 @@
 		type="text"
 		name="search"
 		placeholder={searchPlaceholder}
-		class="h-12 w-60 grow bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
+		class="h-12 min-w-0 flex-1 bg-transparent pl-2 text-body-md placeholder:text-onSurface/54 focus:outline-none"
 		oninput={(e) => searchHandler(e as unknown as InputEvent)}
 	/>
 
@@ -114,9 +94,11 @@
 	<Separator vertical class="my-auto hidden h-6 @sm:flex" />
 
 	<IconButton
-		ariaLabel={m.libraryToggleSortOrder()}
-		tooltip={m.libraryOpenApplicationMenu()}
-		icon="moreVertical"
-		onclick={generalMenuHandler}
+		ariaLabel={m.settings()}
+		tooltip={m.settings()}
+		icon="settings"
+		onclick={() => {
+			void goto('/settings')
+		}}
 	/>
 </div>
