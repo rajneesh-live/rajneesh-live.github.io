@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Osho Discourses</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --primary: #e65100;
+      --primary-light: #fff3e0;
+      --text-main: #212529;
+      --text-muted: #6c757d;
+      --border: #dee2e6;
+      --shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Noto Sans Devanagari', system-ui, sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.7; overflow-x: hidden; }
+    
+    /* Layouts */
+    .hidden { display: none !important; }
+    .view-container { width: 100%; min-height: 100vh; display: flex; flex-direction: column; transition: opacity 0.25s ease; }
+    
+    /* Typography & SVGs */
+    svg { width: 22px; height: 22px; }
+    
+    /* Home View */
+    .hero { text-align: center; padding: 4rem 1.5rem; max-width: 600px; margin: 0 auto; flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); color: var(--primary); margin-bottom: 0.5rem; letter-spacing: -0.5px; line-height: 1.2; }
+    
+    .search-box { margin: 1.5rem 0; position: relative; width: 100%; }
+    .search-box input { width: 100%; padding: 1.1rem 1.5rem; font-size: 1.1rem; border: 1px solid var(--border); border-radius: 50px; outline: none; transition: border-color 0.2s; background: var(--surface); }
+    .search-box input:focus { border-color: var(--primary); }
+    
+    /* Chips */
+    .explore-chips-container { text-align: left; margin-bottom: 2rem; }
+    .explore-chips-container h3 { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; }
+    .chip-wrap { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .chip { display: inline-flex; align-items: center; padding: 0.5rem 0.9rem; background: var(--surface); border: 1px solid var(--border); border-radius: 50px; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; color: var(--text-main); }
+    .chip:active { background: var(--primary-light); border-color: var(--primary); transform: scale(0.96); }
+    
+    .sessions-list { text-align: left; margin-top: 1rem; width: 100%; }
+    .session-card { background: var(--surface); padding: 0.8rem 1.2rem; border-radius: var(--radius); margin-bottom: 0.75rem; border: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; }
+    .session-card:active { transform: scale(0.98); background: var(--primary-light); border-color: var(--primary); }
+    .session-card h4 { margin: 0; color: var(--text-main); font-size: 1.05rem; font-weight: 500; }
+    
+    .corner-menu-right { position: absolute; top: 1.5rem; right: 1.5rem; z-index: 10; }
+    
+    /* Minimal Buttons */
+    .btn-icon { background: transparent; border: none; color: var(--text-main); cursor: pointer; padding: 0.6rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .btn-icon:active, .btn-icon:hover { background: rgba(0,0,0,0.05); }
+    
+    .btn { padding: 0.8rem 1.2rem; border-radius: 50px; border: 1px solid var(--border); cursor: pointer; font-size: 1rem; font-weight: 500; background: var(--surface); transition: 0.2s; color: var(--text-main); width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .btn:active { background: var(--bg); }
+    .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-primary:active { background: #d84c00; }
+    
+    /* Headers & Content */
+    .reader-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); }
+    .reader-title { font-weight: 600; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; text-align: center; }
+    .reader-content { padding: 2rem 1.2rem 9rem; max-width: 800px; margin: 0 auto; font-size: 1.15rem; flex: 1; width: 100%; }
+    
+    /* FAQ & Explore Content */
+    .content-item { margin-bottom: 1.5rem; }
+    .content-item h3 { color: var(--primary); margin-bottom: 0.5rem; font-size: 1.2rem; }
+    .content-item p { color: var(--text-muted); }
+    
+    /* Highlight Styling */
+    mark { background: var(--primary-light); color: var(--primary); font-weight: bold; border-radius: 4px; padding: 2px 4px; transition: all 0.3s ease; }
+    mark.active { background: var(--primary); color: white; box-shadow: 0 0 0 4px rgba(230, 81, 0, 0.2); }
+    
+    /* Floating Navs & Banners */
+    .floating-nav { position: fixed; bottom: 90px; right: 1rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 20; }
+    .float-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--surface); color: var(--primary); border: 1px solid var(--border); box-shadow: var(--shadow-floating); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .float-btn:active { transform: scale(0.9); background: var(--primary-light); }
+    
+    .occurrence-badge { background: var(--surface); color: var(--text-main); font-size: 0.85rem; font-weight: 600; text-align: center; padding: 0.25rem 0; border-radius: 50px; border: 1px solid var(--border); box-shadow: var(--shadow-floating); }
+    
+    .reader-nav-pill { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--surface); display: flex; align-items: center; box-shadow: var(--shadow-floating); border-radius: 50px; padding: 0.4rem; z-index: 20; gap: 0.5rem; white-space: nowrap; border: 1px solid var(--border); }
+    .nav-btn { background: transparent; border: none; padding: 0.5rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50px; transition: background 0.2s; color: var(--text-main); }
+    .nav-btn:active { background: var(--primary-light); }
+    .nav-status { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); min-width: 60px; text-align: center; }
+    
+    /* Resume Scroll Banner */
+    .resume-banner { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 0.5rem 0.5rem 0.5rem 1.2rem; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; z-index: 30; width: max-content; max-width: 90%; transition: opacity 0.3s ease, transform 0.3s ease; }
+    .btn-text { background: var(--primary-light); color: var(--primary); border: none; font-weight: 600; padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.9rem; transition: transform 0.1s; }
+    .btn-text:active { transform: scale(0.95); }
+    .btn-icon-small { background: transparent; border: none; color: var(--text-muted); padding: 0.4rem; border-radius: 50%; display: flex; cursor: pointer; }
+    .btn-icon-small svg { width: 18px; height: 18px; }
+
+    /* Modals */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 100; padding: 1rem; }
+    .modal { background: var(--surface); padding: 2rem; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: var(--shadow-floating); margin-bottom: 2rem; animation: slideUp 0.3s ease-out; }
+    .modal h3 { margin-bottom: 1.5rem; text-align: center; font-size: 1.2rem; }
+    .modal .btn { margin-bottom: 0.75rem; }
+    
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .error-banner { padding: 1rem; background: #ffebee; color: #c62828; text-align: center; font-weight: 500; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <noscript>
+    <div class="error-banner">Please enable JavaScript to use this offline reader.</div>
+  </noscript>
+
+  <!-- HOME VIEW -->
+  <div id="home-view" class="view-container">
+    <div class="corner-menu-right">
+      <button class="btn-icon" onclick="switchView('faq-view')" aria-label="Help">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
+    
+    <div class="hero">
+      <h1>Osho Discourses</h1>
+      <p id="db-status" style="color: var(--text-muted); margin-bottom: 1rem; font-weight: 500;">Checking local library...</p>
+      
+      <div id="search-container" class="search-box hidden">
+        <input type="text" id="search-input" placeholder="Search a keyword..." onkeypress="handleSearchEnter(event)">
+      </div>
+
+      <div id="home-explore-container" class="explore-chips-container hidden">
+        <h3 id="explore-topics-title">Explore Topics</h3>
+        <div class="chip-wrap" id="home-chips"></div>
+        <button class="btn" style="margin-top: 1rem;" onclick="switchView('explore-view')">
+          Explore More Topics
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- Install App Banner (Hidden until session active & PWA ready) -->
+      <div id="install-container" class="hidden" style="margin-bottom: 1.5rem; width: 100%;">
+        <button class="btn btn-primary" onclick="installPWA()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Install App for Offline Access
+        </button>
+      </div>
+
+      <div id="sessions-container" class="sessions-list hidden">
+        <h3 style="margin-bottom: 1rem; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Continue Reading</h3>
+        <div id="sessions-list-render"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPLORE VIEW -->
+  <div id="explore-view" class="view-container hidden" style="opacity: 0;">
+    <div class="reader-header">
+      <button class="btn-icon" onclick="switchView('home-view')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="reader-title">Explore</div>
+      <div style="width: 38px;"></div>
+    </div>
+    <div class="reader-content">
+      <div style="margin-bottom: 2rem;">
+        <button class="btn btn-primary" style="padding: 1rem;" onclick="switchView('library-view')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          Browse All Discourses
+        </button>
+      </div>
+      
+      <div class="explore-chips-container">
+        <h3 style="color: var(--primary);">Popular Themes & Masters</h3>
+        <div class="chip-wrap" id="explore-all-chips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBRARY VIEW -->
+  <div id="library-view" class="view-container hidden" style="opacity: 0;">
+    <div class="reader-header" style="flex-direction: column; align-items: stretch; gap: 1rem; padding-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn-icon" onclick="switchView('explore-view')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="reader-title">All Discourses</div>
+        <div style="width: 38px;"></div>
+      </div>
+      <div class="search-box" style="margin: 0;">
+        <input type="text" id="library-search" placeholder="Filter by title..." oninput="filterLibrary(event.target.value)">
+      </div>
+    </div>
+    <div class="reader-content" style="padding-top: 1rem;" id="library-list">
+      <!-- Titles render here -->
+    </div>
+  </div>
+
+  <!-- FAQ / ABOUT VIEW -->
+  <div id="faq-view" class="view-container hidden" style="opacity: 0;">
+    <div class="reader-header">
+      <button class="btn-icon" onclick="switchView('home-view')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="reader-title">About the Reader</div>
+      <div style="width: 38px;"></div>
+    </div>
+    <div class="reader-content">
+      <div class="content-item">
+        <h3>What is this?</h3>
+        <p>A lightning-fast, highly optimized offline reader for exploring Osho's discourses. It allows you to search across thousands of texts instantly.</p>
+      </div>
+      <div class="content-item">
+        <h3>Do I need internet?</h3>
+        <p>Only for the very first visit! Once the library initializes, the entire database is stored securely on your device. You can turn on airplane mode and it will still work perfectly.</p>
+      </div>
+      <div class="content-item">
+        <h3>How does searching work?</h3>
+        <p>Type any keyword in the search box. The app will scan all available discourses and rank the results based on how often your word appears. You can also click "Explore" to browse full books.</p>
+      </div>
+      <div class="content-item">
+        <h3>Can I export my research?</h3>
+        <p>Yes. When reading, tap the menu (⋮) in the top right. You can download the matches from just the current page you are reading, or export every single match across the entire library.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- READER VIEW -->
+  <div id="reader-view" class="view-container hidden" style="opacity: 0;">
+    <div class="reader-header">
+      <button class="btn-icon" onclick="exitReader()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="reader-title slide-transition" id="reader-title">Discourse Title</div>
+      <button class="btn-icon" onclick="openMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+      </button>
+    </div>
+    
+    <div class="reader-content slide-transition" id="reader-content"></div>
+    
+    <div class="floating-nav" id="reader-float-nav">
+      <button class="float-btn" onclick="navOccurrence(-1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+      </button>
+      <div class="occurrence-badge" id="occurrence-status">0/0</div>
+      <button class="float-btn" onclick="navOccurrence(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Resume Scroll Banner -->
+    <div id="resume-banner" class="resume-banner hidden" style="opacity: 0;">
+      <span style="font-size: 0.9rem; font-weight: 500;">Resume where you left off?</span>
+      <button class="btn-text" onclick="executeResumeScroll()">Resume</button>
+      <button class="btn-icon-small" onclick="hideResumeBanner()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    
+    <div class="reader-nav-pill" id="reader-pill-nav">
+      <button class="nav-btn" onclick="navDiscourse(-1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="nav-status" id="reader-status">1 / 10</div>
+      <button class="nav-btn" onclick="navDiscourse(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menu Modal -->
+  <div class="modal-overlay" id="menu-modal" onclick="closeMenu(event)">
+    <div class="modal">
+      <h3>Options</h3>
+      <button class="btn btn-primary" onclick="openOshoWorld()">Open on OshoWorld</button>
+      <button class="btn" id="btn-export-page" onclick="exportCurrentMatches()">Export matches on this page</button>
+      <button class="btn" id="btn-download-all" onclick="downloadAllQuotes()">Export all matches</button>
+      <button class="btn" style="background: var(--bg); border-color: transparent; margin-top: 1rem;" onclick="closeMenu()">Cancel</button>
+    </div>
+  </div>
+
+<script>
+  window.addEventListener('error', function(e) {
+    const status = document.getElementById('db-status');
+    if(status) status.innerText = 'App Error: ' + e.message;
+  });
+</script>
+
+<script type="module">
+  import brotliPromise from 'https://unpkg.com/brotli-wasm@3.0.0/index.web.js?module';
+
+  const DB_NAME = 'OshoDiscoursesDB'; 
+  const STORE_NAME = 'discourses';
+  const DB_URL = 'https://raw.githubusercontent.com/rajneesh-live/rajneesh-live.github.io/main/static/rajneesh/discourses.ndjson.br';
+  let db;
+
+  let currentSession = null; 
+  let currentMarks = [];
+  let activeMarkIndex = 0;
+  let currentDiscourseRaw = null;
+  let allDiscoursesCache = null;
+  let currentViewId = 'home-view';
+  let isSwitching = false;
+  
+  // State Preservation
+  let libraryScrollY = 0;
+  let librarySearchTerm = '';
+  let pendingResumeScrollY = 0;
+
+  // PWA Install Logic
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    checkInstallPromo();
+  });
+
+  function checkInstallPromo() {
+    const sessions = JSON.parse(localStorage.getItem('oshoSessions') || '[]');
+    const installBtn = document.getElementById('install-container');
+    if (deferredPrompt && sessions.length > 0) {
+      installBtn.classList.remove('hidden');
+    } else {
+      installBtn.classList.add('hidden');
+    }
+  }
+
+  window.installPWA = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      deferredPrompt = null;
+      checkInstallPromo();
+    }
+  };
+
+  const EXPLORE_TOPICS = [
+    { q: "ध्यान", l: "ध्यान" },
+    { q: "प्रेम", l: "प्रेम" },
+    { q: "buddha", l: "Buddha" },
+    { q: "meditation", l: "Meditation" },
+    { q: "zen", l: "Zen" },
+    { q: "सत्य", l: "सत्य" },
+    { q: "krishna", l: "Krishna" },
+    { q: "kabir", l: "Kabir" },
+    { q: "आनंद", l: "आनंद" },
+    { q: "awareness", l: "Awareness" },
+    { q: "tantra", l: "Tantra" },
+    { q: "मौन", l: "मौन" },
+    { q: "परमात्मा", l: "परमात्मा" },
+    { q: "ego", l: "Ego" },
+    { q: "संसार", l: "संसार" }
+  ];
+
+  window.switchView = (targetId) => {
+    if (currentViewId === targetId || isSwitching) return;
+    isSwitching = true;
+    
+    hideResumeBanner();
+    
+    const current = document.getElementById(currentViewId);
+    const target = document.getElementById(targetId);
+    
+    current.style.opacity = '0';
+    setTimeout(() => {
+      current.classList.add('hidden');
+      target.classList.remove('hidden');
+      
+      // Hooks for specific views
+      if (targetId === 'home-view') {
+        updateHomeStatus();
+        loadSessions();
+      } else if (targetId === 'library-view') {
+        document.getElementById('library-search').value = librarySearchTerm;
+        initLibrary().then(() => {
+          setTimeout(() => window.scrollTo(0, libraryScrollY), 20);
+        });
+      } else if (targetId !== 'reader-view') {
+        window.scrollTo(0, 0); 
+      }
+      
+      setTimeout(() => {
+        target.style.opacity = '1';
+        currentViewId = targetId;
+        isSwitching = false;
+      }, 50);
+    }, 250);
+  };
+
+  function renderChips() {
+    document.getElementById('explore-all-chips').innerHTML = EXPLORE_TOPICS.map(t => 
+      `<div class="chip" onclick="triggerSearch('${t.q}')">${t.l}</div>`
+    ).join('');
+
+    const shuffled = [...EXPLORE_TOPICS].sort(() => 0.5 - Math.random()).slice(0, 6);
+    document.getElementById('home-chips').innerHTML = shuffled.map(t => 
+      `<div class="chip" onclick="triggerSearch('${t.q}')">${t.l}</div>`
+    ).join('');
+  }
+
+  window.triggerSearch = (query) => {
+    document.getElementById('search-input').value = query;
+    performSearch(query);
+  };
+
+  function checkWasmSupport() {
+    if (typeof WebAssembly !== 'object') {
+      throw new Error("Your browser doesn't support WebAssembly (WASM), which is required to decompress the library.");
+    }
+  }
+
+  function initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onblocked = () => document.getElementById('db-status').innerText = 'Database locked. Close other tabs and refresh.';
+      request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { autoIncrement: true });
+      };
+      request.onsuccess = (e) => { db = e.target.result; resolve(); };
+      request.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  function getCount() {
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).count();
+      req.onsuccess = () => resolve(req.result);
+    });
+  }
+
+  function saveBatch(batch) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      batch.forEach(item => store.put(item));
+      tx.oncomplete = () => resolve();
+    });
+  }
+
+  async function downloadAndProcessFile() {
+    checkWasmSupport();
+    const statusEl = document.getElementById('db-status');
+    statusEl.innerText = 'Connecting...';
+    
+    const res = await fetch(DB_URL);
+    if (!res.ok) throw new Error(`Network error ${res.status}. Please check your connection.`);
+    
+    const contentLength = res.headers.get('content-length');
+    const fallbackTotal = 28.4 * 1024 * 1024; 
+    const total = contentLength ? parseInt(contentLength, 10) : fallbackTotal;
+    
+    let receivedLength = 0;
+    const reader = res.body.getReader();
+    const chunks = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      receivedLength += value.length;
+      
+      const receivedMB = (receivedLength / 1024 / 1024).toFixed(1);
+      const totalMB = (total / 1024 / 1024).toFixed(1);
+      const percent = Math.min(100, Math.round((receivedLength / total) * 100));
+      
+      statusEl.innerText = `Downloading library: ${receivedMB} MB / ${totalMB} MB (${percent}%)`;
+    }
+
+    const dataArray = new Uint8Array(receivedLength);
+    let position = 0;
+    for (let chunk of chunks) {
+      dataArray.set(chunk, position);
+      position += chunk.length;
+    }
+    
+    let text;
+    if (dataArray[0] === 123) { 
+      text = new TextDecoder('utf-8').decode(dataArray);
+    } else {
+      statusEl.innerText = 'Decompressing library (almost done)...';
+      const brotli = await brotliPromise;
+      const uncompressedData = brotli.decompress(dataArray);
+      text = new TextDecoder('utf-8').decode(uncompressedData);
+    }
+
+    statusEl.innerText = 'Importing to local database...';
+    const lines = text.split('\n');
+    let batch = [];
+    let totalSaved = 0;
+    
+    for (const line of lines) {
+      if (line.trim()) batch.push(JSON.parse(line));
+      if (batch.length >= 250) {
+        await saveBatch(batch);
+        totalSaved += batch.length;
+        batch = [];
+      }
+    }
+    if (batch.length > 0) {
+      await saveBatch(batch);
+      totalSaved += batch.length;
+    }
+    return totalSaved;
+  }
+
+  async function updateHomeStatus() {
+    const statusEl = document.getElementById('db-status');
+    const searchInput = document.getElementById('search-input');
+    
+    if (searchInput.value.trim() === '') {
+      const count = await getCount();
+      statusEl.innerText = `${count} discourses available offline`;
+    }
+  }
+
+  window.onload = async () => {
+    try {
+      await initDB();
+      const count = await getCount();
+      
+      if (count === 0) {
+        await downloadAndProcessFile();
+        setupUIReady(await getCount());
+      } else {
+        setupUIReady(count);
+      }
+      renderChips();
+      loadSessions();
+    } catch (e) {
+      document.getElementById('db-status').innerText = `Error: ${e.message}`;
+      document.getElementById('db-status').style.color = '#c62828';
+    }
+  };
+
+  function setupUIReady(count) {
+    document.getElementById('db-status').innerText = `${count} discourses available offline`;
+    document.getElementById('search-container').classList.remove('hidden');
+    document.getElementById('home-explore-container').classList.remove('hidden');
+  }
+
+  window.performSearch = async (query) => {
+    document.getElementById('db-status').innerText = 'Searching...';
+    const results = [];
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const cursorReq = tx.objectStore(STORE_NAME).openCursor();
+    
+    cursorReq.onsuccess = (ev) => {
+      const cursor = ev.target.result;
+      if (cursor) {
+        const matches = [...cursor.value.c.matchAll(new RegExp(query, 'gi'))];
+        if (matches.length > 0) results.push({ id: cursor.key, count: matches.length });
+        cursor.continue();
+      } else {
+        if (results.length > 0) {
+          results.sort((a, b) => b.count - a.count);
+          
+          const content = document.getElementById('reader-content');
+          const title = document.getElementById('reader-title');
+          content.style.opacity = title.style.opacity = '1';
+          content.style.transform = title.style.transform = 'translateX(0)';
+          
+          startSession(query, results, 0, {});
+        } else {
+          document.getElementById('db-status').innerText = 'No matches found.';
+        }
+      }
+    };
+  };
+
+  window.handleSearchEnter = async (e) => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      if (e.target.blur) e.target.blur();
+      performSearch(e.target.value.trim());
+    } else if (e.key === 'Backspace' && e.target.value.trim().length <= 1) {
+       setTimeout(updateHomeStatus, 50);
+    }
+  };
+  
+  document.getElementById('search-input').addEventListener('search', updateHomeStatus);
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    if (e.target.value.trim() === '') updateHomeStatus();
+  });
+
+  // LIBRARY FUNCTIONS
+  async function initLibrary() {
+    const container = document.getElementById('library-list');
+    
+    if (!allDiscoursesCache) {
+      container.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">Loading library...</div>';
+      allDiscoursesCache = [];
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const cursorReq = tx.objectStore(STORE_NAME).openCursor();
+      
+      await new Promise((resolve) => {
+        cursorReq.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (cursor) {
+            let t = cursor.value.t || cursor.value.s || "Untitled";
+            if (t.includes('>')) t = t.split('>').pop().trim();
+            allDiscoursesCache.push({ id: cursor.key, title: t });
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+      });
+    }
+    filterLibrary(librarySearchTerm);
+  }
+
+  window.filterLibrary = (term) => {
+    librarySearchTerm = term;
+    const container = document.getElementById('library-list');
+    const query = term.toLowerCase();
+    const filtered = allDiscoursesCache.filter(d => d.title.toLowerCase().includes(query));
+    
+    container.innerHTML = filtered.map(d => `
+      <div class="session-card" onclick="openDirectDiscourse(${d.id})">
+        <h4 style="font-weight: normal;">${d.title}</h4>
+      </div>
+    `).join('');
+    
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">No matching books found.</div>';
+    }
+  };
+
+  window.openDirectDiscourse = (id) => {
+    libraryScrollY = window.scrollY;
+    
+    currentSession = { query: '', results: [{id: id}], currentIndex: 0, scrollMap: {}, isLibrary: true };
+    
+    const content = document.getElementById('reader-content');
+    const title = document.getElementById('reader-title');
+    content.style.opacity = title.style.opacity = '1';
+    content.style.transform = title.style.transform = 'translateX(0)';
+    
+    renderReader();
+    switchView('reader-view');
+  };
+
+  // SESSION & READER FUNCTIONS
+  function startSession(query, results, index, scrollMap = {}) {
+    currentSession = { query, results, currentIndex: index, scrollMap, isLibrary: false };
+    saveSessionToLocal(currentSession);
+    renderReader();
+    
+    document.getElementById('db-status').innerText = `${results.length} matches found`;
+    switchView('reader-view');
+  }
+
+  function saveSessionToLocal(session) {
+    if (session.isLibrary) return;
+    let sessions = JSON.parse(localStorage.getItem('oshoSessions') || '[]');
+    sessions = sessions.filter(s => s.query !== session.query);
+    sessions.unshift(session);
+    localStorage.setItem('oshoSessions', JSON.stringify(sessions.slice(0, 10)));
+  }
+
+  function loadSessions() {
+    const sessions = JSON.parse(localStorage.getItem('oshoSessions') || '[]');
+    const container = document.getElementById('sessions-container');
+    const list = document.getElementById('sessions-list-render');
+    const homeChips = document.getElementById('home-chips');
+    const exploreTitle = document.getElementById('explore-topics-title');
+    
+    checkInstallPromo();
+    
+    if (sessions.length > 0) {
+      container.classList.remove('hidden');
+      if (homeChips) homeChips.style.display = 'none';
+      if (exploreTitle) exploreTitle.style.display = 'none';
+      
+      list.innerHTML = sessions.map(s => `
+        <div class="session-card" onclick="resumeSession('${s.query}')">
+          <div style="flex-grow: 1;">
+            <h4>"${s.query}"</h4>
+            <span style="font-size: 0.85rem; color: var(--text-muted)">Progress: ${s.currentIndex + 1} of ${s.results.length}</span>
+          </div>
+          <button class="btn-icon" onclick="deleteSession(event, '${s.query}')" aria-label="Remove" style="padding: 0.5rem; margin-left: 0.5rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `).join('');
+    } else {
+      container.classList.add('hidden');
+      if (homeChips) homeChips.style.display = 'flex';
+      if (exploreTitle) exploreTitle.style.display = 'block';
+    }
+  }
+
+  window.resumeSession = (query) => {
+    const sessions = JSON.parse(localStorage.getItem('oshoSessions') || '[]');
+    const s = sessions.find(s => s.query === query);
+    if (s) {
+      const content = document.getElementById('reader-content');
+      const title = document.getElementById('reader-title');
+      content.style.opacity = title.style.opacity = '1';
+      content.style.transform = title.style.transform = 'translateX(0)';
+      startSession(s.query, s.results, s.currentIndex, s.scrollMap || {});
+    }
+  };
+  
+  window.deleteSession = (e, query) => {
+    e.stopPropagation();
+    let sessions = JSON.parse(localStorage.getItem('oshoSessions') || '[]');
+    localStorage.setItem('oshoSessions', JSON.stringify(sessions.filter(s => s.query !== query)));
+    loadSessions();
+  };
+
+  window.exitReader = () => {
+    hideResumeBanner();
+    if (currentSession && currentSession.results && !currentSession.isLibrary) {
+      const currentItem = currentSession.results[currentSession.currentIndex];
+      currentSession.scrollMap = currentSession.scrollMap || {};
+      currentSession.scrollMap[currentItem.id] = window.scrollY;
+      saveSessionToLocal(currentSession);
+    }
+    if (currentSession && currentSession.isLibrary) {
+      switchView('library-view');
+    } else {
+      switchView('home-view');
+    }
+  };
+
+  // RESUME SCROLL LOGIC
+  window.executeResumeScroll = () => {
+    window.scrollTo({ top: pendingResumeScrollY, behavior: 'smooth' });
+    hideResumeBanner();
+  };
+
+  window.hideResumeBanner = () => {
+    const banner = document.getElementById('resume-banner');
+    if (!banner.classList.contains('hidden')) {
+      banner.style.opacity = '0';
+      setTimeout(() => banner.classList.add('hidden'), 300);
+    }
+  };
+
+  function renderReader() {
+    const { results, currentIndex, query, isLibrary } = currentSession;
+    const currentItem = results[currentIndex];
+    
+    document.getElementById('reader-float-nav').style.display = isLibrary ? 'none' : 'flex';
+    document.getElementById('reader-pill-nav').style.display = (isLibrary || results.length <= 1) ? 'none' : 'flex';
+    if (!isLibrary) document.getElementById('reader-status').innerText = `${currentIndex + 1} / ${results.length}`;
+    
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(currentItem.id);
+      req.onsuccess = () => {
+        const data = req.result;
+        currentDiscourseRaw = data;
+        
+        let titleStr = data.t || data.s || "Untitled";
+        if (titleStr.includes('>')) titleStr = titleStr.split('>').pop().trim();
+        document.getElementById('reader-title').innerText = titleStr;
+
+        const container = document.getElementById('reader-content');
+        container.innerHTML = ''; 
+        currentMarks = [];
+        
+        if (query) {
+          const regex = new RegExp(`(${query})`, 'gi');
+          const parts = data.c.split(regex);
+          parts.forEach(part => {
+            if (part.toLowerCase() === query.toLowerCase()) {
+              const mark = document.createElement('mark');
+              mark.textContent = part;
+              container.appendChild(mark);
+              currentMarks.push(mark);
+            } else {
+              container.appendChild(document.createTextNode(part));
+            }
+          });
+        } else {
+          container.appendChild(document.createTextNode(data.c));
+        }
+
+        // Handle Auto-Scroll vs Resume Prompt
+        currentSession.scrollMap = currentSession.scrollMap || {};
+        const savedScroll = currentSession.scrollMap[currentItem.id];
+        
+        // ALWAYS default to first mark/top initially
+        activeMarkIndex = 0;
+        if (currentMarks.length > 0) {
+          highlightActiveMark(); // Scrolls to top match
+        } else {
+          window.scrollTo(0, 0);
+          const counterEl = document.getElementById('occurrence-status');
+          if (counterEl) counterEl.innerText = '0/0';
+        }
+
+        // Show resume toast if they had scrolled deep previously
+        if (savedScroll && savedScroll > 150) {
+           pendingResumeScrollY = savedScroll;
+           const banner = document.getElementById('resume-banner');
+           banner.classList.remove('hidden');
+           setTimeout(() => banner.style.opacity = '1', 50);
+        } else {
+           hideResumeBanner();
+        }
+        
+        resolve();
+      };
+    });
+  }
+
+  function highlightActiveMark() {
+    currentMarks.forEach((m, idx) => {
+      if (idx === activeMarkIndex) {
+        m.classList.add('active');
+        m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        m.classList.remove('active');
+      }
+    });
+    
+    const counterEl = document.getElementById('occurrence-status');
+    if (counterEl) {
+      counterEl.innerText = currentMarks.length > 0 ? `${activeMarkIndex + 1}/${currentMarks.length}` : '0/0';
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (currentViewId !== 'reader-view') return;
+    if (document.getElementById('menu-modal').style.display === 'flex') return;
+    if (document.activeElement.tagName === 'INPUT') return;
+    if (currentSession.isLibrary) return;
+
+    switch(e.key) {
+      case 'ArrowRight': navDiscourse(1); break;
+      case 'ArrowLeft': navDiscourse(-1); break;
+      case 'ArrowDown': if (currentMarks.length > 0) { e.preventDefault(); navOccurrence(1); } break;
+      case 'ArrowUp': if (currentMarks.length > 0) { e.preventDefault(); navOccurrence(-1); } break;
+    }
+  });
+
+  window.navDiscourse = async (dir) => {
+    if (currentSession.isLibrary) return;
+    
+    let newIndex = currentSession.currentIndex + dir;
+    if (newIndex >= 0 && newIndex < currentSession.results.length) {
+      
+      hideResumeBanner();
+      
+      const currentItem = currentSession.results[currentSession.currentIndex];
+      currentSession.scrollMap = currentSession.scrollMap || {};
+      currentSession.scrollMap[currentItem.id] = window.scrollY;
+      
+      currentSession.currentIndex = newIndex;
+      saveSessionToLocal(currentSession);
+      
+      const content = document.getElementById('reader-content');
+      const title = document.getElementById('reader-title');
+      
+      const outDistance = dir > 0 ? '-30px' : '30px';
+      content.style.transform = `translateX(${outDistance})`;
+      content.style.opacity = '0';
+      title.style.transform = `translateX(${outDistance})`;
+      title.style.opacity = '0';
+      
+      await new Promise(r => setTimeout(r, 250));
+      await renderReader();
+      
+      const inDistance = dir > 0 ? '30px' : '-30px';
+      content.style.transition = 'none';
+      title.style.transition = 'none';
+      content.style.transform = `translateX(${inDistance})`;
+      title.style.transform = `translateX(${inDistance})`;
+      
+      content.offsetHeight; 
+      
+      content.style.transition = '';
+      title.style.transition = '';
+      content.style.transform = 'translateX(0)';
+      content.style.opacity = '1';
+      title.style.transform = 'translateX(0)';
+      title.style.opacity = '1';
+    }
+  };
+
+  window.navOccurrence = (dir) => {
+    hideResumeBanner();
+    if (currentMarks.length === 0) return;
+    activeMarkIndex = (activeMarkIndex + dir + currentMarks.length) % currentMarks.length;
+    highlightActiveMark();
+  };
+
+  window.openMenu = () => {
+    const downloadAllBtn = document.getElementById('btn-download-all');
+    const exportPageBtn = document.getElementById('btn-export-page');
+    
+    if (currentSession && !currentSession.isLibrary && currentSession.query) {
+      downloadAllBtn.style.display = 'block';
+      exportPageBtn.innerText = 'Export matches on this page';
+    } else {
+      downloadAllBtn.style.display = 'none';
+      exportPageBtn.innerText = 'Export this full discourse';
+    }
+    
+    document.getElementById('menu-modal').style.display = 'flex';
+  };
+
+  window.closeMenu = (e) => {
+    if (!e || e.target.id === 'menu-modal' || e.target.tagName === 'BUTTON') {
+      document.getElementById('menu-modal').style.display = 'none';
+    }
+  };
+
+  window.openOshoWorld = () => {
+    let urlTitle = currentDiscourseRaw.t || currentDiscourseRaw.s || "";
+    if (urlTitle.includes('>')) urlTitle = urlTitle.split('>').pop().trim();
+    const cleanSlug = urlTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    window.open(`https://oshoworld.com/${cleanSlug}`, '_blank');
+    closeMenu({target: {tagName: 'BUTTON'}});
+  };
+
+  function getContextAroundMatches(text, query, bufferSize = 150) {
+    if (!query) return text; 
+    
+    const regex = new RegExp(query, 'gi');
+    let result = '';
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      const start = Math.max(0, match.index - bufferSize);
+      const end = Math.min(text.length, match.index + query.length + bufferSize);
+      result += `"...${text.substring(start, end)}..."\n\n`;
+    }
+    return result;
+  }
+
+  window.exportCurrentMatches = () => {
+    if (!currentDiscourseRaw) return;
+    let titleStr = currentDiscourseRaw.t || currentDiscourseRaw.s || "Untitled";
+    if (titleStr.includes('>')) titleStr = titleStr.split('>').pop().trim();
+    
+    let fullText, filename;
+    if (currentSession.isLibrary) {
+       fullText = `--- Discourse: ${titleStr} ---\n\n${currentDiscourseRaw.c}`;
+       filename = `${titleStr.replace(/\s+/g, '_')}.txt`;
+    } else {
+       const snippet = getContextAroundMatches(currentDiscourseRaw.c, currentSession.query);
+       fullText = `--- Discourse: ${titleStr} ---\nSearch Query: "${currentSession.query}"\n\n${snippet}`;
+       filename = `Matches_${currentSession.query}_${titleStr.replace(/\s+/g, '_')}.txt`;
+    }
+    
+    const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    
+    closeMenu({target: {tagName: 'BUTTON'}});
+  };
+
+  window.downloadAllQuotes = () => {
+    if (!currentSession.query) return;
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    let fullText = `Search Query: "${currentSession.query}"\n\n`;
+    let itemsProcessed = 0;
+    
+    currentSession.results.forEach(result => {
+      const req = tx.objectStore(STORE_NAME).get(result.id);
+      req.onsuccess = () => {
+        const data = req.result;
+        let titleStr = data.t || data.s || "Untitled";
+        if (titleStr.includes('>')) titleStr = titleStr.split('>').pop().trim();
+        
+        fullText += `--- Discourse: ${titleStr} ---\n`;
+        fullText += getContextAroundMatches(data.c, currentSession.query);
+        
+        itemsProcessed++;
+        if (itemsProcessed === currentSession.results.length) {
+          const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `All_Matches_${currentSession.query}.txt`;
+          a.click();
+          closeMenu({target: {tagName: 'BUTTON'}});
+        }
+      };
+    });
+  };
+</script>
+</body>
+</html>
